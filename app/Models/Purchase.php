@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['supplier_id', 'purchase_no', 'purchase_date', 'currency', 'exchange_rate', 'subtotal_usd', 'purchase_delivery_cost_usd', 'other_cost_usd', 'total_cost_usd', 'allocation_method', 'status', 'note', 'created_by'])]
+#[Fillable(['supplier_id', 'purchase_no', 'purchase_date', 'arrival_date', 'currency', 'exchange_rate', 'subtotal_usd', 'purchase_delivery_cost_usd', 'other_cost_usd', 'total_cost_usd', 'allocation_method', 'status', 'note', 'created_by'])]
 class Purchase extends Model
 {
     use HasFactory;
@@ -17,6 +17,7 @@ class Purchase extends Model
     {
         return [
             'purchase_date' => 'date',
+            'arrival_date' => 'date',
             'exchange_rate' => 'decimal:4',
             'subtotal_usd' => 'decimal:4',
             'purchase_delivery_cost_usd' => 'decimal:4',

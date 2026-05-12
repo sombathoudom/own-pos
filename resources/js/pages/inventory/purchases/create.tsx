@@ -1,14 +1,20 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
+    type FormEvent,
+    type ReactNode,
+    useMemo,
+    useState,
+} from 'react';
+import {
+    Alert,
+    Badge,
     Button,
     Card,
     Col,
     Container,
     Form,
     Row,
-    Table,
 } from 'react-bootstrap';
-import React from 'react';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
@@ -23,7 +29,7 @@ type Variant = {
     id: number;
     product_id: number;
     sku: string;
-    color: string;
+    color: string | null;
     size: string;
     sale_price_usd: string;
 };
@@ -31,26 +37,27 @@ type Product = {
     id: number;
     name: string;
     category_id: number;
+    image_url: string | null;
     variants: Variant[];
 };
 
-type LineItem = {
-    category_id: string;
+type ProductRow = {
     product_id: string;
-    product_variant_id: string;
-    qty: string;
     unit_cost_usd: string;
     sale_price_usd: string;
+    variantQtys: Record<string, string>;
 };
 
 type FormData = {
     supplier_id: string;
     purchase_date: string;
+    arrival_date: string;
     purchase_no: string;
+    exchange_rate: string;
     purchase_delivery_cost_usd: string;
     other_cost_usd: string;
     note: string;
-    items: LineItem[];
+    productRows: ProductRow[];
 };
 
 type PurchasesCreateProps = {
@@ -60,117 +67,220 @@ type PurchasesCreateProps = {
     purchaseNo: string;
 };
 
-const emptyLineItem = (): LineItem => ({
-    category_id: '',
+const emptyProductRow = (): ProductRow => ({
     product_id: '',
-    product_variant_id: '',
-    qty: '1',
     unit_cost_usd: '0',
     sale_price_usd: '0',
+    variantQtys: {},
 });
 
 function PurchasesCreate() {
     const { suppliers, categories, products, purchaseNo } =
         usePage<PurchasesCreateProps>().props;
 
-    const { data, setData, post, processing, errors } = useForm<FormData>({
-        supplier_id: '',
-        purchase_date: new Date().toISOString().split('T')[0],
-        purchase_no: purchaseNo,
-        purchase_delivery_cost_usd: '0',
-        other_cost_usd: '0',
-        note: '',
-        items: [emptyLineItem()],
-    });
+    const { data, setData, post, processing, errors, transform } =
+        useForm<FormData>({
+            supplier_id: '',
+            purchase_date: new Date().toISOString().split('T')[0],
+            arrival_date: '',
+            purchase_no: purchaseNo,
+            exchange_rate: '1',
+            purchase_delivery_cost_usd: '0',
+            other_cost_usd: '0',
+            note: '',
+            productRows: [],
+        });
 
-    const addItem = () => {
-        setData('items', [...data.items, emptyLineItem()]);
-    };
+    const [productSearch, setProductSearch] = useState('');
+    const [showPicker, setShowPicker] = useState(false);
 
-    const removeItem = (index: number) => {
-        setData(
-            'items',
-            data.items.filter((_: LineItem, i: number) => i !== index),
-        );
-    };
+    transform((formData) => {
+        const items: Array<{
+            category_id: string;
+            product_id: string;
+            product_variant_id: string;
+            qty: string;
+            unit_cost_usd: string;
+            sale_price_usd: string;
+        }> = [];
 
-    const updateItem = (
-        index: number,
-        field: keyof LineItem,
-        value: string,
-    ) => {
-        const updated = [...data.items];
-        updated[index] = { ...updated[index], [field]: value };
-
-        if (field === 'category_id') {
-            updated[index] = {
-                ...updated[index],
-                product_id: '',
-                product_variant_id: '',
-            };
-        }
-        if (field === 'product_id') {
-            updated[index] = { ...updated[index], product_variant_id: '' };
-        }
-        if (field === 'product_variant_id') {
-            const variant = getVariants(index).find(
-                (v: Variant) => String(v.id) === value,
-            );
-            if (variant) {
-                updated[index] = {
-                    ...updated[index],
-                    sale_price_usd: variant.sale_price_usd || '0',
-                };
+        for (const row of formData.productRows) {
+            for (const [variantId, qty] of Object.entries(row.variantQtys)) {
+                const qtyNum = Number(qty);
+                if (qtyNum > 0) {
+                    const product = products.find(
+                        (p) => String(p.id) === row.product_id,
+                    );
+                    items.push({
+                        category_id: String(product?.category_id ?? ''),
+                        product_id: row.product_id,
+                        product_variant_id: variantId,
+                        qty: String(qtyNum),
+                        unit_cost_usd: row.unit_cost_usd,
+                        sale_price_usd: row.sale_price_usd,
+                    });
+                }
             }
         }
 
-        setData('items', updated);
+        return {
+            ...formData,
+            items,
+        } as FormData & { items: typeof items };
+    });
+
+    const selectedProductIds = useMemo(
+        () =>
+            new Set(
+                data.productRows
+                    .map((r) => r.product_id)
+                    .filter(Boolean),
+            ),
+        [data.productRows],
+    );
+
+    const filteredProducts = useMemo(() => {
+        const term = productSearch.trim().toLowerCase();
+        return products.filter((p) => {
+            if (selectedProductIds.has(String(p.id))) return false;
+            if (!term) return true;
+            return p.name.toLowerCase().includes(term);
+        });
+    }, [products, selectedProductIds, productSearch]);
+
+    const addProduct = (product: Product) => {
+        const defaultSalePrice = product.variants[0]?.sale_price_usd ?? '0';
+        const variantQtys: Record<string, string> = {};
+        for (const v of product.variants) {
+            variantQtys[String(v.id)] = '0';
+        }
+
+        setData('productRows', [
+            ...data.productRows,
+            {
+                product_id: String(product.id),
+                unit_cost_usd: '0',
+                sale_price_usd: defaultSalePrice,
+                variantQtys,
+            },
+        ]);
+        setProductSearch('');
+        setShowPicker(false);
     };
 
-    const getProductsByCategory = (categoryId: string): Product[] => {
-        if (!categoryId) return products;
-        return products.filter(
-            (p: Product) => p.category_id === Number(categoryId),
+    const removeRow = (index: number) => {
+        setData(
+            'productRows',
+            data.productRows.filter((_, i) => i !== index),
         );
     };
 
-    const getVariants = (index: number): Variant[] => {
-        const item = data.items[index];
-        if (!item.product_id) return [];
-        const product = products.find(
-            (p: Product) => p.id === Number(item.product_id),
-        );
-        return product?.variants || [];
+    const updateRow = (
+        index: number,
+        field: keyof Omit<ProductRow, 'variantQtys'>,
+        value: string,
+    ) => {
+        const rows = [...data.productRows];
+        rows[index] = { ...rows[index], [field]: value };
+        setData('productRows', rows);
     };
 
-    const subtotal = data.items.reduce(
-        (sum: number, item: LineItem) =>
-            sum + (Number(item.qty) || 0) * (Number(item.unit_cost_usd) || 0),
+    const updateVariantQty = (
+        rowIndex: number,
+        variantId: string,
+        value: string,
+    ) => {
+        const rows = [...data.productRows];
+        rows[rowIndex] = {
+            ...rows[rowIndex],
+            variantQtys: {
+                ...rows[rowIndex].variantQtys,
+                [variantId]: value,
+            },
+        };
+        setData('productRows', rows);
+    };
+
+    const cloneRow = (index: number) => {
+        const source = data.productRows[index];
+        const cloned: ProductRow = {
+            product_id: '',
+            unit_cost_usd: source.unit_cost_usd,
+            sale_price_usd: source.sale_price_usd,
+            variantQtys: {},
+        };
+        setData('productRows', [
+            ...data.productRows.slice(0, index + 1),
+            cloned,
+            ...data.productRows.slice(index + 1),
+        ]);
+    };
+
+    const getProduct = (productId: string): Product | undefined => {
+        return products.find((p) => String(p.id) === productId);
+    };
+
+    const getCategoryName = (categoryId: number): string => {
+        return categories.find((c) => c.id === categoryId)?.name ?? '-';
+    };
+
+    const rowTotalQty = (row: ProductRow): number => {
+        return Object.values(row.variantQtys).reduce(
+            (sum, q) => sum + (Number(q) || 0),
+            0,
+        );
+    };
+
+    const rowSubtotal = (row: ProductRow): number => {
+        return rowTotalQty(row) * (Number(row.unit_cost_usd) || 0);
+    };
+
+    const totalQtyAll = data.productRows.reduce(
+        (sum, row) => sum + rowTotalQty(row),
         0,
     );
 
-    const totalQty = data.items.reduce(
-        (sum: number, item: LineItem) => sum + (Number(item.qty) || 0),
+    const subtotal = data.productRows.reduce(
+        (sum, row) => sum + rowSubtotal(row),
         0,
     );
 
     const deliveryCost = Number(data.purchase_delivery_cost_usd) || 0;
     const otherCost = Number(data.other_cost_usd) || 0;
-
-    const getLandedCostPerUnit = (item: LineItem): number => {
-        const qty = Number(item.qty) || 0;
-        const unitCost = Number(item.unit_cost_usd) || 0;
-        if (!qty || !totalQty) return unitCost;
-        const deliveryAlloc = (deliveryCost * qty) / totalQty;
-        const otherAlloc = (otherCost * qty) / totalQty;
-        return unitCost + deliveryAlloc / qty + otherAlloc / qty;
-    };
-
     const totalCost = subtotal + deliveryCost + otherCost;
 
-    const submit = (e: React.FormEvent<HTMLFormElement>) => {
+    const getDeliveryPerUnit = (row: ProductRow): number => {
+        const qty = rowTotalQty(row);
+        if (!qty || !totalQtyAll) return 0;
+        return (deliveryCost * qty) / totalQtyAll / qty;
+    };
+
+    const getLandedUnitCost = (row: ProductRow): number => {
+        const unitCost = Number(row.unit_cost_usd) || 0;
+        return unitCost + getDeliveryPerUnit(row);
+    };
+
+    const categoryBreakdown = useMemo(() => {
+        const map: Record<string, number> = {};
+        for (const row of data.productRows) {
+            const product = getProduct(row.product_id);
+            if (!product) continue;
+            const catName = getCategoryName(product.category_id);
+            map[catName] = (map[catName] || 0) + rowTotalQty(row);
+        }
+        return map;
+    }, [data.productRows]);
+
+    const submit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         post(purchasesStore.url());
+    };
+
+    const variantLabel = (variant: Variant): string => {
+        if (variant.color && variant.size) {
+            return `${variant.color} / ${variant.size}`;
+        }
+        return variant.size || variant.color || variant.sku;
     };
 
     return (
@@ -215,7 +325,9 @@ function PurchasesCreate() {
                                                             (s: Supplier) => (
                                                                 <option
                                                                     key={s.id}
-                                                                    value={s.id}
+                                                                    value={
+                                                                        s.id
+                                                                    }
                                                                 >
                                                                     {s.name}
                                                                 </option>
@@ -261,6 +373,35 @@ function PurchasesCreate() {
                                             </Col>
                                             <Col lg={4}>
                                                 <div className="mb-3">
+                                                    <Form.Label htmlFor="arrival_date">
+                                                        Arrival Date
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        id="arrival_date"
+                                                        type="date"
+                                                        value={data.arrival_date}
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'arrival_date',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        isInvalid={
+                                                            !!errors.arrival_date
+                                                        }
+                                                    />
+                                                    <Form.Control.Feedback
+                                                        type="invalid"
+                                                        className="d-block"
+                                                    >
+                                                        {errors.arrival_date}
+                                                    </Form.Control.Feedback>
+                                                </div>
+                                            </Col>
+                                        </Row>
+                                        <Row>
+                                            <Col lg={4}>
+                                                <div className="mb-3">
                                                     <Form.Label htmlFor="purchase_no">
                                                         Purchase #
                                                     </Form.Label>
@@ -282,6 +423,35 @@ function PurchasesCreate() {
                                                         className="d-block"
                                                     >
                                                         {errors.purchase_no}
+                                                    </Form.Control.Feedback>
+                                                </div>
+                                            </Col>
+                                            <Col lg={4}>
+                                                <div className="mb-3">
+                                                    <Form.Label htmlFor="exchange_rate">
+                                                        Exchange Rate
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        id="exchange_rate"
+                                                        type="number"
+                                                        step="0.0001"
+                                                        min="0"
+                                                        value={data.exchange_rate}
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'exchange_rate',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        isInvalid={
+                                                            !!errors.exchange_rate
+                                                        }
+                                                    />
+                                                    <Form.Control.Feedback
+                                                        type="invalid"
+                                                        className="d-block"
+                                                    >
+                                                        {errors.exchange_rate}
                                                     </Form.Control.Feedback>
                                                 </div>
                                             </Col>
@@ -379,312 +549,591 @@ function PurchasesCreate() {
                                     </Card.Body>
                                 </Card>
 
-                                <Card>
+                                <Card className="mb-3">
                                     <Card.Body>
                                         <div className="d-flex align-items-center justify-content-between mb-3">
                                             <h4 className="card-title mb-0">
-                                                Line Items
+                                                Purchase Items
                                             </h4>
-                                            <Button
-                                                type="button"
-                                                variant="outline-primary"
-                                                size="sm"
-                                                onClick={addItem}
-                                            >
-                                                + Add Item
-                                            </Button>
+                                            <span className="text-muted small">
+                                                {data.productRows.length} product
+                                                {data.productRows.length !== 1
+                                                    ? 's'
+                                                    : ''}
+                                            </span>
                                         </div>
 
-                                        <div className="table-responsive">
-                                            <Table
-                                                striped
-                                                hover
-                                                className="align-middle"
-                                            >
-                                                <thead>
-                                                    <tr>
-                                                        <th>Category</th>
-                                                        <th>Product</th>
-                                                        <th>Variant</th>
-                                                        <th>Qty</th>
-                                                        <th>Unit Cost</th>
-                                                        <th>Sale Price</th>
-                                                        <th>
-                                                            Landed Cost/Unit
-                                                        </th>
-                                                        <th></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {data.items.map(
-                                                        (
-                                                            item: LineItem,
-                                                            index: number,
-                                                        ) => (
-                                                            <tr key={index}>
-                                                                <td>
-                                                                    <Form.Select
-                                                                        size="sm"
-                                                                        value={
-                                                                            item.category_id
-                                                                        }
-                                                                        onChange={(
-                                                                            e,
-                                                                        ) =>
-                                                                            updateItem(
-                                                                                index,
-                                                                                'category_id',
-                                                                                e
-                                                                                    .target
-                                                                                    .value,
-                                                                            )
-                                                                        }
-                                                                        isInvalid={
-                                                                            !!errors[
-                                                                                `items.${index}.category_id`
-                                                                            ]
-                                                                        }
-                                                                    >
-                                                                        <option value="">
-                                                                            Select
-                                                                        </option>
-                                                                        {categories.map(
-                                                                            (
-                                                                                c: Category,
-                                                                            ) => (
-                                                                                <option
-                                                                                    key={
-                                                                                        c.id
-                                                                                    }
-                                                                                    value={
-                                                                                        c.id
-                                                                                    }
-                                                                                >
-                                                                                    {
-                                                                                        c.name
-                                                                                    }
-                                                                                </option>
-                                                                            ),
-                                                                        )}
-                                                                    </Form.Select>
-                                                                </td>
-                                                                <td>
-                                                                    <Form.Select
-                                                                        size="sm"
-                                                                        value={
-                                                                            item.product_id
-                                                                        }
-                                                                        onChange={(
-                                                                            e,
-                                                                        ) =>
-                                                                            updateItem(
-                                                                                index,
-                                                                                'product_id',
-                                                                                e
-                                                                                    .target
-                                                                                    .value,
-                                                                            )
-                                                                        }
-                                                                        isInvalid={
-                                                                            !!errors[
-                                                                                `items.${index}.product_id`
-                                                                            ]
-                                                                        }
-                                                                    >
-                                                                        <option value="">
-                                                                            Select
-                                                                        </option>
-                                                                        {getProductsByCategory(
-                                                                            item.category_id,
-                                                                        ).map(
-                                                                            (
-                                                                                p: Product,
-                                                                            ) => (
-                                                                                <option
-                                                                                    key={
-                                                                                        p.id
-                                                                                    }
-                                                                                    value={
-                                                                                        p.id
-                                                                                    }
-                                                                                >
-                                                                                    {
-                                                                                        p.name
-                                                                                    }
-                                                                                </option>
-                                                                            ),
-                                                                        )}
-                                                                    </Form.Select>
-                                                                </td>
-                                                                <td>
-                                                                    <Form.Select
-                                                                        size="sm"
-                                                                        value={
-                                                                            item.product_variant_id
-                                                                        }
-                                                                        onChange={(
-                                                                            e,
-                                                                        ) =>
-                                                                            updateItem(
-                                                                                index,
-                                                                                'product_variant_id',
-                                                                                e
-                                                                                    .target
-                                                                                    .value,
-                                                                            )
-                                                                        }
-                                                                        isInvalid={
-                                                                            !!errors[
-                                                                                `items.${index}.product_variant_id`
-                                                                            ]
-                                                                        }
-                                                                    >
-                                                                        <option value="">
-                                                                            Select
-                                                                        </option>
-                                                                        {getVariants(
-                                                                            index,
-                                                                        ).map(
-                                                                            (
-                                                                                v: Variant,
-                                                                            ) => (
-                                                                                <option
-                                                                                    key={
-                                                                                        v.id
-                                                                                    }
-                                                                                    value={
-                                                                                        v.id
-                                                                                    }
-                                                                                >
-                                                                                    {
-                                                                                        v.color
-                                                                                    }{' '}
-                                                                                    /{' '}
-                                                                                    {
-                                                                                        v.size
-                                                                                    }
-                                                                                </option>
-                                                                            ),
-                                                                        )}
-                                                                    </Form.Select>
-                                                                </td>
-                                                                <td>
-                                                                    <Form.Control
-                                                                        size="sm"
-                                                                        type="number"
-                                                                        min="1"
-                                                                        value={
-                                                                            item.qty
-                                                                        }
-                                                                        onChange={(
-                                                                            e,
-                                                                        ) =>
-                                                                            updateItem(
-                                                                                index,
-                                                                                'qty',
-                                                                                e
-                                                                                    .target
-                                                                                    .value,
-                                                                            )
-                                                                        }
+                                        {(() => {
+                                            const itemsError = (errors as Record<string, unknown>).items;
+                                            if (!itemsError) return null;
+                                            return (
+                                                <Alert variant="danger" className="mb-3">
+                                                    {typeof itemsError === 'string' ? itemsError : 'Please check your items.'}
+                                                </Alert>
+                                            );
+                                        })()}
+
+                                        {/* Product Picker */}
+                                        <div className="position-relative mb-3">
+                                            <Form.Control
+                                                type="text"
+                                                placeholder="Search products..."
+                                                value={productSearch}
+                                                onChange={(e) => {
+                                                    setProductSearch(
+                                                        e.target.value,
+                                                    );
+                                                    setShowPicker(true);
+                                                }}
+                                                onFocus={() =>
+                                                    setShowPicker(true)
+                                                }
+                                                autoComplete="off"
+                                            />
+                                            {showPicker &&
+                                                filteredProducts.length > 0 && (
+                                                    <div
+                                                        className="position-absolute w-100 bg-white border rounded shadow-sm"
+                                                        style={{
+                                                            zIndex: 1000,
+                                                            maxHeight: 320,
+                                                            overflowY: 'auto',
+                                                        }}
+                                                    >
+                                                        {filteredProducts.map(
+                                                            (product) => (
+                                                                <button
+                                                                    key={
+                                                                        product.id
+                                                                    }
+                                                                    type="button"
+                                                                    className="d-flex align-items-center gap-2 w-100 text-start border-0 bg-white px-3 py-2 hover-bg-light"
+                                                                    style={{
+                                                                        cursor: 'pointer',
+                                                                    }}
+                                                                    onMouseDown={(
+                                                                        e,
+                                                                    ) => {
+                                                                        e.preventDefault();
+                                                                        addProduct(
+                                                                            product,
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    <div
+                                                                        className="flex-shrink-0 rounded border bg-light"
                                                                         style={{
-                                                                            width: 80,
+                                                                            width: 40,
+                                                                            height: 40,
                                                                         }}
-                                                                    />
-                                                                </td>
-                                                                <td>
-                                                                    <Form.Control
-                                                                        size="sm"
-                                                                        type="number"
-                                                                        step="0.01"
-                                                                        min="0"
-                                                                        value={
-                                                                            item.unit_cost_usd
-                                                                        }
-                                                                        onChange={(
-                                                                            e,
-                                                                        ) =>
-                                                                            updateItem(
-                                                                                index,
-                                                                                'unit_cost_usd',
-                                                                                e
-                                                                                    .target
-                                                                                    .value,
-                                                                            )
-                                                                        }
-                                                                        style={{
-                                                                            width: 100,
-                                                                        }}
-                                                                    />
-                                                                </td>
-                                                                <td>
-                                                                    <Form.Control
-                                                                        size="sm"
-                                                                        type="number"
-                                                                        step="0.01"
-                                                                        min="0"
-                                                                        value={
-                                                                            item.sale_price_usd
-                                                                        }
-                                                                        onChange={(
-                                                                            e,
-                                                                        ) =>
-                                                                            updateItem(
-                                                                                index,
-                                                                                'sale_price_usd',
-                                                                                e
-                                                                                    .target
-                                                                                    .value,
-                                                                            )
-                                                                        }
-                                                                        style={{
-                                                                            width: 100,
-                                                                        }}
-                                                                    />
-                                                                </td>
-                                                                <td className="text-nowrap">
-                                                                    $
-                                                                    {getLandedCostPerUnit(
-                                                                        item,
-                                                                    ).toFixed(
-                                                                        2,
-                                                                    )}
-                                                                </td>
-                                                                <td>
-                                                                    {data.items
-                                                                        .length >
-                                                                        1 && (
+                                                                    >
+                                                                        {product.image_url ? (
+                                                                            <img
+                                                                                src={
+                                                                                    product.image_url
+                                                                                }
+                                                                                alt={
+                                                                                    product.name
+                                                                                }
+                                                                                className="w-100 h-100 object-fit-cover rounded"
+                                                                            />
+                                                                        ) : (
+                                                                            <div className="d-flex align-items-center justify-content-center w-100 h-100 text-muted">
+                                                                                <i className="ri-image-line"></i>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex-grow-1 min-w-0">
+                                                                        <div className="fw-medium text-truncate">
+                                                                            {
+                                                                                product.name
+                                                                            }
+                                                                        </div>
+                                                                        <div className="small text-muted">
+                                                                            {getCategoryName(
+                                                                                product.category_id,
+                                                                            )}{' '}
+                                                                            &middot;{' '}
+                                                                            {
+                                                                                product
+                                                                                    .variants
+                                                                                    .length
+                                                                            }{' '}
+                                                                            variant
+                                                                            {product
+                                                                                .variants
+                                                                                .length !==
+                                                                            1
+                                                                                ? 's'
+                                                                                : ''}
+                                                                        </div>
+                                                                    </div>
+                                                                </button>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                )}
+                                            {showPicker &&
+                                                productSearch &&
+                                                filteredProducts.length ===
+                                                    0 && (
+                                                    <div
+                                                        className="position-absolute w-100 bg-white border rounded shadow-sm px-3 py-2 text-muted small"
+                                                        style={{ zIndex: 1000 }}
+                                                    >
+                                                        No products found.
+                                                    </div>
+                                                )}
+                                        </div>
+
+                                        {/* Product Rows */}
+                                        <div className="vstack gap-3">
+                                            {data.productRows.map(
+                                                (row, index) => {
+                                                    const product = getProduct(
+                                                        row.product_id,
+                                                    );
+
+                                                    if (!product) {
+                                                        return (
+                                                            <Card
+                                                                key={index}
+                                                                className="border-dashed"
+                                                            >
+                                                                <Card.Body>
+                                                                    <div className="d-flex align-items-center gap-3">
+                                                                        <div className="flex-grow-1">
+                                                                            <Form.Select
+                                                                                size="sm"
+                                                                                value={
+                                                                                    row.product_id
+                                                                                }
+                                                                                onChange={(
+                                                                                    e,
+                                                                                ) => {
+                                                                                    const pid =
+                                                                                        e
+                                                                                            .target
+                                                                                            .value;
+                                                                                    const prod =
+                                                                                        products.find(
+                                                                                            (
+                                                                                                p,
+                                                                                            ) =>
+                                                                                                String(
+                                                                                                    p.id,
+                                                                                                ) ===
+                                                                                                pid,
+                                                                                        );
+                                                                                    if (
+                                                                                        !prod
+                                                                                    )
+                                                                                        return;
+                                                                                    const variantQtys:
+                                                                                        Record<
+                                                                                            string,
+                                                                                            string
+                                                                                        > =
+                                                                                        {};
+                                                                                    for (const v of prod.variants) {
+                                                                                        variantQtys[
+                                                                                            String(
+                                                                                                v.id,
+                                                                                            )
+                                                                                        ] =
+                                                                                            '0';
+                                                                                    }
+                                                                                    const rows =
+                                                                                        [
+                                                                                            ...data.productRows,
+                                                                                        ];
+                                                                                    rows[
+                                                                                        index
+                                                                                    ] =
+                                                                                        {
+                                                                                            ...rows[
+                                                                                                index
+                                                                                            ],
+                                                                                            product_id:
+                                                                                                pid,
+                                                                                            sale_price_usd:
+                                                                                                prod
+                                                                                                    .variants[0]
+                                                                                                    ?.sale_price_usd ??
+                                                                                                '0',
+                                                                                            variantQtys,
+                                                                                        };
+                                                                                    setData(
+                                                                                        'productRows',
+                                                                                        rows,
+                                                                                    );
+                                                                                }}
+                                                                            >
+                                                                                <option value="">
+                                                                                    Select
+                                                                                    product
+                                                                                </option>
+                                                                                {products
+                                                                                    .filter(
+                                                                                        (
+                                                                                            p,
+                                                                                        ) =>
+                                                                                            !selectedProductIds.has(
+                                                                                                String(
+                                                                                                    p.id,
+                                                                                                ),
+                                                                                            ) ||
+                                                                                            String(
+                                                                                                p.id,
+                                                                                            ) ===
+                                                                                                row.product_id,
+                                                                                    )
+                                                                                    .map(
+                                                                                        (
+                                                                                            p,
+                                                                                        ) => (
+                                                                                            <option
+                                                                                                key={
+                                                                                                    p.id
+                                                                                                }
+                                                                                                value={
+                                                                                                    p.id
+                                                                                                }
+                                                                                            >
+                                                                                                {
+                                                                                                    p.name
+                                                                                                }
+                                                                                            </option>
+                                                                                        ),
+                                                                                    )}
+                                                                            </Form.Select>
+                                                                        </div>
                                                                         <Button
                                                                             type="button"
                                                                             variant="outline-danger"
                                                                             size="sm"
                                                                             onClick={() =>
-                                                                                removeItem(
+                                                                                removeRow(
                                                                                     index,
                                                                                 )
                                                                             }
                                                                         >
-                                                                            &times;
+                                                                            Remove
                                                                         </Button>
-                                                                    )}
-                                                                </td>
-                                                            </tr>
-                                                        ),
-                                                    )}
-                                                </tbody>
-                                            </Table>
+                                                                    </div>
+                                                                </Card.Body>
+                                                            </Card>
+                                                        );
+                                                    }
+
+                                                    const rowQty = rowTotalQty(
+                                                        row,
+                                                    );
+
+                                                    return (
+                                                        <Card
+                                                            key={index}
+                                                            className="border"
+                                                        >
+                                                            <Card.Body>
+                                                                <div className="d-flex align-items-start gap-3">
+                                                                    {/* Product Image */}
+                                                                    <div
+                                                                        className="flex-shrink-0 rounded border bg-light"
+                                                                        style={{
+                                                                            width: 64,
+                                                                            height: 64,
+                                                                        }}
+                                                                    >
+                                                                        {product.image_url ? (
+                                                                            <img
+                                                                                src={
+                                                                                    product.image_url
+                                                                                }
+                                                                                alt={
+                                                                                    product.name
+                                                                                }
+                                                                                className="w-100 h-100 object-fit-cover rounded"
+                                                                            />
+                                                                        ) : (
+                                                                            <div className="d-flex align-items-center justify-content-center w-100 h-100 text-muted">
+                                                                                <i className="ri-image-line fs-4"></i>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    <div className="flex-grow-1 min-w-0">
+                                                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                                                            <div>
+                                                                                <h6 className="mb-0">
+                                                                                    {
+                                                                                        product.name
+                                                                                    }
+                                                                                </h6>
+                                                                                <Badge
+                                                                                    bg="light"
+                                                                                    className="text-dark fw-normal"
+                                                                                >
+                                                                                    {getCategoryName(
+                                                                                        product.category_id,
+                                                                                    )}
+                                                                                </Badge>
+                                                                            </div>
+                                                                            <div className="d-flex gap-2">
+                                                                                <Button
+                                                                                    type="button"
+                                                                                    variant="outline-primary"
+                                                                                    size="sm"
+                                                                                    onClick={() =>
+                                                                                        cloneRow(
+                                                                                            index,
+                                                                                        )
+                                                                                    }
+                                                                                >
+                                                                                    Clone
+                                                                                </Button>
+                                                                                <Button
+                                                                                    type="button"
+                                                                                    variant="outline-danger"
+                                                                                    size="sm"
+                                                                                    onClick={() =>
+                                                                                        removeRow(
+                                                                                            index,
+                                                                                        )
+                                                                                    }
+                                                                                >
+                                                                                    Remove
+                                                                                </Button>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="d-flex flex-wrap gap-3 mb-3">
+                                                                            <div style={{ minWidth: 100 }}>
+                                                                                <div className="small text-muted mb-1">
+                                                                                    Unit Cost
+                                                                                </div>
+                                                                                <Form.Control
+                                                                                    size="sm"
+                                                                                    type="number"
+                                                                                    step="0.01"
+                                                                                    min="0"
+                                                                                    value={
+                                                                                        row.unit_cost_usd
+                                                                                    }
+                                                                                    onChange={(
+                                                                                        e,
+                                                                                    ) =>
+                                                                                        updateRow(
+                                                                                            index,
+                                                                                            'unit_cost_usd',
+                                                                                            e
+                                                                                                .target
+                                                                                                .value,
+                                                                                        )
+                                                                                    }
+                                                                                />
+                                                                            </div>
+                                                                            <div style={{ minWidth: 90 }}>
+                                                                                <div className="small text-muted mb-1">
+                                                                                    Delivery / Unit
+                                                                                </div>
+                                                                                <div className="form-control form-control-sm bg-light text-muted">
+                                                                                    ${getDeliveryPerUnit(
+                                                                                        row,
+                                                                                    ).toFixed(
+                                                                                        2,
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div style={{ minWidth: 90 }}>
+                                                                                <div className="small text-muted mb-1">
+                                                                                    Landed Cost
+                                                                                </div>
+                                                                                <div className="form-control form-control-sm bg-light fw-semibold text-dark">
+                                                                                    ${getLandedUnitCost(
+                                                                                        row,
+                                                                                    ).toFixed(
+                                                                                        2,
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div style={{ minWidth: 100 }}>
+                                                                                <div className="small text-muted mb-1">
+                                                                                    Sale Price
+                                                                                </div>
+                                                                                <Form.Control
+                                                                                    size="sm"
+                                                                                    type="number"
+                                                                                    step="0.01"
+                                                                                    min="0"
+                                                                                    value={
+                                                                                        row.sale_price_usd
+                                                                                    }
+                                                                                    onChange={(
+                                                                                        e,
+                                                                                    ) =>
+                                                                                        updateRow(
+                                                                                            index,
+                                                                                            'sale_price_usd',
+                                                                                            e
+                                                                                                .target
+                                                                                                .value,
+                                                                                        )
+                                                                                    }
+                                                                                />
+                                                                            </div>
+                                                                            <div className="d-flex align-items-end">
+                                                                                <div className="small text-muted">
+                                                                                    Qty:{" "}
+                                                                                    <span className="fw-semibold text-dark">
+                                                                                        {
+                                                                                            rowQty
+                                                                                        }
+                                                                                    </span>{' '}
+                                                                                    &middot; Sub:{" "}
+                                                                                    <span className="fw-semibold text-dark">
+                                                                                        $
+                                                                                        {rowSubtotal(
+                                                                                            row,
+                                                                                        ).toFixed(
+                                                                                            2,
+                                                                                        )}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="d-flex flex-wrap gap-2">
+                                                                            {product.variants.map(
+                                                                                (
+                                                                                    variant,
+                                                                                ) => (
+                                                                                    <div
+                                                                                        key={
+                                                                                            variant.id
+                                                                                        }
+                                                                                        className="d-flex align-items-center gap-1 border rounded px-2 py-1 bg-light-subtle"
+                                                                                    >
+                                                                                        <span className="small fw-medium text-nowrap">
+                                                                                            {variantLabel(
+                                                                                                variant,
+                                                                                            )}
+                                                                                        </span>
+                                                                                        <Form.Control
+                                                                                            size="sm"
+                                                                                            type="number"
+                                                                                            min="0"
+                                                                                            value={
+                                                                                                row
+                                                                                                    .variantQtys[
+                                                                                                    String(
+                                                                                                        variant.id,
+                                                                                                    )
+                                                                                                ] ??
+                                                                                                '0'
+                                                                                            }
+                                                                                            onChange={(
+                                                                                                e,
+                                                                                            ) =>
+                                                                                                updateVariantQty(
+                                                                                                    index,
+                                                                                                    String(
+                                                                                                        variant.id,
+                                                                                                    ),
+                                                                                                    e
+                                                                                                        .target
+                                                                                                        .value,
+                                                                                                )
+                                                                                            }
+                                                                                            style={{
+                                                                                                width: 56,
+                                                                                                border: 'none',
+                                                                                                background: 'transparent',
+                                                                                                padding: '0.15rem 0.3rem',
+                                                                                            }}
+                                                                                        />
+                                                                                    </div>
+                                                                                ),
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </Card.Body>
+                                                        </Card>
+                                                    );
+                                                },
+                                            )}
+
+                                            {data.productRows.length === 0 && (
+                                                <div className="text-center text-muted py-5 border rounded bg-light-subtle">
+                                                    <i className="ri-shopping-cart-line fs-1 d-block mb-2"></i>
+                                                    <p className="mb-0">
+                                                        Search and select
+                                                        products above to add
+                                                        purchase items.
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     </Card.Body>
                                 </Card>
                             </Col>
 
                             <Col xl={4}>
-                                <Card>
+                                <Card className="mb-3">
                                     <Card.Body>
                                         <h4 className="card-title mb-3">
-                                            Cost Summary
+                                            Order Summary
                                         </h4>
-                                        <div className="vstack gap-2">
+
+                                        <div className="vstack gap-3 mb-3">
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <span className="text-muted">
+                                                    Total Shirts
+                                                </span>
+                                                <span className="fw-bold fs-5">
+                                                    {totalQtyAll}
+                                                </span>
+                                            </div>
+
+                                            {Object.entries(
+                                                categoryBreakdown,
+                                            ).length > 0 && (
+                                                <div>
+                                                    <div className="small text-muted mb-2">
+                                                        By Category
+                                                    </div>
+                                                    <div className="vstack gap-1">
+                                                        {Object.entries(
+                                                            categoryBreakdown,
+                                                        ).map(
+                                                            ([
+                                                                catName,
+                                                                qty,
+                                                            ]) => (
+                                                                <div
+                                                                    key={
+                                                                        catName
+                                                                    }
+                                                                    className="d-flex justify-content-between small"
+                                                                >
+                                                                    <span>
+                                                                        {
+                                                                            catName
+                                                                        }
+                                                                    </span>
+                                                                    <span className="fw-medium">
+                                                                        {qty}
+                                                                    </span>
+                                                                </div>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <hr className="my-1" />
+
                                             <div className="d-flex justify-content-between">
                                                 <span className="text-muted">
                                                     Subtotal
@@ -709,24 +1158,35 @@ function PurchasesCreate() {
                                                     ${otherCost.toFixed(2)}
                                                 </span>
                                             </div>
+                                            {Number(data.exchange_rate) !== 1 && (
+                                                <div className="d-flex justify-content-between small">
+                                                    <span className="text-muted">
+                                                        Exchange Rate
+                                                    </span>
+                                                    <span className="fw-medium">
+                                                        {data.exchange_rate}
+                                                    </span>
+                                                </div>
+                                            )}
                                             <hr className="my-1" />
                                             <div className="d-flex justify-content-between">
                                                 <span className="fw-semibold">
                                                     Total Cost
                                                 </span>
-                                                <span className="fw-bold">
+                                                <span className="fw-bold fs-5">
                                                     ${totalCost.toFixed(2)}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <hr />
-
                                         <div className="d-grid gap-2">
                                             <Button
                                                 type="submit"
                                                 variant="success"
-                                                disabled={processing}
+                                                disabled={
+                                                    processing ||
+                                                    totalQtyAll === 0
+                                                }
                                             >
                                                 {processing
                                                     ? 'Saving...'
@@ -750,6 +1210,6 @@ function PurchasesCreate() {
     );
 }
 
-PurchasesCreate.layout = (page: React.ReactNode) => <Layout>{page}</Layout>;
+PurchasesCreate.layout = (page: ReactNode) => <Layout>{page}</Layout>;
 
 export default PurchasesCreate;

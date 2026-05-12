@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProductVariant;
+use App\Models\Purchase;
+use App\Models\Sale;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -53,36 +55,65 @@ class StockController extends Controller
     public function movements(Request $request): Response
     {
         $productVariantId = $request->integer('product_variant_id');
+        $type = $request->string('type')->toString();
 
         $movements = StockMovement::query()
-            ->with('productVariant.product', 'stockLayer', 'reference')
+            ->with('productVariant.product', 'stockLayer')
             ->when($productVariantId, fn ($query, $id) => $query->where('product_variant_id', $id))
+            ->when($type !== '', fn ($query) => $query->where('type', $type))
             ->orderByDesc('created_at')
             ->paginate(20)
             ->withQueryString()
-            ->through(fn (StockMovement $movement) => [
-                'id' => $movement->id,
-                'type' => $movement->type,
-                'product_variant_id' => $movement->product_variant_id,
-                'qty_change' => $movement->qty_change,
-                'unit_cost_usd' => $movement->unit_cost_usd,
-                'note' => $movement->note,
-                'created_at' => $movement->created_at?->toDateTimeString(),
-                'productVariant' => $movement->productVariant ? [
-                    'id' => $movement->productVariant->id,
-                    'sku' => $movement->productVariant->sku,
-                    'color' => $movement->productVariant->color,
-                    'size' => $movement->productVariant->size,
-                    'product' => $movement->productVariant->product,
-                ] : null,
-                'stockLayer' => $movement->stockLayer,
-                'reference' => $movement->reference,
-            ]);
+            ->through(function (StockMovement $movement) {
+                $reference = null;
+                if ($movement->reference_type && $movement->reference_id) {
+                    $refClass = match ($movement->reference_type) {
+                        'sale', Sale::class => Sale::class,
+                        'purchase', Purchase::class => Purchase::class,
+                        default => $movement->reference_type,
+                    };
+
+                    if (class_exists($refClass)) {
+                        $refModel = $refClass::find($movement->reference_id);
+                        if ($refModel) {
+                            $reference = [
+                                'id' => $refModel->id,
+                                'type' => class_basename($refClass),
+                                'label' => match (true) {
+                                    $refModel instanceof Purchase => $refModel->purchase_no,
+                                    $refModel instanceof Sale => $refModel->invoice_no,
+                                    default => null,
+                                },
+                            ];
+                        }
+                    }
+                }
+
+                return [
+                    'id' => $movement->id,
+                    'type' => $movement->type,
+                    'product_variant_id' => $movement->product_variant_id,
+                    'qty_change' => $movement->qty_change,
+                    'unit_cost_usd' => $movement->unit_cost_usd,
+                    'note' => $movement->note,
+                    'created_at' => $movement->created_at?->toDateTimeString(),
+                    'productVariant' => $movement->productVariant ? [
+                        'id' => $movement->productVariant->id,
+                        'sku' => $movement->productVariant->sku,
+                        'color' => $movement->productVariant->color,
+                        'size' => $movement->productVariant->size,
+                        'product' => $movement->productVariant->product,
+                    ] : null,
+                    'stockLayer' => $movement->stockLayer,
+                    'reference' => $reference,
+                ];
+            });
 
         return Inertia::render('inventory/stock/movements', [
             'movements' => $movements,
             'filters' => [
                 'product_variant_id' => $productVariantId ? (string) $productVariantId : '',
+                'type' => $type,
             ],
         ]);
     }

@@ -108,6 +108,27 @@ function ProductsCreate() {
         setData('variants', [...data.variants, emptyVariant()]);
     };
 
+    const addVariants = (sizes: string[]): void => {
+        const existingSizes = new Set(data.variants.map((v) => v.size.toUpperCase()));
+        const newVariants = sizes
+            .filter((size) => !existingSizes.has(size.toUpperCase()))
+            .map((size) => {
+                const variant: VariantRow = {
+                    sku: '',
+                    style_name: '',
+                    color: '',
+                    size,
+                    sale_price_usd: '0',
+                };
+                return {
+                    ...variant,
+                    sku: buildSmartSku(data.name, variant),
+                };
+            });
+
+        setData('variants', [...data.variants, ...newVariants]);
+    };
+
     const removeVariant = (index: number): void => {
         setData(
             'variants',
@@ -351,14 +372,33 @@ function ProductsCreate() {
                                                 </p>
                                             </div>
 
-                                            <Button
-                                                type="button"
-                                                variant="outline-primary"
-                                                size="sm"
-                                                onClick={addVariant}
-                                            >
-                                                + Add Variant
-                                            </Button>
+                                            <div className="d-flex gap-2">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline-info"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        addVariants([
+                                                            'M',
+                                                            'L',
+                                                            'XL',
+                                                            '2XL',
+                                                            '3XL',
+                                                        ])
+                                                    }
+                                                    title="Add M, L, XL, 2XL, 3XL"
+                                                >
+                                                    + Shirt Sizes (M-3XL)
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline-primary"
+                                                    size="sm"
+                                                    onClick={addVariant}
+                                                >
+                                                    + Add Variant
+                                                </Button>
+                                            </div>
                                         </div>
 
                                         <div className="table-responsive">

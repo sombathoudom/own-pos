@@ -16,6 +16,7 @@ class StorePurchaseRequest extends FormRequest
         return [
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'purchase_date' => ['required', 'date'],
+            'arrival_date' => ['nullable', 'date', 'after_or_equal:purchase_date'],
             'currency' => ['sometimes', 'string', 'size:3'],
             'exchange_rate' => ['sometimes', 'numeric', 'min:0'],
             'purchase_delivery_cost_usd' => ['sometimes', 'numeric', 'min:0'],

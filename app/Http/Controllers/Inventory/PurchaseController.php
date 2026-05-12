@@ -40,7 +40,17 @@ class PurchaseController extends Controller
     {
         $suppliers = Supplier::where('status', 'active')->orderBy('name')->get(['id', 'name']);
         $categories = Category::where('status', 'active')->orderBy('name')->get(['id', 'name']);
-        $products = Product::where('status', 'active')->with('variants:id,product_id,sku,color,size,sale_price_usd')->orderBy('name')->get(['id', 'name', 'category_id']);
+        $products = Product::where('status', 'active')
+            ->with('variants:id,product_id,sku,color,size,sale_price_usd')
+            ->orderBy('name')
+            ->get(['id', 'name', 'category_id', 'image_path'])
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'category_id' => $p->category_id,
+                'image_url' => $p->imageUrl(),
+                'variants' => $p->variants,
+            ]);
 
         return Inertia::render('inventory/purchases/create', [
             'suppliers' => $suppliers,
@@ -58,6 +68,7 @@ class PurchaseController extends Controller
             'supplier_id' => $validated['supplier_id'] ?? null,
             'purchase_no' => $validated['purchase_no'] ?? 'PO-'.now()->format('Ymd').'-'.Str::upper(Str::random(4)),
             'purchase_date' => $validated['purchase_date'],
+            'arrival_date' => $validated['arrival_date'] ?? null,
             'currency' => $validated['currency'] ?? 'USD',
             'exchange_rate' => $validated['exchange_rate'] ?? 1,
             'purchase_delivery_cost_usd' => $validated['purchase_delivery_cost_usd'] ?? 0,

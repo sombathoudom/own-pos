@@ -159,7 +159,7 @@ function ProductsIndex() {
                                                     product.variants.reduce(
                                                         (sum, v) =>
                                                             sum +
-                                                            (v.stock_balance
+                                                            (v.stockBalance
                                                                 ?.qty_on_hand ??
                                                                 0),
                                                         0,

@@ -25,16 +25,22 @@ const resources = {
     },
 };
 
-const language = localStorage.getItem('I18N_LANGUAGE');
-if (!language) {
-    localStorage.setItem('I18N_LANGUAGE', 'kh');
-}
+const getLanguage = (): string => {
+    if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem('I18N_LANGUAGE');
+        if (!stored) {
+            localStorage.setItem('I18N_LANGUAGE', 'kh');
+        }
+        return stored || 'kh';
+    }
+    return 'kh';
+};
 
 i18n.use(detector)
     .use(initReactI18next) // passes i18n down to react-i18next
     .init({
         resources,
-        lng: localStorage.getItem('I18N_LANGUAGE') || 'kh',
+        lng: getLanguage(),
         fallbackLng: 'en', // use en if detected lng is not available
 
         keySeparator: false, // we do not use keys in form messages.welcome

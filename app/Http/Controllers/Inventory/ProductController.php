@@ -108,7 +108,8 @@ class ProductController extends Controller
         DB::transaction(function () use ($request, $product): void {
             $validated = $request->validated();
             $removeImage = (bool) ($validated['remove_image'] ?? false);
-            unset($validated['image'], $validated['remove_image']);
+            $newVariants = $validated['new_variants'] ?? [];
+            unset($validated['image'], $validated['remove_image'], $validated['new_variants']);
 
             if ($removeImage && $product->image_path) {
                 Storage::disk('public')->delete($product->image_path);
@@ -124,6 +125,10 @@ class ProductController extends Controller
             }
 
             $product->update($validated);
+
+            foreach ($newVariants as $variantData) {
+                $product->variants()->create($variantData);
+            }
         });
 
         return to_route('products.index')->with('toast', ['type' => 'success', 'message' => 'Product updated.']);

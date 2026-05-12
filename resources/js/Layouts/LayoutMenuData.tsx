@@ -41,6 +41,12 @@ const navdata = () => {
                     link: '/purchases',
                 },
                 {
+                    id: 'sales',
+                    label: 'Sales',
+                    icon: 'ri-shopping-cart-2-line',
+                    link: '/sales',
+                },
+                {
                     id: 'stock',
                     label: 'Stock',
                     icon: 'ri-inbox-archive-line',
