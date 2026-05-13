@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['sale_id', 'returned_at', 'total_refund_usd', 'note', 'created_by'])]
+#[Fillable(['sale_id', 'returned_at', 'total_refund_usd', 'payment_received_date', 'note', 'created_by'])]
 class SaleReturn extends Model
 {
     use HasFactory;
@@ -17,6 +17,7 @@ class SaleReturn extends Model
     {
         return [
             'returned_at' => 'date',
+            'payment_received_date' => 'date',
             'total_refund_usd' => 'decimal:4',
         ];
     }

@@ -1,4 +1,4 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { type ReactNode, useMemo, useState } from 'react';
 import {
     Badge,
@@ -14,37 +14,67 @@ import {
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
+import { store as storeConfirmDelivery } from '@/routes/sales/confirm-delivery';
 import {
     cancel as saleCancel,
+    confirmDelivery,
+    exchange as exchangeSale,
     index as salesIndex,
     returnMethod,
     updatePayment,
 } from '@/routes/sales';
 import type { SaleShowPageProps } from '@/types';
 
+type ExchangeItemForm = {
+    sale_item_id: number;
+    qty: string;
+    new_variant_id: string;
+    new_unit_price: string;
+};
+
+type NewExchangeItemForm = {
+    product_variant_id: string;
+    qty: string;
+    unit_price_usd: string;
+};
+
 function SalesShow() {
-    const { sale, variants } = usePage<
-        SaleShowPageProps & { variants: any[] }
-    >().props;
+    const { sale, variants } = usePage<SaleShowPageProps>().props;
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelling, setCancelling] = useState(false);
     const [showReturnModal, setShowReturnModal] = useState(false);
     const [returning, setReturning] = useState(false);
+    const [showExchangeModal, setShowExchangeModal] = useState(false);
     const [returnItems, setReturnItems] = useState<Record<number, string>>({});
     const [returnNote, setReturnNote] = useState('');
-    const [showExchangeModal, setShowExchangeModal] = useState(false);
-    const [exchanging, setExchanging] = useState(false);
-    const [exchangeItems, setExchangeItems] = useState<
-        Record<
-            number,
-            { qty: string; new_variant_id: string; new_unit_price: string }
-        >
-    >({});
-    const [exchangeNote, setExchangeNote] = useState('');
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [paymentAmount, setPaymentAmount] = useState('');
     const [paymentNote, setPaymentNote] = useState('');
     const [updatingPayment, setUpdatingPayment] = useState(false);
+    const [confirmingAll, setConfirmingAll] = useState(false);
+    const exchangeForm = useForm<{
+        exchange_date: string;
+        items: ExchangeItemForm[];
+        new_items: NewExchangeItemForm[];
+        exchange_delivery_fee_usd: string;
+        exchange_delivery_cost_usd: string;
+        note: string;
+    }>({
+        exchange_date: new Date().toISOString().split('T')[0],
+        items: sale.items.map((item) => ({
+            sale_item_id: item.id,
+            qty: '',
+            new_variant_id: '',
+            new_unit_price: '',
+        })),
+        new_items: [],
+        exchange_delivery_fee_usd: '0',
+        exchange_delivery_cost_usd: '0',
+        note: '',
+    });
+    const exchangeGeneralError = (
+        exchangeForm.errors as Record<string, string | undefined>
+    ).general;
 
     const paymentBadge = (status: string) => {
         switch (status) {
@@ -59,7 +89,6 @@ function SalesShow() {
 
     const orderBadge = (status: string) => {
         switch (status) {
-            case 'confirmed':
             case 'completed':
                 return 'success';
             case 'cancelled':
@@ -76,15 +105,77 @@ function SalesShow() {
     const returnedQtyByItem = useMemo(() => {
         const map: Record<number, number> = {};
         sale.returns.forEach((ret) => {
-            ret.items.forEach((ri) => {
-                map[ri.sale_item_id] = (map[ri.sale_item_id] ?? 0) + ri.qty;
+            ret.items.forEach((item) => {
+                map[item.sale_item_id] =
+                    (map[item.sale_item_id] ?? 0) + item.qty;
             });
         });
+
         return map;
     }, [sale.returns]);
 
+    const exchangedQtyByItem = useMemo(() => {
+        const map: Record<number, number> = {};
+        sale.exchanges.forEach((exchange) => {
+            exchange.items.forEach((item) => {
+                map[item.sale_item_id] =
+                    (map[item.sale_item_id] ?? 0) + item.qty_returned;
+            });
+        });
+
+        return map;
+    }, [sale.exchanges]);
+
+    const replacementSaleItemIds = useMemo(
+        () =>
+            new Set(
+                sale.exchanges.flatMap((exchange) =>
+                    exchange.items
+                        .map((item) => item.new_sale_item_id)
+                        .filter((itemId): itemId is number => itemId !== null),
+                ),
+            ),
+        [sale.exchanges],
+    );
+
     const canReturn =
-        sale.order_status !== 'cancelled' && sale.order_status !== 'returned';
+        sale.delivery_completed_date !== null &&
+        sale.order_status !== 'cancelled' &&
+        sale.order_status !== 'returned';
+
+    const canConfirmDelivery =
+        sale.delivery_completed_date === null &&
+        sale.order_status !== 'cancelled' &&
+        sale.order_status !== 'returned';
+
+    const canExchange =
+        sale.delivery_completed_date !== null &&
+        sale.order_status !== 'cancelled' &&
+        sale.order_status !== 'returned';
+
+    const originalTotal = Number(sale.original_total_usd || sale.total_usd);
+    const finalTotal = Number(sale.total_usd);
+    const originalSubtotal = Number(
+        sale.original_subtotal_usd || sale.subtotal_usd,
+    );
+    const finalSubtotal = Number(sale.subtotal_usd);
+
+    const resetExchangeForm = () => {
+        exchangeForm.setData({
+            exchange_date: new Date().toISOString().split('T')[0],
+            items: sale.items.map((item) => ({
+                sale_item_id: item.id,
+                qty: '',
+                new_variant_id: '',
+                new_unit_price: '',
+            })),
+            new_items: [],
+            exchange_delivery_fee_usd: '0',
+            exchange_delivery_cost_usd: '0',
+            note: '',
+        });
+        exchangeForm.clearErrors();
+    };
 
     const handleReturnSubmit = () => {
         const items = Object.entries(returnItems)
@@ -113,10 +204,127 @@ function SalesShow() {
                     setReturnItems({});
                     setReturnNote('');
                 },
-                onError: () => {
-                    setShowReturnModal(false);
-                },
                 onFinish: () => setReturning(false),
+            },
+        );
+    };
+
+    const updateExchangeItem = (
+        index: number,
+        field: keyof ExchangeItemForm,
+        value: string,
+    ) => {
+        exchangeForm.setData(
+            'items',
+            exchangeForm.data.items.map((item, itemIndex) => {
+                if (itemIndex !== index) {
+                    return item;
+                }
+
+                const updatedItem = { ...item, [field]: value };
+
+                if (field === 'new_variant_id') {
+                    const selectedVariant = variants.find(
+                        (variant) => variant.id === Number(value),
+                    );
+
+                    updatedItem.new_unit_price =
+                        selectedVariant?.sale_price_usd ?? '';
+                }
+
+                return updatedItem;
+            }),
+        );
+    };
+
+    const updateNewExchangeItem = (
+        index: number,
+        field: keyof NewExchangeItemForm,
+        value: string,
+    ) => {
+        exchangeForm.setData(
+            'new_items',
+            exchangeForm.data.new_items.map((item, itemIndex) => {
+                if (itemIndex !== index) {
+                    return item;
+                }
+
+                const updatedItem = { ...item, [field]: value };
+
+                if (field === 'product_variant_id') {
+                    const selectedVariant = variants.find(
+                        (variant) => variant.id === Number(value),
+                    );
+
+                    updatedItem.unit_price_usd =
+                        selectedVariant?.sale_price_usd ?? '';
+                }
+
+                return updatedItem;
+            }),
+        );
+    };
+
+    const handleExchangeSubmit = () => {
+        const items = exchangeForm.data.items
+            .filter((item) => Number(item.qty) > 0)
+            .map((item) => ({
+                sale_item_id: item.sale_item_id,
+                qty: Number(item.qty),
+                new_variant_id: Number(item.new_variant_id),
+                new_unit_price: item.new_unit_price,
+            }));
+
+        const newItems = exchangeForm.data.new_items
+            .filter(
+                (item) =>
+                    Number(item.qty) > 0 && Number(item.product_variant_id) > 0,
+            )
+            .map((item) => ({
+                product_variant_id: Number(item.product_variant_id),
+                qty: Number(item.qty),
+                unit_price_usd: item.unit_price_usd,
+            }));
+
+        exchangeForm.transform(() => ({
+            exchange_date: exchangeForm.data.exchange_date,
+            items,
+            new_items: newItems,
+            exchange_delivery_fee_usd:
+                exchangeForm.data.exchange_delivery_fee_usd,
+            exchange_delivery_cost_usd:
+                exchangeForm.data.exchange_delivery_cost_usd,
+            note: exchangeForm.data.note || undefined,
+        }));
+
+        exchangeForm.post(exchangeSale.url(sale.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowExchangeModal(false);
+                resetExchangeForm();
+            },
+        });
+    };
+
+    const handleDeliveredAll = () => {
+        setConfirmingAll(true);
+
+        router.post(
+            storeConfirmDelivery.url(sale.id),
+            {
+                confirmation_date: new Date().toISOString().split('T')[0],
+                status: 'delivered',
+                items: sale.items.map((item) => ({
+                    sale_item_id: item.id,
+                    accepted_qty: item.qty,
+                    changed_qty: 0,
+                })),
+                added_items: [],
+                final_delivery_fee_usd: sale.customer_delivery_fee_usd ?? '0',
+                actual_delivery_cost_usd: sale.actual_delivery_cost_usd ?? '0',
+            },
+            {
+                onFinish: () => setConfirmingAll(false),
             },
         );
     };
@@ -203,115 +411,443 @@ function SalesShow() {
                                         </Col>
                                         <Col md={6}>
                                             <div className="small text-muted">
+                                                Delivery Completed
+                                            </div>
+                                            <div>
+                                                {sale.delivery_completed_date ||
+                                                    '-'}
+                                            </div>
+                                        </Col>
+                                    </Row>
+
+                                    <Row className="mb-3">
+                                        <Col md={6}>
+                                            <div className="small text-muted">
                                                 Note
                                             </div>
                                             <div>{sale.note || '-'}</div>
                                         </Col>
+                                        <Col md={6}>
+                                            <div className="small text-muted">
+                                                Payment Received Date
+                                            </div>
+                                            <div>
+                                                {sale.payment_received_date ||
+                                                    '-'}
+                                            </div>
+                                        </Col>
                                     </Row>
 
-                                    <h5 className="mb-3">Items</h5>
+                                    <h5 className="mb-3">
+                                        Items{' '}
+                                        <Badge bg="light" text="dark">
+                                            {sale.items.length}
+                                        </Badge>
+                                    </h5>
+
                                     <Table responsive className="mb-0">
                                         <thead>
                                             <tr>
                                                 <th>Product</th>
-                                                <th>Sold Qty</th>
-                                                <th>Returned</th>
-                                                <th>Unit Price</th>
-                                                <th>Discount</th>
-                                                <th>Total</th>
-                                                <th>COGS</th>
-                                                <th>Profit</th>
+                                                <th className="text-center">
+                                                    Original Qty
+                                                </th>
+                                                <th className="text-center">
+                                                    Accepted
+                                                </th>
+                                                <th className="text-center">
+                                                    Rejected
+                                                </th>
+                                                <th className="text-center">
+                                                    Returned
+                                                </th>
+                                                <th className="text-end">
+                                                    Price
+                                                </th>
+                                                <th className="text-end">
+                                                    Final Total
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {sale.items.map((item) => {
-                                                const returned =
-                                                    returnedQtyByItem[
-                                                        item.id
-                                                    ] ?? 0;
-                                                return (
-                                                    <tr key={item.id}>
-                                                        <td>
-                                                            <div className="fw-medium">
-                                                                {item
-                                                                    .product_variant
-                                                                    ?.product_name ||
-                                                                    item
-                                                                        .product_variant
-                                                                        ?.sku}
+                                            {sale.items.map((item) => (
+                                                <tr key={item.id}>
+                                                    <td>
+                                                        {(() => {
+                                                            const exchangedQty =
+                                                                exchangedQtyByItem[
+                                                                    item.id
+                                                                ] ?? 0;
+
+                                                            return (
+                                                                <>
+                                                                    <div className="fw-medium">
+                                                                        {item
+                                                                            .product_variant
+                                                                            ?.product_name ||
+                                                                            item
+                                                                                .product_variant
+                                                                                ?.sku}
+                                                                    </div>
+                                                                    <div className="small text-muted">
+                                                                        {
+                                                                            item
+                                                                                .product_variant
+                                                                                ?.color
+                                                                        }{' '}
+                                                                        /{' '}
+                                                                        {
+                                                                            item
+                                                                                .product_variant
+                                                                                ?.size
+                                                                        }
+                                                                    </div>
+                                                                    <div className="small text-capitalize text-muted">
+                                                                        Status:{' '}
+                                                                        {
+                                                                            item.status
+                                                                        }
+                                                                    </div>
+                                                                    {replacementSaleItemIds.has(
+                                                                        item.id,
+                                                                    ) && (
+                                                                        <div className="mt-1">
+                                                                            <span className="badge bg-soft-info text-info">
+                                                                                Replacement
+                                                                                item
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                    {!replacementSaleItemIds.has(
+                                                                        item.id,
+                                                                    ) &&
+                                                                        exchangedQty >
+                                                                            0 && (
+                                                                            <div className="mt-1">
+                                                                                <span className="badge bg-soft-primary text-primary">
+                                                                                    Original
+                                                                                    changed
+                                                                                    item
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+                                                                    {exchangedQty >
+                                                                        0 && (
+                                                                        <div className="small text-primary">
+                                                                            Exchanged
+                                                                            out:{' '}
+                                                                            {
+                                                                                exchangedQty
+                                                                            }{' '}
+                                                                            {exchangedQty ===
+                                                                            1
+                                                                                ? 'piece'
+                                                                                : 'pieces'}
+                                                                        </div>
+                                                                    )}
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </td>
+                                                    <td className="text-center">
+                                                        {item.qty}
+                                                    </td>
+                                                    <td className="text-center">
+                                                        {item.final_qty}
+                                                        {(exchangedQtyByItem[
+                                                            item.id
+                                                        ] ?? 0) > 0 && (
+                                                            <div className="small text-primary">
+                                                                Current kept qty
                                                             </div>
-                                                            <div className="small text-muted">
-                                                                {
-                                                                    item
-                                                                        .product_variant
-                                                                        ?.color
-                                                                }{' '}
-                                                                /{' '}
-                                                                {
-                                                                    item
-                                                                        .product_variant
-                                                                        ?.size
-                                                                }
-                                                            </div>
-                                                        </td>
-                                                        <td>{item.qty}</td>
-                                                        <td>
-                                                            {returned > 0 ? (
-                                                                <Badge bg="info">
-                                                                    {returned}
-                                                                </Badge>
-                                                            ) : (
-                                                                '-'
-                                                            )}
-                                                        </td>
-                                                        <td>
-                                                            $
-                                                            {Number(
-                                                                item.unit_price_usd,
-                                                            ).toFixed(2)}
-                                                        </td>
-                                                        <td>
-                                                            $
-                                                            {Number(
-                                                                item.discount_usd,
-                                                            ).toFixed(2)}
-                                                        </td>
-                                                        <td className="fw-semibold">
-                                                            $
-                                                            {Number(
-                                                                item.total_usd,
-                                                            ).toFixed(2)}
-                                                        </td>
-                                                        <td>
-                                                            $
-                                                            {Number(
-                                                                item.cogs_usd,
-                                                            ).toFixed(2)}
-                                                        </td>
-                                                        <td
-                                                            className={
-                                                                Number(
-                                                                    item.profit_usd,
-                                                                ) >= 0
-                                                                    ? 'text-success'
-                                                                    : 'text-danger'
-                                                            }
-                                                        >
-                                                            $
-                                                            {Number(
-                                                                item.profit_usd,
-                                                            ).toFixed(2)}
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
+                                                        )}
+                                                    </td>
+                                                    <td className="text-center">
+                                                        {item.rejected_qty}
+                                                    </td>
+                                                    <td className="text-center">
+                                                        {returnedQtyByItem[
+                                                            item.id
+                                                        ] ?? 0}
+                                                    </td>
+                                                    <td className="text-end">
+                                                        $
+                                                        {Number(
+                                                            item.unit_price_usd,
+                                                        ).toFixed(2)}
+                                                    </td>
+                                                    <td className="fw-semibold text-end">
+                                                        $
+                                                        {Number(
+                                                            item.total_usd,
+                                                        ).toFixed(2)}
+                                                    </td>
+                                                </tr>
+                                            ))}
                                         </tbody>
                                     </Table>
                                 </Card.Body>
                             </Card>
 
+                            {sale.delivery_confirmations.length > 0 && (
+                                <Card className="border-info mb-3">
+                                    <Card.Body>
+                                        <h5 className="mb-3">
+                                            Delivery Confirmations
+                                        </h5>
+                                        {sale.delivery_confirmations.map(
+                                            (confirmation) => (
+                                                <div
+                                                    key={confirmation.id}
+                                                    className="border-bottom mb-3 pb-3"
+                                                >
+                                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                                        <div>
+                                                            <div className="fw-semibold text-capitalize">
+                                                                {confirmation.status.replaceAll(
+                                                                    '_',
+                                                                    ' ',
+                                                                )}
+                                                            </div>
+                                                            <div className="small text-muted">
+                                                                {
+                                                                    confirmation.confirmation_date
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                        <div className="small text-end">
+                                                            <div>
+                                                                Original total:
+                                                                $
+                                                                {Number(
+                                                                    confirmation.original_product_total_usd,
+                                                                ).toFixed(2)}
+                                                            </div>
+                                                            <div>
+                                                                Final total: $
+                                                                {Number(
+                                                                    confirmation.final_total_usd,
+                                                                ).toFixed(2)}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <Table
+                                                        size="sm"
+                                                        responsive
+                                                        className="mb-0"
+                                                    >
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Action</th>
+                                                                <th>
+                                                                    Original
+                                                                </th>
+                                                                <th>Final</th>
+                                                                <th>Qty</th>
+                                                                <th className="text-end">
+                                                                    Total
+                                                                </th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {confirmation.items.map(
+                                                                (item) => (
+                                                                    <tr
+                                                                        key={
+                                                                            item.id
+                                                                        }
+                                                                    >
+                                                                        <td className="text-capitalize">
+                                                                            {item.action_type.replaceAll(
+                                                                                '_',
+                                                                                ' ',
+                                                                            )}
+                                                                        </td>
+                                                                        <td>
+                                                                            {item
+                                                                                .original_variant
+                                                                                .product_name ||
+                                                                                item
+                                                                                    .original_variant
+                                                                                    .sku ||
+                                                                                '-'}
+                                                                        </td>
+                                                                        <td>
+                                                                            {item
+                                                                                .final_variant
+                                                                                .product_name ||
+                                                                                item
+                                                                                    .final_variant
+                                                                                    .sku ||
+                                                                                '-'}
+                                                                        </td>
+                                                                        <td>
+                                                                            {item.accepted_qty >
+                                                                            0
+                                                                                ? item.accepted_qty
+                                                                                : item.added_qty}
+                                                                            {item.rejected_qty >
+                                                                                0 &&
+                                                                                ` / rejected ${item.rejected_qty}`}
+                                                                        </td>
+                                                                        <td className="text-end">
+                                                                            $
+                                                                            {Number(
+                                                                                item.final_total_usd,
+                                                                            ).toFixed(
+                                                                                2,
+                                                                            )}
+                                                                        </td>
+                                                                    </tr>
+                                                                ),
+                                                            )}
+                                                        </tbody>
+                                                    </Table>
+
+                                                    {confirmation.note && (
+                                                        <div className="small mt-2 text-muted">
+                                                            {confirmation.note}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ),
+                                        )}
+                                    </Card.Body>
+                                </Card>
+                            )}
+
+                            {sale.exchanges.length > 0 && (
+                                <Card className="mb-3 border-primary">
+                                    <Card.Body>
+                                        <h5 className="mb-3">Exchanges</h5>
+                                        {sale.exchanges.map((exchange) => (
+                                            <div
+                                                key={exchange.id}
+                                                className="border-bottom mb-3 pb-3"
+                                            >
+                                                <div className="d-flex justify-content-between align-items-start mb-2">
+                                                    <div>
+                                                        <div className="fw-semibold">
+                                                            Exchange #
+                                                            {exchange.id}
+                                                        </div>
+                                                        <div className="small text-muted">
+                                                            Exchange date:{' '}
+                                                            {exchange.exchange_date ??
+                                                                exchange.created_at}
+                                                        </div>
+                                                        <div className="small text-muted">
+                                                            Extra money
+                                                            received:{' '}
+                                                            {exchange.payment_received_date ??
+                                                                '-'}
+                                                        </div>
+                                                    </div>
+                                                    <div className="small text-end">
+                                                        <div>
+                                                            Additional amount: $
+                                                            {Number(
+                                                                exchange.total_additional_amount_usd,
+                                                            ).toFixed(2)}
+                                                        </div>
+                                                        <div>
+                                                            Additional profit: $
+                                                            {Number(
+                                                                exchange.additional_profit_usd,
+                                                            ).toFixed(2)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <Table
+                                                    size="sm"
+                                                    responsive
+                                                    className="mb-0"
+                                                >
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Original</th>
+                                                            <th>New</th>
+                                                            <th>Qty</th>
+                                                            <th className="text-end">
+                                                                New Price
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {exchange.items.map(
+                                                            (item) => (
+                                                                <tr
+                                                                    key={
+                                                                        item.id
+                                                                    }
+                                                                >
+                                                                    <td>
+                                                                        {item
+                                                                            .original_variant
+                                                                            .product_name ||
+                                                                            item
+                                                                                .original_variant
+                                                                                .sku ||
+                                                                            '-'}
+                                                                    </td>
+                                                                    <td>
+                                                                        {item
+                                                                            .new_variant
+                                                                            .product_name ||
+                                                                            item
+                                                                                .new_variant
+                                                                                .sku ||
+                                                                            'Extra item'}
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            item.qty_returned
+                                                                        }
+                                                                    </td>
+                                                                    <td className="text-end">
+                                                                        $
+                                                                        {Number(
+                                                                            item.new_unit_price_usd,
+                                                                        ).toFixed(
+                                                                            2,
+                                                                        )}
+                                                                    </td>
+                                                                </tr>
+                                                            ),
+                                                        )}
+                                                    </tbody>
+                                                </Table>
+
+                                                <div className="small mt-2 text-muted">
+                                                    Price diff: $
+                                                    {Number(
+                                                        exchange.subtotal_adjustment_usd,
+                                                    ).toFixed(2)}{' '}
+                                                    | Extra items: $
+                                                    {Number(
+                                                        exchange.new_items_subtotal_usd,
+                                                    ).toFixed(2)}{' '}
+                                                    | Delivery fee: $
+                                                    {Number(
+                                                        exchange.exchange_delivery_fee_usd,
+                                                    ).toFixed(2)}
+                                                </div>
+
+                                                {exchange.note && (
+                                                    <div className="small mt-1 text-muted">
+                                                        {exchange.note}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </Card.Body>
+                                </Card>
+                            )}
+
                             {sale.returns.length > 0 && (
-                                <Card className="mb-3">
+                                <Card className="border-warning mb-3">
                                     <Card.Body>
                                         <h5 className="mb-3">Returns</h5>
                                         {sale.returns.map((ret) => (
@@ -319,14 +855,22 @@ function SalesShow() {
                                                 key={ret.id}
                                                 className="border-bottom mb-3 pb-2"
                                             >
-                                                <div className="d-flex justify-content-between small mb-1 text-muted">
-                                                    <span>
-                                                        Return #{ret.id}{' '}
-                                                        &middot;{' '}
+                                                <div className="d-flex justify-content-between small mb-1">
+                                                    <span className="text-muted">
+                                                        Return #{ret.id} ·{' '}
                                                         {ret.returned_at}
+                                                        {ret.payment_received_date && (
+                                                            <>
+                                                                {' '}
+                                                                · Refund date:{' '}
+                                                                {
+                                                                    ret.payment_received_date
+                                                                }
+                                                            </>
+                                                        )}
                                                     </span>
-                                                    <span className="fw-semibold">
-                                                        $
+                                                    <span className="fw-semibold text-danger">
+                                                        -$
                                                         {Number(
                                                             ret.total_refund_usd,
                                                         ).toFixed(2)}
@@ -348,10 +892,11 @@ function SalesShow() {
                                                         {ret.items.map((ri) => {
                                                             const saleItem =
                                                                 sale.items.find(
-                                                                    (i) =>
-                                                                        i.id ===
+                                                                    (item) =>
+                                                                        item.id ===
                                                                         ri.sale_item_id,
                                                                 );
+
                                                             return (
                                                                 <tr key={ri.id}>
                                                                     <td>
@@ -391,77 +936,65 @@ function SalesShow() {
                             )}
 
                             {sale.items.some(
-                                (i) => i.cost_layers.length > 0,
+                                (item) => item.cost_layers.length > 0,
                             ) && (
-                                <Card>
+                                <Card className="border-light">
                                     <Card.Body>
-                                        <h5 className="mb-3">
-                                            FIFO Cost Layers
-                                        </h5>
+                                        <div className="d-flex align-items-center justify-content-between mb-3">
+                                            <h5 className="mb-0">
+                                                Stock Cost Breakdown
+                                            </h5>
+                                            <span className="badge bg-light text-muted">
+                                                FIFO
+                                            </span>
+                                        </div>
+
                                         {sale.items.map((item) =>
                                             item.cost_layers.length > 0 ? (
                                                 <div
                                                     key={item.id}
-                                                    className="mb-3"
+                                                    className="bg-light mb-3 rounded p-2"
                                                 >
-                                                    <div className="fw-medium small">
+                                                    <div className="fw-medium mb-2">
                                                         {item.product_variant
                                                             ?.product_name ||
                                                             item.product_variant
                                                                 ?.sku}
+                                                        <span className="ms-1 text-muted">
+                                                            (Final Qty:{' '}
+                                                            {item.final_qty})
+                                                        </span>
                                                     </div>
-                                                    <Table
-                                                        size="sm"
-                                                        responsive
-                                                        className="mb-0"
-                                                    >
-                                                        <thead>
-                                                            <tr>
-                                                                <th>
-                                                                    Layer Qty
-                                                                </th>
-                                                                <th>
-                                                                    Unit Cost
-                                                                </th>
-                                                                <th>
-                                                                    Total Cost
-                                                                </th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {item.cost_layers.map(
-                                                                (cl, idx) => (
-                                                                    <tr
-                                                                        key={
-                                                                            idx
-                                                                        }
-                                                                    >
-                                                                        <td>
-                                                                            {
-                                                                                cl.qty
-                                                                            }
-                                                                        </td>
-                                                                        <td>
-                                                                            $
-                                                                            {Number(
-                                                                                cl.unit_cost_usd,
-                                                                            ).toFixed(
-                                                                                2,
-                                                                            )}
-                                                                        </td>
-                                                                        <td>
-                                                                            $
-                                                                            {Number(
-                                                                                cl.total_cost_usd,
-                                                                            ).toFixed(
-                                                                                2,
-                                                                            )}
-                                                                        </td>
-                                                                    </tr>
-                                                                ),
-                                                            )}
-                                                        </tbody>
-                                                    </Table>
+
+                                                    {item.cost_layers.map(
+                                                        (layer, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className="d-flex justify-content-between small mb-1"
+                                                            >
+                                                                <span className="text-muted">
+                                                                    Batch{' '}
+                                                                    {index + 1}:{' '}
+                                                                    {layer.qty}{' '}
+                                                                    pcs
+                                                                </span>
+                                                                <span>
+                                                                    $
+                                                                    {Number(
+                                                                        layer.unit_cost_usd,
+                                                                    ).toFixed(
+                                                                        2,
+                                                                    )}{' '}
+                                                                    each ={' $'}
+                                                                    {Number(
+                                                                        layer.total_cost_usd,
+                                                                    ).toFixed(
+                                                                        2,
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        ),
+                                                    )}
                                                 </div>
                                             ) : null,
                                         )}
@@ -473,33 +1006,64 @@ function SalesShow() {
                         <Col xl={4}>
                             <Card>
                                 <Card.Body>
-                                    <h4 className="card-title mb-3">Summary</h4>
+                                    <h4 className="card-title mb-3">
+                                        Payment Summary
+                                    </h4>
+
                                     <div className="vstack gap-2">
+                                        {originalSubtotal !== finalSubtotal && (
+                                            <div className="d-flex justify-content-between small text-muted">
+                                                <span>Original Subtotal</span>
+                                                <span>
+                                                    $
+                                                    {originalSubtotal.toFixed(
+                                                        2,
+                                                    )}
+                                                </span>
+                                            </div>
+                                        )}
                                         <div className="d-flex justify-content-between">
                                             <span className="text-muted">
-                                                Subtotal
+                                                Final Items Subtotal
                                             </span>
                                             <span className="fw-semibold">
-                                                $
-                                                {Number(
-                                                    sale.subtotal_usd,
-                                                ).toFixed(2)}
+                                                ${finalSubtotal.toFixed(2)}
                                             </span>
                                         </div>
+                                        {Number(sale.discount_usd) > 0 && (
+                                            <div className="d-flex justify-content-between">
+                                                <span className="text-muted">
+                                                    Discount
+                                                </span>
+                                                <span className="fw-semibold text-success">
+                                                    -$
+                                                    {Number(
+                                                        sale.discount_usd,
+                                                    ).toFixed(2)}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {Number(
+                                            sale.original_delivery_fee_usd,
+                                        ) !==
+                                            Number(
+                                                sale.customer_delivery_fee_usd,
+                                            ) && (
+                                            <div className="d-flex justify-content-between small text-muted">
+                                                <span>
+                                                    Original Delivery Fee
+                                                </span>
+                                                <span>
+                                                    $
+                                                    {Number(
+                                                        sale.original_delivery_fee_usd,
+                                                    ).toFixed(2)}
+                                                </span>
+                                            </div>
+                                        )}
                                         <div className="d-flex justify-content-between">
                                             <span className="text-muted">
-                                                Discount
-                                            </span>
-                                            <span className="fw-semibold">
-                                                $
-                                                {Number(
-                                                    sale.discount_usd,
-                                                ).toFixed(2)}
-                                            </span>
-                                        </div>
-                                        <div className="d-flex justify-content-between">
-                                            <span className="text-muted">
-                                                Delivery Fee
+                                                Final Delivery Fee
                                             </span>
                                             <span className="fw-semibold">
                                                 $
@@ -509,30 +1073,34 @@ function SalesShow() {
                                             </span>
                                         </div>
                                         <hr className="my-1" />
-                                        <div className="d-flex justify-content-between">
-                                            <span className="fw-semibold">
-                                                Total
-                                            </span>
+                                        {originalTotal !== finalTotal && (
+                                            <div className="d-flex justify-content-between small text-muted">
+                                                <span>Original Total</span>
+                                                <span>
+                                                    ${originalTotal.toFixed(2)}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className="d-flex justify-content-between fs-5">
                                             <span className="fw-bold">
-                                                $
-                                                {Number(sale.total_usd).toFixed(
-                                                    2,
-                                                )}
+                                                Final Total
+                                            </span>
+                                            <span className="fw-bold text-primary">
+                                                ${finalTotal.toFixed(2)}
                                             </span>
                                         </div>
                                         <div className="d-flex justify-content-between">
                                             <span className="text-muted">
                                                 Paid
                                             </span>
-                                            <span className="fw-semibold">
+                                            <span className="fw-semibold text-success">
                                                 $
                                                 {Number(sale.paid_usd).toFixed(
                                                     2,
                                                 )}
                                             </span>
                                         </div>
-                                        {Number(sale.total_usd) >
-                                            Number(sale.paid_usd) && (
+                                        {finalTotal > Number(sale.paid_usd) && (
                                             <div className="d-flex justify-content-between">
                                                 <span className="text-danger">
                                                     Due
@@ -540,7 +1108,7 @@ function SalesShow() {
                                                 <span className="fw-bold text-danger">
                                                     $
                                                     {(
-                                                        Number(sale.total_usd) -
+                                                        finalTotal -
                                                         Number(sale.paid_usd)
                                                     ).toFixed(2)}
                                                 </span>
@@ -548,79 +1116,108 @@ function SalesShow() {
                                         )}
                                         <hr className="my-1" />
                                         <div className="d-flex justify-content-between">
-                                            <span className="fw-semibold">
-                                                Total COGS
+                                            <span className="text-muted">
+                                                Product Cost
                                             </span>
                                             <span>
                                                 $
                                                 {sale.items
                                                     .reduce(
-                                                        (sum, i) =>
+                                                        (sum, item) =>
                                                             sum +
-                                                            Number(i.cogs_usd),
+                                                            Number(
+                                                                item.cogs_usd,
+                                                            ),
                                                         0,
                                                     )
                                                     .toFixed(2)}
                                             </span>
                                         </div>
                                         <div className="d-flex justify-content-between">
-                                            <span className="fw-semibold">
-                                                Total Profit
+                                            <span className="text-muted">
+                                                Delivery Cost
                                             </span>
-                                            <span
-                                                className={
-                                                    sale.items.reduce(
-                                                        (sum, i) =>
-                                                            sum +
-                                                            Number(
-                                                                i.profit_usd,
-                                                            ),
-                                                        0,
-                                                    ) >= 0
-                                                        ? 'text-success fw-bold'
-                                                        : 'text-danger fw-bold'
-                                                }
-                                            >
+                                            <span>
                                                 $
-                                                {sale.items
-                                                    .reduce(
-                                                        (sum, i) =>
+                                                {Number(
+                                                    sale.actual_delivery_cost_usd,
+                                                ).toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <div className="d-flex justify-content-between">
+                                            <span className="fw-semibold">
+                                                Net Profit
+                                            </span>
+                                            <span className="fw-bold text-success">
+                                                $
+                                                {(
+                                                    sale.items.reduce(
+                                                        (sum, item) =>
                                                             sum +
                                                             Number(
-                                                                i.profit_usd,
+                                                                item.profit_usd,
                                                             ),
                                                         0,
+                                                    ) +
+                                                    Number(
+                                                        sale.delivery_profit_usd,
                                                     )
-                                                    .toFixed(2)}
+                                                ).toFixed(2)}
                                             </span>
                                         </div>
                                     </div>
 
                                     <hr />
 
-                                    {canReturn && (
+                                    {canConfirmDelivery && (
                                         <>
                                             <Button
-                                                variant="outline-warning"
+                                                variant="success"
                                                 className="mb-2 w-100"
-                                                onClick={() =>
-                                                    setShowReturnModal(true)
-                                                }
+                                                disabled={confirmingAll}
+                                                onClick={handleDeliveredAll}
                                             >
-                                                <i className="ri-arrow-go-back-line me-1" />
-                                                Return Items
+                                                <i className="ri-check-double-line me-1" />{' '}
+                                                {confirmingAll
+                                                    ? 'Confirming...'
+                                                    : 'Delivered All'}
                                             </Button>
-                                            <Button
-                                                variant="outline-info"
-                                                className="mb-2 w-100"
-                                                onClick={() =>
-                                                    setShowExchangeModal(true)
-                                                }
+                                            <Link
+                                                href={confirmDelivery.url(
+                                                    sale.id,
+                                                )}
+                                                className="btn btn-outline-success mb-2 w-100"
                                             >
-                                                <i className="ri-exchange-line me-1" />
-                                                Exchange Items
-                                            </Button>
+                                                <i className="ri-edit-circle-line me-1" />{' '}
+                                                Delivery Changes
+                                            </Link>
                                         </>
+                                    )}
+
+                                    {canReturn && (
+                                        <Button
+                                            variant="outline-warning"
+                                            className="mb-2 w-100"
+                                            onClick={() =>
+                                                setShowReturnModal(true)
+                                            }
+                                        >
+                                            <i className="ri-arrow-go-back-line me-1" />{' '}
+                                            Return Items
+                                        </Button>
+                                    )}
+
+                                    {canExchange && (
+                                        <Button
+                                            variant="outline-primary"
+                                            className="mb-2 w-100"
+                                            onClick={() =>
+                                                setShowExchangeModal(true)
+                                            }
+                                        >
+                                            <i className="ri-arrow-left-right-line me-1" />{' '}
+                                            Exchange
+                                        </Button>
                                     )}
 
                                     {sale.order_status !== 'cancelled' &&
@@ -632,7 +1229,7 @@ function SalesShow() {
                                                     setShowCancelModal(true)
                                                 }
                                             >
-                                                <i className="ri-close-circle-line me-1" />
+                                                <i className="ri-close-circle-line me-1" />{' '}
                                                 Cancel Sale
                                             </Button>
                                         )}
@@ -678,8 +1275,8 @@ function SalesShow() {
                         <strong>{sale.invoice_no}</strong>?
                     </p>
                     <p className="small mb-0 text-muted">
-                        This will restore all stock quantities back to their
-                        original layers and record reversal movements.
+                        This restores stock quantities back to their original
+                        layers.
                     </p>
                 </Modal.Body>
                 <Modal.Footer>
@@ -699,7 +1296,6 @@ function SalesShow() {
                                 {},
                                 {
                                     onSuccess: () => setShowCancelModal(false),
-                                    onError: () => setShowCancelModal(false),
                                     onFinish: () => setCancelling(false),
                                 },
                             );
@@ -724,7 +1320,7 @@ function SalesShow() {
                         <thead>
                             <tr>
                                 <th>Product</th>
-                                <th>Sold</th>
+                                <th>Final Qty</th>
                                 <th>Already Returned</th>
                                 <th>Return Qty</th>
                             </tr>
@@ -733,7 +1329,8 @@ function SalesShow() {
                             {sale.items.map((item) => {
                                 const returned =
                                     returnedQtyByItem[item.id] ?? 0;
-                                const maxReturn = item.qty - returned;
+                                const maxReturn = item.final_qty - returned;
+
                                 return (
                                     <tr key={item.id}>
                                         <td>
@@ -747,7 +1344,7 @@ function SalesShow() {
                                                 {item.product_variant?.size}
                                             </div>
                                         </td>
-                                        <td>{item.qty}</td>
+                                        <td>{item.final_qty}</td>
                                         <td>{returned}</td>
                                         <td style={{ width: 120 }}>
                                             <Form.Control
@@ -757,16 +1354,19 @@ function SalesShow() {
                                                 value={
                                                     returnItems[item.id] ?? ''
                                                 }
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
+                                                onChange={(event) => {
+                                                    const value =
+                                                        event.target.value;
                                                     if (
-                                                        val === '' ||
-                                                        Number(val) <= maxReturn
+                                                        value === '' ||
+                                                        Number(value) <=
+                                                            maxReturn
                                                     ) {
                                                         setReturnItems(
-                                                            (prev) => ({
-                                                                ...prev,
-                                                                [item.id]: val,
+                                                            (previous) => ({
+                                                                ...previous,
+                                                                [item.id]:
+                                                                    value,
                                                             }),
                                                         );
                                                     }
@@ -780,13 +1380,16 @@ function SalesShow() {
                             })}
                         </tbody>
                     </Table>
+
                     <Form.Group>
                         <Form.Label>Note</Form.Label>
                         <Form.Control
                             as="textarea"
                             rows={2}
                             value={returnNote}
-                            onChange={(e) => setReturnNote(e.target.value)}
+                            onChange={(event) =>
+                                setReturnNote(event.target.value)
+                            }
                             placeholder="Optional reason for return..."
                         />
                     </Form.Group>
@@ -810,35 +1413,107 @@ function SalesShow() {
 
             <Modal
                 show={showExchangeModal}
-                onHide={() => setShowExchangeModal(false)}
+                onHide={() => {
+                    setShowExchangeModal(false);
+                    resetExchangeForm();
+                }}
                 centered
-                size="lg"
+                size="xl"
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>Exchange Items</Modal.Title>
+                    <Modal.Title>Exchange After Delivery</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Table responsive className="mb-3">
+                    {exchangeGeneralError && (
+                        <div className="alert alert-danger">
+                            {exchangeGeneralError}
+                        </div>
+                    )}
+
+                    <Row className="mb-3">
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Label>Exchange Date</Form.Label>
+                                <Form.Control
+                                    type="date"
+                                    value={exchangeForm.data.exchange_date}
+                                    onChange={(event) =>
+                                        exchangeForm.setData(
+                                            'exchange_date',
+                                            event.target.value,
+                                        )
+                                    }
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Label>
+                                    Extra Delivery Fee From Customer
+                                </Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={
+                                        exchangeForm.data
+                                            .exchange_delivery_fee_usd
+                                    }
+                                    onChange={(event) =>
+                                        exchangeForm.setData(
+                                            'exchange_delivery_fee_usd',
+                                            event.target.value,
+                                        )
+                                    }
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Label>Actual Delivery Cost</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={
+                                        exchangeForm.data
+                                            .exchange_delivery_cost_usd
+                                    }
+                                    onChange={(event) =>
+                                        exchangeForm.setData(
+                                            'exchange_delivery_cost_usd',
+                                            event.target.value,
+                                        )
+                                    }
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+
+                    <h6 className="mb-2">Change Size / Style</h6>
+                    <Table responsive className="mb-3 align-middle">
                         <thead>
                             <tr>
-                                <th>Product</th>
-                                <th>Sold</th>
-                                <th>Already Returned</th>
-                                <th>Exchange Qty</th>
-                                <th>New Variant</th>
+                                <th>Exchangeable Item</th>
+                                <th className="text-center">Available</th>
+                                <th className="text-center">Qty</th>
+                                <th>Replacement Variant</th>
                                 <th>New Price</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {sale.items.map((item) => {
-                                const returned =
+                            {sale.items.map((item, index) => {
+                                const returnedQty =
                                     returnedQtyByItem[item.id] ?? 0;
-                                const maxExchange = item.qty - returned;
-                                const exchangeData = exchangeItems[item.id] ?? {
-                                    qty: '',
-                                    new_variant_id: '',
-                                    new_unit_price: '',
-                                };
+                                const exchangedQty =
+                                    exchangedQtyByItem[item.id] ?? 0;
+                                const exchangeableQty =
+                                    (item.final_qty > 0
+                                        ? item.final_qty
+                                        : item.qty) -
+                                    returnedQty -
+                                    exchangedQty;
+
                                 return (
                                     <tr key={item.id}>
                                         <td>
@@ -852,97 +1527,81 @@ function SalesShow() {
                                                 {item.product_variant?.size}
                                             </div>
                                         </td>
-                                        <td>{item.qty}</td>
-                                        <td>{returned}</td>
-                                        <td style={{ width: 80 }}>
+                                        <td className="text-center">
+                                            {Math.max(0, exchangeableQty)}
+                                        </td>
+                                        <td style={{ width: 120 }}>
                                             <Form.Control
                                                 type="number"
-                                                min={0}
-                                                max={maxExchange}
-                                                value={exchangeData.qty}
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    if (
-                                                        val === '' ||
-                                                        Number(val) <=
-                                                            maxExchange
-                                                    ) {
-                                                        setExchangeItems(
-                                                            (prev) => ({
-                                                                ...prev,
-                                                                [item.id]: {
-                                                                    ...exchangeData,
-                                                                    qty: val,
-                                                                },
-                                                            }),
-                                                        );
-                                                    }
-                                                }}
-                                                placeholder="0"
-                                                disabled={maxExchange <= 0}
-                                                size="sm"
-                                            />
-                                        </td>
-                                        <td style={{ width: 180 }}>
-                                            <Form.Select
+                                                min="0"
+                                                max={Math.max(
+                                                    0,
+                                                    exchangeableQty,
+                                                )}
                                                 value={
-                                                    exchangeData.new_variant_id
+                                                    exchangeForm.data.items[
+                                                        index
+                                                    ]?.qty ?? ''
                                                 }
-                                                onChange={(e) =>
-                                                    setExchangeItems(
-                                                        (prev) => ({
-                                                            ...prev,
-                                                            [item.id]: {
-                                                                ...exchangeData,
-                                                                new_variant_id:
-                                                                    e.target
-                                                                        .value,
-                                                            },
-                                                        }),
+                                                onChange={(event) =>
+                                                    updateExchangeItem(
+                                                        index,
+                                                        'qty',
+                                                        event.target.value,
                                                     )
                                                 }
-                                                size="sm"
-                                                disabled={maxExchange <= 0}
+                                                placeholder="0"
+                                            />
+                                        </td>
+                                        <td style={{ minWidth: 260 }}>
+                                            <Form.Select
+                                                value={
+                                                    exchangeForm.data.items[
+                                                        index
+                                                    ]?.new_variant_id ?? ''
+                                                }
+                                                onChange={(event) =>
+                                                    updateExchangeItem(
+                                                        index,
+                                                        'new_variant_id',
+                                                        event.target.value,
+                                                    )
+                                                }
                                             >
                                                 <option value="">
-                                                    Select...
+                                                    Select replacement...
                                                 </option>
-                                                {variants.map((v) => (
+                                                {variants.map((variant) => (
                                                     <option
-                                                        key={v.id}
-                                                        value={v.id}
+                                                        key={variant.id}
+                                                        value={variant.id}
                                                     >
-                                                        {v.sku} -{' '}
-                                                        {v.product.name} (
-                                                        {v.size})
+                                                        {variant.sku} -{' '}
+                                                        {variant.product.name} (
+                                                        {variant.size}) | Stock:{' '}
+                                                        {variant.stock_on_hand}
                                                     </option>
                                                 ))}
                                             </Form.Select>
                                         </td>
-                                        <td style={{ width: 100 }}>
+                                        <td style={{ width: 150 }}>
                                             <Form.Control
                                                 type="number"
+                                                min="0"
                                                 step="0.01"
-                                                min={0}
                                                 value={
-                                                    exchangeData.new_unit_price
+                                                    exchangeForm.data.items[
+                                                        index
+                                                    ]?.new_unit_price ?? ''
                                                 }
-                                                onChange={(e) =>
-                                                    setExchangeItems(
-                                                        (prev) => ({
-                                                            ...prev,
-                                                            [item.id]: {
-                                                                ...exchangeData,
-                                                                new_unit_price:
-                                                                    e.target
-                                                                        .value,
-                                                            },
-                                                        }),
+                                                onChange={(event) =>
+                                                    updateExchangeItem(
+                                                        index,
+                                                        'new_unit_price',
+                                                        event.target.value,
                                                     )
                                                 }
                                                 placeholder="0.00"
-                                                disabled={maxExchange <= 0}
-                                                size="sm"
                                             />
                                         </td>
                                     </tr>
@@ -950,71 +1609,143 @@ function SalesShow() {
                             })}
                         </tbody>
                     </Table>
+
+                    <div className="d-flex align-items-center justify-content-between mb-2">
+                        <h6 className="mb-0">Extra Items</h6>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="outline-primary"
+                            onClick={() =>
+                                exchangeForm.setData('new_items', [
+                                    ...exchangeForm.data.new_items,
+                                    {
+                                        product_variant_id: '',
+                                        qty: '1',
+                                        unit_price_usd: '',
+                                    },
+                                ])
+                            }
+                        >
+                            Add Item
+                        </Button>
+                    </div>
+
+                    {exchangeForm.data.new_items.length > 0 ? (
+                        exchangeForm.data.new_items.map((item, index) => (
+                            <div
+                                key={index}
+                                className="d-flex align-items-end mb-2 gap-2"
+                            >
+                                <Form.Select
+                                    value={item.product_variant_id}
+                                    onChange={(event) =>
+                                        updateNewExchangeItem(
+                                            index,
+                                            'product_variant_id',
+                                            event.target.value,
+                                        )
+                                    }
+                                >
+                                    <option value="">Select product...</option>
+                                    {variants.map((variant) => (
+                                        <option
+                                            key={variant.id}
+                                            value={variant.id}
+                                        >
+                                            {variant.sku} -{' '}
+                                            {variant.product.name} (
+                                            {variant.size}) | Stock:{' '}
+                                            {variant.stock_on_hand}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                                <Form.Control
+                                    type="number"
+                                    min="1"
+                                    value={item.qty}
+                                    onChange={(event) =>
+                                        updateNewExchangeItem(
+                                            index,
+                                            'qty',
+                                            event.target.value,
+                                        )
+                                    }
+                                    style={{ width: 110 }}
+                                />
+                                <Form.Control
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={item.unit_price_usd}
+                                    onChange={(event) =>
+                                        updateNewExchangeItem(
+                                            index,
+                                            'unit_price_usd',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Price"
+                                    style={{ width: 130 }}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="light"
+                                    onClick={() =>
+                                        exchangeForm.setData(
+                                            'new_items',
+                                            exchangeForm.data.new_items.filter(
+                                                (_, itemIndex) =>
+                                                    itemIndex !== index,
+                                            ),
+                                        )
+                                    }
+                                >
+                                    Remove
+                                </Button>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="small mb-3 text-muted">
+                            No extra items added.
+                        </div>
+                    )}
+
                     <Form.Group>
                         <Form.Label>Note</Form.Label>
                         <Form.Control
                             as="textarea"
-                            rows={2}
-                            value={exchangeNote}
-                            onChange={(e) => setExchangeNote(e.target.value)}
-                            placeholder="Optional reason for exchange..."
+                            rows={3}
+                            value={exchangeForm.data.note}
+                            onChange={(event) =>
+                                exchangeForm.setData('note', event.target.value)
+                            }
+                            placeholder="Customer asked for a later size change or extra item..."
                         />
                     </Form.Group>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button
                         variant="light"
-                        onClick={() => setShowExchangeModal(false)}
+                        onClick={() => {
+                            setShowExchangeModal(false);
+                            resetExchangeForm();
+                        }}
                     >
                         Close
                     </Button>
                     <Button
-                        variant="info"
-                        disabled={exchanging}
-                        onClick={() => {
-                            const items = Object.entries(exchangeItems)
-                                .filter(
-                                    ([, data]) =>
-                                        Number(data.qty) > 0 &&
-                                        data.new_variant_id &&
-                                        data.new_unit_price,
-                                )
-                                .map(([saleItemId, data]) => ({
-                                    sale_item_id: Number(saleItemId),
-                                    qty: Number(data.qty),
-                                    new_variant_id: Number(data.new_variant_id),
-                                    new_unit_price: data.new_unit_price,
-                                }));
-
-                            if (items.length === 0) {
-                                setShowExchangeModal(false);
-                                return;
-                            }
-
-                            setExchanging(true);
-                            router.post(
-                                `/sales/${sale.id}/exchange`,
-                                { items, note: exchangeNote || undefined },
-                                {
-                                    onSuccess: () => {
-                                        setShowExchangeModal(false);
-                                        setExchangeItems({});
-                                        setExchangeNote('');
-                                    },
-                                    onError: () => {
-                                        setShowExchangeModal(false);
-                                    },
-                                    onFinish: () => setExchanging(false),
-                                },
-                            );
-                        }}
+                        variant="primary"
+                        disabled={exchangeForm.processing}
+                        onClick={handleExchangeSubmit}
                     >
-                        {exchanging ? 'Processing...' : 'Process Exchange'}
+                        {exchangeForm.processing
+                            ? 'Processing...'
+                            : 'Process Exchange'}
                     </Button>
                 </Modal.Footer>
             </Modal>
 
-            {/* Update Payment Modal */}
             <Modal
                 show={showPaymentModal}
                 onHide={() => setShowPaymentModal(false)}
@@ -1026,25 +1757,15 @@ function SalesShow() {
                 <Modal.Body>
                     <div className="mb-3">
                         <div className="d-flex justify-content-between small text-muted">
-                            <span>Total Amount</span>
+                            <span>Final Total</span>
                             <span>${Number(sale.total_usd).toFixed(2)}</span>
                         </div>
                         <div className="d-flex justify-content-between small text-muted">
                             <span>Previously Paid</span>
                             <span>${Number(sale.paid_usd).toFixed(2)}</span>
                         </div>
-                        <div className="d-flex justify-content-between fw-bold">
-                            <span>Due</span>
-                            <span className="text-danger">
-                                $
-                                {Math.max(
-                                    0,
-                                    Number(sale.total_usd) -
-                                        Number(sale.paid_usd),
-                                ).toFixed(2)}
-                            </span>
-                        </div>
                     </div>
+
                     <Form.Group className="mb-3">
                         <Form.Label>New Paid Amount</Form.Label>
                         <Form.Control
@@ -1052,21 +1773,22 @@ function SalesShow() {
                             step="0.01"
                             min="0"
                             value={paymentAmount}
-                            onChange={(e) => setPaymentAmount(e.target.value)}
+                            onChange={(event) =>
+                                setPaymentAmount(event.target.value)
+                            }
                             placeholder="Enter total paid amount"
                         />
-                        <Form.Text className="text-muted">
-                            Enter the new total paid amount (not the additional
-                            amount).
-                        </Form.Text>
                     </Form.Group>
+
                     <Form.Group>
                         <Form.Label>Note</Form.Label>
                         <Form.Control
                             as="textarea"
                             rows={2}
                             value={paymentNote}
-                            onChange={(e) => setPaymentNote(e.target.value)}
+                            onChange={(event) =>
+                                setPaymentNote(event.target.value)
+                            }
                             placeholder="Optional payment note..."
                         />
                     </Form.Group>
@@ -1094,9 +1816,6 @@ function SalesShow() {
                                         setShowPaymentModal(false);
                                         setPaymentAmount('');
                                         setPaymentNote('');
-                                    },
-                                    onError: () => {
-                                        setShowPaymentModal(false);
                                     },
                                     onFinish: () => setUpdatingPayment(false),
                                 },

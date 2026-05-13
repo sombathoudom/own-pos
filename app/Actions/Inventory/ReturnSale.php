@@ -24,6 +24,10 @@ final class ReturnSale
                 throw new \RuntimeException('Cannot return a cancelled sale.');
             }
 
+            if (! $sale->isDeliveryCompleted()) {
+                throw new \RuntimeException('Use delivery confirmation before using sale return. Returns are only allowed after delivery is completed.');
+            }
+
             $saleReturn = SaleReturn::create([
                 'sale_id' => $sale->id,
                 'returned_at' => $returnedAt,
@@ -50,15 +54,23 @@ final class ReturnSale
                     ->flatMap(fn ($r) => $r->items->where('sale_item_id', $saleItem->id))
                     ->sum('qty');
 
-                $maxReturn = $saleItem->qty - $alreadyReturned;
+                $alreadyExchanged = $sale->exchanges()
+                    ->with('items')
+                    ->get()
+                    ->flatMap(fn ($e) => $e->items->where('sale_item_id', $saleItem->id))
+                    ->sum('qty_returned');
+
+                $returnableQty = $saleItem->final_qty > 0 ? $saleItem->final_qty : $saleItem->qty;
+                $maxReturn = max(0, $returnableQty - $alreadyReturned - $alreadyExchanged);
                 if ($returnQty > $maxReturn) {
                     throw new \RuntimeException(
                         "Cannot return {$returnQty} of item #{$saleItem->id}. Max returnable: {$maxReturn}."
                     );
                 }
 
-                $refund = bcmul((string) $saleItem->unit_price_usd, (string) $returnQty, 4);
-                $cogs = bcmul((string) $saleItem->cogs_usd, bcdiv((string) $returnQty, (string) $saleItem->qty, 4), 4);
+                $refundBaseQty = max(1, $returnableQty);
+                $refund = bcmul((string) $saleItem->total_usd, bcdiv((string) $returnQty, (string) $refundBaseQty, 4), 4);
+                $cogs = bcmul((string) $saleItem->cogs_usd, bcdiv((string) $returnQty, (string) $refundBaseQty, 4), 4);
 
                 $saleReturn->items()->create([
                     'sale_item_id' => $saleItem->id,
@@ -70,11 +82,36 @@ final class ReturnSale
                 ]);
 
                 $this->restoreStock($saleItem, $returnQty, $saleReturn, $createdBy);
+                $this->refreshSaleItemAfterReturn($saleItem, $returnQty);
 
                 $totalRefund = bcadd($totalRefund, $refund, 4);
             }
 
-            $saleReturn->update(['total_refund_usd' => $totalRefund]);
+            $saleReturn->update([
+                'total_refund_usd' => $totalRefund,
+                'payment_received_date' => $returnedAt,
+            ]);
+
+            $newTotalUsd = bcsub((string) $sale->total_usd, $totalRefund, 4);
+            $newSubtotalUsd = bcsub((string) $sale->subtotal_usd, $totalRefund, 4);
+            $newPaidUsd = bcsub((string) $sale->paid_usd, $totalRefund, 4);
+
+            $paymentStatus = 'unpaid';
+            if (bccomp($newPaidUsd, '0', 4) < 0) {
+                $newPaidUsd = '0';
+            }
+            if (bccomp($newPaidUsd, $newTotalUsd, 4) >= 0) {
+                $paymentStatus = 'paid';
+            } elseif (bccomp($newPaidUsd, '0', 4) > 0) {
+                $paymentStatus = 'partial';
+            }
+
+            $sale->update([
+                'total_usd' => $newTotalUsd,
+                'subtotal_usd' => $newSubtotalUsd,
+                'paid_usd' => $newPaidUsd,
+                'payment_status' => $paymentStatus,
+            ]);
 
             $this->updateSaleStatus($sale);
 
@@ -112,7 +149,22 @@ final class ReturnSale
                 createdBy: $createdBy,
             );
 
+            $remainingLayerQty = $costLayer->qty - $restoreQty;
+
+            if ($remainingLayerQty > 0) {
+                $costLayer->update([
+                    'qty' => $remainingLayerQty,
+                    'total_cost_usd' => bcmul((string) $costLayer->unit_cost_usd, (string) $remainingLayerQty, 4),
+                ]);
+            } else {
+                $costLayer->delete();
+            }
+
             $remainingToRestore -= $restoreQty;
+        }
+
+        if ($remainingToRestore > 0) {
+            throw new \RuntimeException("Unable to restore {$returnQty} returned units for sale item #{$saleItem->id}.");
         }
 
         $this->syncStockBalance->incrementOnHand($saleItem->product_variant_id, $returnQty);
@@ -120,13 +172,35 @@ final class ReturnSale
 
     private function updateSaleStatus(Sale $sale): void
     {
-        $totalSold = $sale->items->sum('qty');
+        $sale->load('items', 'returns.items');
+        $totalRemaining = $sale->items->sum('final_qty');
         $totalReturned = $sale->returns->flatMap(fn ($r) => $r->items)->sum('qty');
 
-        if ($totalReturned >= $totalSold) {
+        if ($totalRemaining === 0 && $totalReturned > 0) {
             $sale->update(['order_status' => 'returned']);
-        } else {
+        } elseif ($totalReturned > 0) {
             $sale->update(['order_status' => 'partially_returned']);
         }
+    }
+
+    private function refreshSaleItemAfterReturn(SaleItem $saleItem, int $returnQty): void
+    {
+        $saleItem->refresh();
+        $currentFinalQty = $saleItem->final_qty > 0 ? $saleItem->final_qty : $saleItem->qty;
+        $newFinalQty = max(0, $currentFinalQty - $returnQty);
+        $currentLineTotal = (string) $saleItem->total_usd;
+        $lineUnitValue = $currentFinalQty > 0
+            ? bcdiv($currentLineTotal, (string) $currentFinalQty, 4)
+            : '0';
+        $newLineTotal = bcmul($lineUnitValue, (string) $newFinalQty, 4);
+        $remainingCogs = (string) $saleItem->costLayers()->sum('total_cost_usd');
+        $profit = bcsub($newLineTotal, $remainingCogs, 4);
+
+        $saleItem->update([
+            'final_qty' => $newFinalQty,
+            'total_usd' => $newLineTotal,
+            'cogs_usd' => $remainingCogs,
+            'profit_usd' => $profit,
+        ]);
     }
 }

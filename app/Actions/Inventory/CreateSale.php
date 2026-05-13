@@ -81,15 +81,24 @@ final class CreateSale
                 $paymentStatus = 'partial';
             }
 
-            $sale->update([
+            $updateData = [
+                'original_subtotal_usd' => $subtotal,
                 'subtotal_usd' => $subtotal,
                 'discount_usd' => $discount,
+                'original_delivery_fee_usd' => $deliveryFee,
                 'delivery_profit_usd' => $deliveryProfit,
+                'original_total_usd' => $total,
                 'total_usd' => $total,
                 'paid_usd' => $paid,
                 'payment_status' => $paymentStatus,
                 'order_status' => 'confirmed',
-            ]);
+            ];
+
+            if ($paymentStatus === 'paid') {
+                $updateData['payment_received_date'] = now()->toDateString();
+            }
+
+            $sale->update($updateData);
 
             return $sale->fresh();
         });

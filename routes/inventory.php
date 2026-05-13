@@ -28,6 +28,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('pos', [SaleController::class, 'pos'])->name('pos');
     Route::post('sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
     Route::post('sales/{sale}/return', [SaleController::class, 'return'])->name('sales.return');
+    Route::get('sales/{sale}/confirm-delivery', [SaleController::class, 'confirmDelivery'])->name('sales.confirm-delivery');
+    Route::post('sales/{sale}/confirm-delivery', [SaleController::class, 'storeDeliveryConfirmation'])->name('sales.confirm-delivery.store');
     Route::post('sales/{sale}/exchange', [SaleController::class, 'exchange'])->name('sales.exchange');
     Route::post('sales/{sale}/update-payment', [SaleController::class, 'updatePayment'])->name('sales.update-payment');
     Route::get('stock', [StockController::class, 'index'])->name('stock.index');

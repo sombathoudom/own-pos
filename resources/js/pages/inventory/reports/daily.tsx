@@ -6,27 +6,17 @@ import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
 
 function ReportsDaily() {
-    const { date, sales, closings } = usePage<{
+    const { date, entries, closings } = usePage<{
         date: string;
-        sales: any[];
+        entries: any[];
         closings: any[];
     }>().props;
 
-    const totalSales = sales
-        .reduce((sum, s) => sum + parseFloat(s.subtotal_usd), 0)
+    const totalSales = entries
+        .reduce((sum, entry) => sum + parseFloat(entry.total_usd ?? 0), 0)
         .toFixed(2);
-    const totalProfit = sales
-        .reduce(
-            (sum, s) =>
-                sum +
-                parseFloat(
-                    s.items?.reduce(
-                        (is: number, i: any) => is + parseFloat(i.profit_usd),
-                        0,
-                    ) ?? 0,
-                ),
-            0,
-        )
+    const totalProfit = entries
+        .reduce((sum, entry) => sum + parseFloat(entry.profit_usd ?? 0), 0)
         .toFixed(2);
 
     return (
@@ -66,7 +56,7 @@ function ReportsDaily() {
                                         <Col md={3}>
                                             <Card className="bg-soft-info">
                                                 <Card.Body>
-                                                    <h5>{sales.length}</h5>
+                                                    <h5>{entries.length}</h5>
                                                     <p className="mb-0">
                                                         Orders
                                                     </p>
@@ -99,24 +89,27 @@ function ReportsDaily() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {sales.map((sale) => (
-                                                <tr key={sale.id}>
-                                                    <td>{sale.invoice_no}</td>
+                                            {entries.map((entry) => (
+                                                <tr key={entry.id}>
+                                                    <td>{entry.invoice_no}</td>
                                                     <td>
-                                                        {sale.customer_name ??
+                                                        {entry.customer_name ??
                                                             'Walk-in'}
                                                     </td>
                                                     <td>
                                                         <span
-                                                            className={`badge bg-${sale.order_status === 'completed' ? 'success' : sale.order_status === 'cancelled' ? 'danger' : 'warning'}`}
+                                                            className={`badge bg-${entry.order_status === 'completed' ? 'success' : entry.order_status === 'cancelled' ? 'danger' : 'warning'}`}
                                                         >
-                                                            {sale.order_status}
+                                                            {entry.entry_type ===
+                                                            'exchange'
+                                                                ? 'exchange'
+                                                                : entry.order_status}
                                                         </span>
                                                     </td>
-                                                    <td>${sale.total_usd}</td>
+                                                    <td>${entry.total_usd}</td>
                                                 </tr>
                                             ))}
-                                            {sales.length === 0 && (
+                                            {entries.length === 0 && (
                                                 <tr>
                                                     <td
                                                         colSpan={4}

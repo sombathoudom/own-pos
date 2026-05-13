@@ -15,6 +15,7 @@ import {
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Pagination from '@/Components/Pagination';
 import Layout from '@/Layouts';
+import { store as storeConfirmDelivery } from '@/routes/sales/confirm-delivery';
 import {
     create as salesCreate,
     show as salesShow,
@@ -25,6 +26,9 @@ import type { SaleIndexPageProps } from '@/types';
 function SalesIndex() {
     const { sales, filters, toast } = usePage<SaleIndexPageProps>().props;
     const [search, setSearch] = useState(filters.search ?? '');
+    const [confirmingSaleId, setConfirmingSaleId] = useState<number | null>(
+        null,
+    );
 
     useEffect(() => {
         setSearch(filters.search ?? '');
@@ -64,6 +68,42 @@ function SalesIndex() {
         }
     };
 
+    const canConfirmDelivery = (
+        sale: SaleIndexPageProps['sales']['data'][number],
+    ) => {
+        return (
+            sale.delivery_completed_date === null &&
+            sale.order_status !== 'cancelled' &&
+            sale.order_status !== 'returned'
+        );
+    };
+
+    const handleDeliveredAll = (
+        sale: SaleIndexPageProps['sales']['data'][number],
+    ) => {
+        setConfirmingSaleId(sale.id);
+
+        router.post(
+            storeConfirmDelivery.url(sale.id),
+            {
+                confirmation_date: new Date().toISOString().split('T')[0],
+                status: 'delivered',
+                items: sale.items.map((item) => ({
+                    sale_item_id: item.id,
+                    accepted_qty: item.qty,
+                    changed_qty: 0,
+                })),
+                added_items: [],
+                final_delivery_fee_usd: sale.customer_delivery_fee_usd ?? '0',
+                actual_delivery_cost_usd: sale.actual_delivery_cost_usd ?? '0',
+            },
+            {
+                preserveScroll: true,
+                onFinish: () => setConfirmingSaleId(null),
+            },
+        );
+    };
+
     return (
         <>
             <Head title="Sales" />
@@ -74,7 +114,9 @@ function SalesIndex() {
 
                     {toast && (
                         <Alert
-                            variant={toast.type === 'error' ? 'danger' : toast.type}
+                            variant={
+                                toast.type === 'error' ? 'danger' : toast.type
+                            }
                             className="mb-3"
                         >
                             {toast.message}
@@ -87,19 +129,33 @@ function SalesIndex() {
                                 <Card.Header className="card-header border-0">
                                     <Row className="align-items-center gy-3">
                                         <div className="col-sm">
-                                            <h5 className="card-title mb-0">Sales</h5>
+                                            <h5 className="card-title mb-0">
+                                                Sales
+                                            </h5>
                                         </div>
                                         <div className="col-sm-auto">
                                             <div className="d-flex flex-wrap gap-1">
-                                                <Form onSubmit={handleSearch} className="d-flex gap-2">
+                                                <Form
+                                                    onSubmit={handleSearch}
+                                                    className="d-flex gap-2"
+                                                >
                                                     <Form.Control
                                                         type="search"
                                                         placeholder="Search invoice or customer..."
                                                         value={search}
-                                                        onChange={(e) => setSearch(e.target.value)}
-                                                        style={{ minWidth: 220 }}
+                                                        onChange={(e) =>
+                                                            setSearch(
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        style={{
+                                                            minWidth: 220,
+                                                        }}
                                                     />
-                                                    <Button type="submit" variant="light">
+                                                    <Button
+                                                        type="submit"
+                                                        variant="light"
+                                                    >
                                                         Search
                                                     </Button>
                                                     {search && (
@@ -108,14 +164,24 @@ function SalesIndex() {
                                                             variant="light"
                                                             onClick={() => {
                                                                 setSearch('');
-                                                                router.get(salesIndex.url(), {}, { preserveScroll: true, preserveState: true });
+                                                                router.get(
+                                                                    salesIndex.url(),
+                                                                    {},
+                                                                    {
+                                                                        preserveScroll: true,
+                                                                        preserveState: true,
+                                                                    },
+                                                                );
                                                             }}
                                                         >
                                                             Clear
                                                         </Button>
                                                     )}
                                                 </Form>
-                                                <Link className="btn btn-success" href={salesCreate.url()}>
+                                                <Link
+                                                    className="btn btn-success"
+                                                    href={salesCreate.url()}
+                                                >
                                                     + New Sale
                                                 </Link>
                                             </div>
@@ -134,45 +200,100 @@ function SalesIndex() {
                                                 <th>Total</th>
                                                 <th>Payment</th>
                                                 <th>Status</th>
-                                                <th className="text-end">Actions</th>
+                                                <th className="text-end">
+                                                    Actions
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {sales.data.map((sale) => (
                                                 <tr key={sale.id}>
-                                                    <td className="fw-medium">{sale.invoice_no}</td>
+                                                    <td className="fw-medium">
+                                                        {sale.invoice_no}
+                                                    </td>
                                                     <td>
-                                                        {sale.customer_name || '-'}
+                                                        {sale.customer_name ||
+                                                            '-'}
                                                         {sale.customer_phone && (
-                                                            <div className="small text-muted">{sale.customer_phone}</div>
+                                                            <div className="small text-muted">
+                                                                {
+                                                                    sale.customer_phone
+                                                                }
+                                                            </div>
                                                         )}
                                                     </td>
                                                     <td>{sale.sale_date}</td>
                                                     <td>{sale.items.length}</td>
-                                                    <td>${Number(sale.total_usd).toFixed(2)}</td>
                                                     <td>
-                                                        <Badge bg={paymentBadge(sale.payment_status)}>
-                                                            {sale.payment_status}
+                                                        $
+                                                        {Number(
+                                                            sale.total_usd,
+                                                        ).toFixed(2)}
+                                                    </td>
+                                                    <td>
+                                                        <Badge
+                                                            bg={paymentBadge(
+                                                                sale.payment_status,
+                                                            )}
+                                                        >
+                                                            {
+                                                                sale.payment_status
+                                                            }
                                                         </Badge>
                                                     </td>
                                                     <td>
-                                                        <Badge bg={orderBadge(sale.order_status)}>
+                                                        <Badge
+                                                            bg={orderBadge(
+                                                                sale.order_status,
+                                                            )}
+                                                        >
                                                             {sale.order_status}
                                                         </Badge>
                                                     </td>
                                                     <td className="text-end">
-                                                        <Link
-                                                            className="btn btn-sm btn-outline-secondary"
-                                                            href={salesShow.url({ sale: sale.id })}
-                                                        >
-                                                            View
-                                                        </Link>
+                                                        <div className="d-inline-flex justify-content-end flex-wrap gap-1">
+                                                            {canConfirmDelivery(
+                                                                sale,
+                                                            ) && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="success"
+                                                                    disabled={
+                                                                        confirmingSaleId ===
+                                                                        sale.id
+                                                                    }
+                                                                    onClick={() =>
+                                                                        handleDeliveredAll(
+                                                                            sale,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    {confirmingSaleId ===
+                                                                    sale.id
+                                                                        ? '...'
+                                                                        : 'Delivered All'}
+                                                                </Button>
+                                                            )}
+                                                            <Link
+                                                                className="btn btn-sm btn-outline-secondary"
+                                                                href={salesShow.url(
+                                                                    {
+                                                                        sale: sale.id,
+                                                                    },
+                                                                )}
+                                                            >
+                                                                View
+                                                            </Link>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}
                                             {sales.data.length === 0 && (
                                                 <tr>
-                                                    <td colSpan={8} className="py-4 text-center text-muted">
+                                                    <td
+                                                        colSpan={8}
+                                                        className="py-4 text-center text-muted"
+                                                    >
                                                         No sales found.
                                                     </td>
                                                 </tr>

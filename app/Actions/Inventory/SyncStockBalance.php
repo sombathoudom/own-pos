@@ -9,18 +9,12 @@ final class SyncStockBalance
 {
     public function incrementOnHand(int $productVariantId, int $qty): StockBalance
     {
-        return StockBalance::updateOrCreate(
-            ['product_variant_id' => $productVariantId],
-            ['qty_on_hand' => StockBalance::getOnHand($productVariantId) + $qty],
-        );
+        return $this->recalculate($productVariantId);
     }
 
     public function decrementOnHand(int $productVariantId, int $qty): StockBalance
     {
-        return StockBalance::updateOrCreate(
-            ['product_variant_id' => $productVariantId],
-            ['qty_on_hand' => max(0, StockBalance::getOnHand($productVariantId) - $qty)],
-        );
+        return $this->recalculate($productVariantId);
     }
 
     public function recalculate(int $productVariantId): StockBalance

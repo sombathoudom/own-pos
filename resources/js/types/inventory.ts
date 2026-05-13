@@ -127,7 +127,11 @@ export type InventorySaleItemCostLayer = {
 
 export type InventorySaleItem = {
     id: number;
+    status: string;
     qty: number;
+    accepted_qty: number;
+    rejected_qty: number;
+    final_qty: number;
     unit_price_usd: string;
     discount_usd: string;
     total_usd: string;
@@ -154,8 +158,85 @@ export type InventorySaleReturn = {
     id: number;
     returned_at: string;
     total_refund_usd: string;
+    payment_received_date: string | null;
     note: string | null;
     items: InventorySaleReturnItem[];
+};
+
+export type InventorySaleExchangeItem = {
+    id: number;
+    sale_item_id: number;
+    qty_returned: number;
+    new_sale_item_id: number | null;
+    original_variant: {
+        sku: string | null;
+        product_name: string | null;
+        color: string | null;
+        size: string;
+    };
+    new_variant: {
+        sku: string | null;
+        product_name: string | null;
+        color: string | null;
+        size: string;
+    };
+    new_unit_price_usd: string;
+};
+
+export type InventorySaleExchange = {
+    id: number;
+    exchange_date: string | null;
+    payment_received_date: string | null;
+    exchange_delivery_fee_usd: string;
+    exchange_delivery_cost_usd: string;
+    subtotal_adjustment_usd: string;
+    new_items_subtotal_usd: string;
+    total_additional_amount_usd: string;
+    additional_cogs_usd: string;
+    additional_profit_usd: string;
+    additional_qty_sold: number;
+    note: string | null;
+    created_at: string;
+    items: InventorySaleExchangeItem[];
+};
+
+export type InventoryDeliveryConfirmationItem = {
+    id: number;
+    sale_item_id: number | null;
+    original_qty: number;
+    accepted_qty: number;
+    rejected_qty: number;
+    added_qty: number;
+    unit_price_usd: string;
+    final_total_usd: string;
+    action_type: string;
+    original_variant: {
+        sku: string | null;
+        product_name: string | null;
+        color: string | null;
+        size: string | null;
+    };
+    final_variant: {
+        sku: string | null;
+        product_name: string | null;
+        color: string | null;
+        size: string | null;
+    };
+};
+
+export type InventoryDeliveryConfirmation = {
+    id: number;
+    confirmation_date: string;
+    status: string;
+    original_product_total_usd: string;
+    final_product_total_usd: string;
+    original_delivery_fee_usd: string;
+    final_delivery_fee_usd: string;
+    discount_usd: string;
+    final_total_usd: string;
+    delivery_fee_note: string | null;
+    note: string | null;
+    items: InventoryDeliveryConfirmationItem[];
 };
 
 export type InventorySale = {
@@ -166,18 +247,25 @@ export type InventorySale = {
     sale_date: string;
     currency: string;
     exchange_rate: string;
+    original_subtotal_usd: string;
     subtotal_usd: string;
     discount_usd: string;
+    original_delivery_fee_usd: string;
     customer_delivery_fee_usd: string;
     actual_delivery_cost_usd: string;
     delivery_profit_usd: string;
+    original_total_usd: string;
     total_usd: string;
     paid_usd: string;
+    payment_received_date: string | null;
+    delivery_completed_date: string | null;
     payment_status: string;
     order_status: string;
     note: string | null;
     items: InventorySaleItem[];
     returns: InventorySaleReturn[];
+    exchanges: InventorySaleExchange[];
+    delivery_confirmations: InventoryDeliveryConfirmation[];
 };
 
 export type SaleIndexPageProps = InventoryIndexPageProps<{
@@ -186,6 +274,20 @@ export type SaleIndexPageProps = InventoryIndexPageProps<{
 
 export type SaleShowPageProps = {
     sale: InventorySale;
+    variants: Array<{
+        id: number;
+        sku: string;
+        style_name: string | null;
+        color: string | null;
+        size: string;
+        sale_price_usd: string;
+        stock_on_hand: number;
+        product: {
+            id: number | null;
+            name: string | null;
+            category: string | null;
+        };
+    }>;
 };
 
 export type StockMovementIndexPageProps = InventoryIndexPageProps<{
