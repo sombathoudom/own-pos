@@ -1,6 +1,17 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Badge, Card, Col, Container, Row, Table } from 'react-bootstrap';
-import React from 'react';
+import {
+    Badge,
+    Button,
+    Card,
+    Col,
+    Container,
+    Form,
+    Modal,
+    Row,
+    Table,
+} from 'react-bootstrap';
+import React, { useState } from 'react';
+import { router } from '@inertiajs/react';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
@@ -41,6 +52,7 @@ type Purchase = {
     id: number;
     purchase_no: string;
     purchase_date: string;
+    arrival_date: string | null;
     currency: string;
     exchange_rate: string;
     subtotal_usd: string;
@@ -60,13 +72,21 @@ type PurchasesShowProps = {
 
 function PurchasesShow() {
     const { purchase } = usePage<PurchasesShowProps>().props;
+    const [showArriveModal, setShowArriveModal] = useState(false);
+    const [arriving, setArriving] = useState(false);
+    const [arrivalDate, setArrivalDate] = useState(
+        new Date().toISOString().split('T')[0],
+    );
 
     const statusBadge = (status: string) => {
-        if (status === 'draft') return <Badge bg="warning">Draft</Badge>;
-        if (status === 'confirmed')
-            return <Badge bg="success">Confirmed</Badge>;
+        if (status === 'in_transit')
+            return <Badge bg="warning">In Transit</Badge>;
+        if (status === 'arrived') return <Badge bg="success">Arrived</Badge>;
+        if (status === 'draft') return <Badge bg="secondary">Draft</Badge>;
         return <Badge bg="secondary">{status}</Badge>;
     };
+
+    const canArrive = purchase.status === 'in_transit';
 
     return (
         <>
@@ -94,17 +114,42 @@ function PurchasesShow() {
                                                     '—'}
                                             </p>
                                         </div>
-                                        {statusBadge(purchase.status)}
+                                        <div className="d-flex gap-2">
+                                            {statusBadge(purchase.status)}
+                                            {canArrive && (
+                                                <Button
+                                                    variant="success"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        setShowArriveModal(true)
+                                                    }
+                                                >
+                                                    <i className="ri-check-line me-1"></i>
+                                                    Mark Arrived
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <Row>
                                         <Col lg={3}>
                                             <div className="mb-2">
                                                 <span className="d-block small text-muted">
-                                                    Date
+                                                    Purchase Date
                                                 </span>
                                                 <span className="fw-semibold">
                                                     {purchase.purchase_date}
+                                                </span>
+                                            </div>
+                                        </Col>
+                                        <Col lg={3}>
+                                            <div className="mb-2">
+                                                <span className="d-block small text-muted">
+                                                    Arrival Date
+                                                </span>
+                                                <span className="fw-semibold">
+                                                    {purchase.arrival_date ||
+                                                        '—'}
                                                 </span>
                                             </div>
                                         </Col>
@@ -126,16 +171,6 @@ function PurchasesShow() {
                                                 </span>
                                                 <span className="fw-semibold">
                                                     {purchase.currency}
-                                                </span>
-                                            </div>
-                                        </Col>
-                                        <Col lg={3}>
-                                            <div className="mb-2">
-                                                <span className="d-block small text-muted">
-                                                    Exchange Rate
-                                                </span>
-                                                <span className="fw-semibold">
-                                                    {purchase.exchange_rate}
                                                 </span>
                                             </div>
                                         </Col>
@@ -317,6 +352,62 @@ function PurchasesShow() {
                     </Row>
                 </Container>
             </div>
+
+            <Modal
+                show={showArriveModal}
+                onHide={() => setShowArriveModal(false)}
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Mark Purchase as Arrived</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>
+                        Mark <strong>{purchase.purchase_no}</strong> as arrived?
+                    </p>
+                    {parseFloat(purchase.other_cost_usd) > 0 && (
+                        <p className="small text-muted">
+                            Other cost of $
+                            {Number(purchase.other_cost_usd).toFixed(2)} will be
+                            added to expenses.
+                        </p>
+                    )}
+                    <Form.Group>
+                        <Form.Label>Arrival Date</Form.Label>
+                        <Form.Control
+                            type="date"
+                            value={arrivalDate}
+                            onChange={(e) => setArrivalDate(e.target.value)}
+                        />
+                    </Form.Group>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        variant="light"
+                        onClick={() => setShowArriveModal(false)}
+                    >
+                        Close
+                    </Button>
+                    <Button
+                        variant="success"
+                        disabled={arriving}
+                        onClick={() => {
+                            setArriving(true);
+                            router.post(
+                                `/purchases/${purchase.id}/arrive`,
+                                { arrival_date: arrivalDate },
+                                {
+                                    onSuccess: () => setShowArriveModal(false),
+                                    onError: () => setShowArriveModal(false),
+                                    onFinish: () => setArriving(false),
+                                },
+                            );
+                        }}
+                    >
+                        {arriving ? 'Processing...' : 'Confirm Arrival'}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </>
     );
 }

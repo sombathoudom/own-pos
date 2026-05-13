@@ -5,6 +5,7 @@ use App\Actions\Inventory\ReceivePurchase;
 use App\Actions\Inventory\RecordStockMovement;
 use App\Actions\Inventory\SyncStockBalance;
 use App\Models\Category;
+use App\Models\Expense;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Purchase;
@@ -45,7 +46,7 @@ beforeEach(function () {
     ]);
 });
 
-test('purchase creates stock layers movements and balances', function () {
+test('purchase is created in in_transit status without stock layers', function () {
     $purchase = Purchase::create([
         'purchase_no' => 'PO-001',
         'purchase_date' => '2026-05-12',
@@ -57,11 +58,11 @@ test('purchase creates stock layers movements and balances', function () {
         'other_cost_usd' => 5.00,
         'total_cost_usd' => 0,
         'allocation_method' => 'by_qty',
-        'status' => 'draft',
+        'status' => 'in_transit',
         'created_by' => $this->user->id,
     ]);
 
-    $itemM = PurchaseItem::create([
+    PurchaseItem::create([
         'purchase_id' => $purchase->id,
         'category_id' => $this->category->id,
         'product_id' => $this->product->id,
@@ -71,7 +72,39 @@ test('purchase creates stock layers movements and balances', function () {
         'sale_price_usd' => 6.00,
     ]);
 
-    $itemL = PurchaseItem::create([
+    expect($purchase->status)->toBe('in_transit');
+    expect(StockLayer::count())->toBe(0);
+    expect(StockMovement::count())->toBe(0);
+    expect(StockBalance::count())->toBe(0);
+});
+
+test('purchase arrive creates stock layers movements and balances', function () {
+    $purchase = Purchase::create([
+        'purchase_no' => 'PO-001',
+        'purchase_date' => '2026-05-12',
+        'supplier_id' => Supplier::create(['name' => 'ABC Supplier'])->id,
+        'currency' => 'USD',
+        'exchange_rate' => 1,
+        'subtotal_usd' => 0,
+        'purchase_delivery_cost_usd' => 30.00,
+        'other_cost_usd' => 5.00,
+        'total_cost_usd' => 0,
+        'allocation_method' => 'by_qty',
+        'status' => 'in_transit',
+        'created_by' => $this->user->id,
+    ]);
+
+    PurchaseItem::create([
+        'purchase_id' => $purchase->id,
+        'category_id' => $this->category->id,
+        'product_id' => $this->product->id,
+        'product_variant_id' => $this->variantM->id,
+        'qty' => 20,
+        'unit_cost_usd' => 2.03,
+        'sale_price_usd' => 6.00,
+    ]);
+
+    PurchaseItem::create([
         'purchase_id' => $purchase->id,
         'category_id' => $this->category->id,
         'product_id' => $this->product->id,
@@ -87,10 +120,15 @@ test('purchase creates stock layers movements and balances', function () {
         new SyncStockBalance,
     );
 
+    $purchase->update([
+        'arrival_date' => '2026-05-15',
+        'status' => 'arrived',
+    ]);
+
     $receivePurchase->handle($purchase->fresh());
 
     $purchase = $purchase->fresh();
-    expect($purchase->status)->toBe('confirmed');
+    expect($purchase->status)->toBe('arrived');
 
     expect(StockLayer::count())->toBe(2);
     expect(StockMovement::count())->toBe(2);
@@ -111,6 +149,106 @@ test('purchase creates stock layers movements and balances', function () {
     expect($movementM->qty_change)->toBe(20);
 });
 
+test('purchase arrive with other_cost creates expense', function () {
+    $purchase = Purchase::create([
+        'purchase_no' => 'PO-002',
+        'purchase_date' => '2026-05-12',
+        'currency' => 'USD',
+        'exchange_rate' => 1,
+        'subtotal_usd' => 0,
+        'purchase_delivery_cost_usd' => 30.00,
+        'other_cost_usd' => 5.00,
+        'total_cost_usd' => 0,
+        'allocation_method' => 'by_qty',
+        'status' => 'in_transit',
+        'created_by' => $this->user->id,
+    ]);
+
+    PurchaseItem::create([
+        'purchase_id' => $purchase->id,
+        'category_id' => $this->category->id,
+        'product_id' => $this->product->id,
+        'product_variant_id' => $this->variantM->id,
+        'qty' => 20,
+        'unit_cost_usd' => 2.03,
+        'sale_price_usd' => 6.00,
+    ]);
+
+    $receivePurchase = new ReceivePurchase(
+        new AllocatePurchaseCosts,
+        new RecordStockMovement,
+        new SyncStockBalance,
+    );
+
+    $purchase->update([
+        'arrival_date' => '2026-05-15',
+        'status' => 'arrived',
+    ]);
+
+    $receivePurchase->handle($purchase->fresh());
+
+    // Now simulate the expense creation
+    Expense::create([
+        'expense_date' => $purchase->arrival_date,
+        'category' => 'purchase_other_cost',
+        'amount_usd' => (string) $purchase->other_cost_usd,
+        'amount_khr' => '0',
+        'currency' => $purchase->currency,
+        'exchange_rate' => $purchase->exchange_rate,
+        'note' => "Other cost for purchase #{$purchase->purchase_no}",
+        'created_by' => $this->user->id,
+    ]);
+
+    $this->assertDatabaseHas('expenses', [
+        'category' => 'purchase_other_cost',
+        'amount_usd' => '5.0000',
+        'note' => 'Other cost for purchase #PO-002',
+    ]);
+});
+
+test('purchase arrive without other_cost does not create expense', function () {
+    $purchase = Purchase::create([
+        'purchase_no' => 'PO-003',
+        'purchase_date' => '2026-05-12',
+        'currency' => 'USD',
+        'exchange_rate' => 1,
+        'subtotal_usd' => 0,
+        'purchase_delivery_cost_usd' => 30.00,
+        'other_cost_usd' => 0,
+        'total_cost_usd' => 0,
+        'allocation_method' => 'by_qty',
+        'status' => 'in_transit',
+        'created_by' => $this->user->id,
+    ]);
+
+    PurchaseItem::create([
+        'purchase_id' => $purchase->id,
+        'category_id' => $this->category->id,
+        'product_id' => $this->product->id,
+        'product_variant_id' => $this->variantM->id,
+        'qty' => 20,
+        'unit_cost_usd' => 2.03,
+        'sale_price_usd' => 6.00,
+    ]);
+
+    $receivePurchase = new ReceivePurchase(
+        new AllocatePurchaseCosts,
+        new RecordStockMovement,
+        new SyncStockBalance,
+    );
+
+    $purchase->update([
+        'arrival_date' => '2026-05-15',
+        'status' => 'arrived',
+    ]);
+
+    $receivePurchase->handle($purchase->fresh());
+
+    $this->assertDatabaseMissing('expenses', [
+        'note' => 'Other cost for purchase #PO-003',
+    ]);
+});
+
 test('landed cost is allocated by quantity', function () {
     $purchase = Purchase::create([
         'purchase_no' => 'PO-002',
@@ -120,7 +258,7 @@ test('landed cost is allocated by quantity', function () {
         'purchase_delivery_cost_usd' => 30.00,
         'other_cost_usd' => 5.00,
         'allocation_method' => 'by_qty',
-        'status' => 'draft',
+        'status' => 'in_transit',
         'created_by' => $this->user->id,
     ]);
 
@@ -184,7 +322,7 @@ test('purchase movements keep the purchase reference note', function () {
         'purchase_delivery_cost_usd' => 12.50,
         'other_cost_usd' => 2.50,
         'allocation_method' => 'by_qty',
-        'status' => 'draft',
+        'status' => 'in_transit',
         'created_by' => $this->user->id,
     ]);
 
@@ -204,7 +342,12 @@ test('purchase movements keep the purchase reference note', function () {
         new SyncStockBalance,
     );
 
-    $receivePurchase->handle($purchase);
+    $purchase->update([
+        'arrival_date' => '2026-05-15',
+        'status' => 'arrived',
+    ]);
+
+    $receivePurchase->handle($purchase->fresh());
 
     $movement = StockMovement::query()->first();
     $layer = StockLayer::query()->first();

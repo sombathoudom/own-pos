@@ -7,6 +7,8 @@ use App\Http\Requests\Inventory\StoreProductRequest;
 use App\Http\Requests\Inventory\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductVariant;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -139,5 +141,39 @@ class ProductController extends Controller
         $product->delete();
 
         return to_route('products.index')->with('toast', ['type' => 'success', 'message' => 'Product deleted.']);
+    }
+
+    public function search(Request $request): JsonResponse
+    {
+        $query = $request->string('q')->toString();
+
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $variants = ProductVariant::query()
+            ->with(['product:id,name', 'stockBalance'])
+            ->where('status', 'active')
+            ->where(function ($q) use ($query) {
+                $q->where('sku', 'like', "%{$query}%")
+                    ->orWhere('barcode', 'like', "%{$query}%")
+                    ->orWhereHas('product', function ($pq) use ($query) {
+                        $pq->where('name', 'like', "%{$query}%");
+                    });
+            })
+            ->limit(20)
+            ->get();
+
+        return response()->json($variants->map(fn ($v) => [
+            'id' => $v->id,
+            'sku' => $v->sku,
+            'barcode' => $v->barcode,
+            'style_name' => $v->style_name,
+            'color' => $v->color,
+            'size' => $v->size,
+            'sale_price_usd' => $v->sale_price_usd,
+            'stock_on_hand' => $v->stockBalance?->qty_on_hand ?? 0,
+            'product_name' => $v->product?->name,
+        ]));
     }
 }

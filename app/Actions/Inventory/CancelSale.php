@@ -12,9 +12,9 @@ final class CancelSale
         private SyncStockBalance $syncStockBalance,
     ) {}
 
-    public function handle(Sale $sale, ?int $cancelledBy = null): Sale
+    public function handle(Sale $sale, ?int $cancelledBy = null, ?string $reason = null): Sale
     {
-        return DB::transaction(function () use ($sale, $cancelledBy): Sale {
+        return DB::transaction(function () use ($sale, $cancelledBy, $reason): Sale {
             if ($sale->isCancelled()) {
                 throw new \RuntimeException('Sale is already cancelled.');
             }
@@ -31,7 +31,7 @@ final class CancelSale
 
                     $this->recordStockMovement->handle(
                         productVariantId: $saleItem->product_variant_id,
-                        type: 'sale_cancel',
+                        type: 'cancel_sale',
                         qtyChange: $costLayer->qty,
                         stockLayerId: $costLayer->stock_layer_id,
                         referenceType: $sale->getMorphClass(),
@@ -49,6 +49,12 @@ final class CancelSale
                     $totalQtyToRestore,
                 );
             }
+
+            $sale->cancellation()->create([
+                'reason' => $reason,
+                'cancelled_by' => $cancelledBy,
+                'cancelled_at' => now(),
+            ]);
 
             $sale->update([
                 'order_status' => 'cancelled',

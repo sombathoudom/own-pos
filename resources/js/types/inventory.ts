@@ -191,3 +191,93 @@ export type SaleShowPageProps = {
 export type StockMovementIndexPageProps = InventoryIndexPageProps<{
     movements: LaravelPaginator<InventoryStockMovement>;
 }>;
+
+export type InventoryExpense = {
+    id: number;
+    expense_date: string;
+    category: string;
+    amount_usd: string;
+    amount_khr: string;
+    currency: string;
+    exchange_rate: string;
+    note: string | null;
+};
+
+export type ExpenseIndexPageProps = InventoryIndexPageProps<{
+    expenses: LaravelPaginator<InventoryExpense>;
+}>;
+
+export type InventoryStockAdjustmentItem = {
+    id: number;
+    product_variant_id: number;
+    system_qty: number;
+    actual_qty: number;
+    difference_qty: number;
+    movement_type: string;
+    note: string | null;
+    productVariant?: InventoryProductVariant;
+};
+
+export type InventoryStockAdjustment = {
+    id: number;
+    adjustment_date: string;
+    reason: string | null;
+    note: string | null;
+    approved_by: number | null;
+    approved_at: string | null;
+    items: InventoryStockAdjustmentItem[];
+};
+
+export type StockAdjustmentIndexPageProps = InventoryIndexPageProps<{
+    adjustments: LaravelPaginator<InventoryStockAdjustment>;
+}>;
+
+export type InventoryStockCountItem = {
+    id: number;
+    product_variant_id: number;
+    system_qty: number;
+    actual_qty: number;
+    difference_qty: number;
+    note: string | null;
+    productVariant?: InventoryProductVariant;
+};
+
+export type InventoryStockCount = {
+    id: number;
+    count_date: string;
+    status: string;
+    note: string | null;
+    items: InventoryStockCountItem[];
+};
+
+export type StockCountIndexPageProps = InventoryIndexPageProps<{
+    counts: LaravelPaginator<InventoryStockCount>;
+}>;
+
+export type InventoryDailyClosing = {
+    id: number;
+    closing_date: string;
+    total_orders: number;
+    completed_orders: number;
+    cancelled_orders: number;
+    returned_orders: number;
+    total_qty_sold: number;
+    gross_sales_usd: string;
+    discount_usd: string;
+    net_sales_usd: string;
+    total_cogs_usd: string;
+    gross_profit_usd: string;
+    total_expenses_usd: string;
+    net_profit_usd: string;
+    cash_usd: string;
+    cash_khr: string;
+    bank_usd: string;
+    unpaid_usd: string;
+    refund_usd: string;
+    status: string;
+    note: string | null;
+};
+
+export type DailyClosingIndexPageProps = InventoryIndexPageProps<{
+    closings: LaravelPaginator<InventoryDailyClosing>;
+}>;

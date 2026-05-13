@@ -41,7 +41,6 @@ final class ReceivePurchase
             $purchase->update([
                 'subtotal_usd' => $subtotal,
                 'total_cost_usd' => $totalCost,
-                'status' => 'confirmed',
             ]);
         });
     }

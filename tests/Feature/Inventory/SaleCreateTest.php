@@ -37,7 +37,7 @@ beforeEach(function () {
         'purchase_date' => '2026-05-12',
         'currency' => 'USD',
         'exchange_rate' => 1,
-        'status' => 'confirmed',
+        'status' => 'arrived',
         'created_by' => $this->user->id,
     ]);
 

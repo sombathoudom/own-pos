@@ -38,7 +38,7 @@ beforeEach(function () {
         'purchase_date' => '2026-05-12',
         'currency' => 'USD',
         'exchange_rate' => 1,
-        'status' => 'confirmed',
+        'status' => 'arrived',
         'created_by' => $this->user->id,
     ]);
 
@@ -114,7 +114,7 @@ test('cancel sale restores stock and records movement', function () {
 
     $this->assertDatabaseHas('stock_movements', [
         'product_variant_id' => $this->variant->id,
-        'type' => 'sale_cancel',
+        'type' => 'cancel_sale',
         'qty_change' => 10,
     ]);
 

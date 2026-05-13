@@ -6,11 +6,13 @@ use App\Actions\Inventory\ReceivePurchase;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StorePurchaseRequest;
 use App\Models\Category;
+use App\Models\Expense;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -60,7 +62,7 @@ class PurchaseController extends Controller
         ]);
     }
 
-    public function store(StorePurchaseRequest $request, ReceivePurchase $receivePurchase): RedirectResponse
+    public function store(StorePurchaseRequest $request): RedirectResponse
     {
         $validated = $request->validated();
 
@@ -68,12 +70,12 @@ class PurchaseController extends Controller
             'supplier_id' => $validated['supplier_id'] ?? null,
             'purchase_no' => $validated['purchase_no'] ?? 'PO-'.now()->format('Ymd').'-'.Str::upper(Str::random(4)),
             'purchase_date' => $validated['purchase_date'],
-            'arrival_date' => $validated['arrival_date'] ?? null,
+            'arrival_date' => null,
             'currency' => $validated['currency'] ?? 'USD',
             'exchange_rate' => $validated['exchange_rate'] ?? 1,
             'purchase_delivery_cost_usd' => $validated['purchase_delivery_cost_usd'] ?? 0,
             'other_cost_usd' => $validated['other_cost_usd'] ?? 0,
-            'status' => 'draft',
+            'status' => 'in_transit',
             'note' => $validated['note'] ?? null,
             'created_by' => $request->user()->id,
         ]);
@@ -90,9 +92,7 @@ class PurchaseController extends Controller
             ]);
         }
 
-        $receivePurchase->handle($purchase);
-
-        return to_route('purchases.show', $purchase)->with('toast', ['type' => 'success', 'message' => 'Purchase received and stock updated.']);
+        return to_route('purchases.show', $purchase)->with('toast', ['type' => 'success', 'message' => 'Purchase recorded as in-transit.']);
     }
 
     public function show(Purchase $purchase): Response
@@ -104,6 +104,7 @@ class PurchaseController extends Controller
                 'id' => $purchase->id,
                 'purchase_no' => $purchase->purchase_no,
                 'purchase_date' => $purchase->purchase_date?->toDateString(),
+                'arrival_date' => $purchase->arrival_date?->toDateString(),
                 'currency' => $purchase->currency,
                 'exchange_rate' => $purchase->exchange_rate,
                 'subtotal_usd' => $purchase->subtotal_usd,
@@ -134,5 +135,41 @@ class PurchaseController extends Controller
                 ])->values()->all(),
             ],
         ]);
+    }
+
+    public function arrive(Request $request, Purchase $purchase, ReceivePurchase $receivePurchase): RedirectResponse
+    {
+        if (! $purchase->isInTransit()) {
+            return back()->withErrors(['general' => 'Only in-transit purchases can be marked as arrived.']);
+        }
+
+        $validated = $request->validate([
+            'arrival_date' => ['required', 'date'],
+        ]);
+
+        DB::transaction(function () use ($purchase, $receivePurchase, $validated) {
+            $purchase->update([
+                'arrival_date' => $validated['arrival_date'],
+                'status' => 'arrived',
+            ]);
+
+            $receivePurchase->handle($purchase->fresh());
+
+            $otherCost = (string) $purchase->other_cost_usd;
+            if (bccomp($otherCost, '0', 4) > 0) {
+                Expense::create([
+                    'expense_date' => $validated['arrival_date'],
+                    'category' => 'purchase_other_cost',
+                    'amount_usd' => $otherCost,
+                    'amount_khr' => '0',
+                    'currency' => $purchase->currency ?? 'USD',
+                    'exchange_rate' => $purchase->exchange_rate ?? 1,
+                    'note' => "Other cost for purchase #{$purchase->purchase_no}",
+                    'created_by' => auth()->id(),
+                ]);
+            }
+        });
+
+        return to_route('purchases.show', $purchase)->with('toast', ['type' => 'success', 'message' => 'Purchase arrived, stock updated, and costs recorded.']);
     }
 }

@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Actions\Inventory\CancelSale;
 use App\Actions\Inventory\CreateSale;
+use App\Actions\Inventory\ExchangeSale;
 use App\Actions\Inventory\ReturnSale;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreSaleRequest;
+use App\Models\Category;
 use App\Models\ProductVariant;
 use App\Models\Sale;
+use App\Services\DailyClosingLock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -65,16 +68,53 @@ class SaleController extends Controller
         ]);
     }
 
+    public function pos(): Response
+    {
+        $variants = ProductVariant::query()
+            ->with(['product:id,name,category_id,image_path', 'product.category:id,name', 'stockBalance'])
+            ->where('status', 'active')
+            ->orderBy('sku')
+            ->get(['id', 'product_id', 'sku', 'style_name', 'color', 'size', 'sale_price_usd']);
+
+        $categories = Category::where('status', 'active')->orderBy('name')->pluck('name', 'id');
+
+        $sizes = $variants->pluck('size')->unique()->sort()->values();
+
+        return Inertia::render('inventory/pos/index', [
+            'variants' => $variants->map(fn ($v) => [
+                'id' => $v->id,
+                'sku' => $v->sku,
+                'style_name' => $v->style_name,
+                'color' => $v->color,
+                'size' => $v->size,
+                'sale_price_usd' => $v->sale_price_usd,
+                'stock_on_hand' => $v->stockBalance?->qty_on_hand ?? 0,
+                'product' => [
+                    'id' => $v->product?->id,
+                    'name' => $v->product?->name,
+                    'category_id' => $v->product?->category_id,
+                    'category' => $v->product?->category?->name,
+                    'image_url' => $v->product?->imageUrl(),
+                ],
+            ]),
+            'categories' => $categories,
+            'sizes' => $sizes,
+        ]);
+    }
+
     public function store(StoreSaleRequest $request, CreateSale $createSale): RedirectResponse
     {
         $validated = $request->validated();
 
         try {
+            DailyClosingLock::ensureNotLocked($validated['sale_date'], 'This day has been closed. New sales cannot be added.');
+
             $sale = $createSale->handle(
                 saleData: [
                     'invoice_no' => 'INV-'.now()->format('Ymd').'-'.Str::upper(Str::random(4)),
                     'customer_name' => $validated['customer_name'] ?? null,
                     'customer_phone' => $validated['customer_phone'] ?? null,
+                    'customer_address' => $validated['customer_address'] ?? null,
                     'sale_date' => $validated['sale_date'],
                     'currency' => $validated['currency'] ?? 'USD',
                     'exchange_rate' => $validated['exchange_rate'] ?? 1,
@@ -94,10 +134,16 @@ class SaleController extends Controller
         return to_route('sales.show', $sale)->with('toast', ['type' => 'success', 'message' => 'Sale created and stock deducted.']);
     }
 
-    public function cancel(Sale $sale, CancelSale $cancelSale): RedirectResponse
+    public function cancel(Request $request, Sale $sale, CancelSale $cancelSale): RedirectResponse
     {
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string'],
+        ]);
+
         try {
-            $cancelSale->handle($sale, auth()->id());
+            DailyClosingLock::ensureNotLocked($sale->sale_date, 'This day has been closed. Sales cannot be cancelled.');
+
+            $cancelSale->handle($sale, auth()->id(), $validated['reason'] ?? null);
         } catch (Throwable $e) {
             return back()->withErrors(['general' => $e->getMessage()]);
         }
@@ -130,11 +176,87 @@ class SaleController extends Controller
         return to_route('sales.show', $sale)->with('toast', ['type' => 'success', 'message' => 'Items returned and stock restored.']);
     }
 
+    public function exchange(Request $request, Sale $sale, ExchangeSale $exchangeSale): RedirectResponse
+    {
+        $validated = $request->validate([
+            'items' => ['required', 'array'],
+            'items.*.sale_item_id' => ['required', 'integer', 'exists:sale_items,id'],
+            'items.*.qty' => ['required', 'integer', 'min:1'],
+            'items.*.new_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'items.*.new_unit_price' => ['required', 'numeric', 'min:0'],
+            'note' => ['nullable', 'string'],
+        ]);
+
+        try {
+            $exchangeSale->handle(
+                sale: $sale,
+                exchangeItems: $validated['items'],
+                note: $validated['note'] ?? null,
+                createdBy: auth()->id(),
+            );
+        } catch (Throwable $e) {
+            return back()->withErrors(['general' => $e->getMessage()]);
+        }
+
+        return to_route('sales.show', $sale)->with('toast', ['type' => 'success', 'message' => 'Items exchanged and stock updated.']);
+    }
+
+    public function updatePayment(Request $request, Sale $sale): RedirectResponse
+    {
+        $validated = $request->validate([
+            'paid_usd' => ['required', 'numeric', 'min:0'],
+            'payment_note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        try {
+            DailyClosingLock::ensureNotLocked($sale->sale_date, 'This day has been closed. Payment cannot be updated.');
+
+            $paid = (string) $validated['paid_usd'];
+            $total = (string) $sale->total_usd;
+
+            $paymentStatus = 'unpaid';
+            if (bccomp($paid, $total, 4) >= 0) {
+                $paymentStatus = 'paid';
+            } elseif (bccomp($paid, '0', 4) > 0) {
+                $paymentStatus = 'partial';
+            }
+
+            $sale->update([
+                'paid_usd' => $paid,
+                'payment_status' => $paymentStatus,
+            ]);
+        } catch (Throwable $e) {
+            return back()->withErrors(['general' => $e->getMessage()]);
+        }
+
+        return to_route('sales.show', $sale)->with('toast', ['type' => 'success', 'message' => 'Payment updated successfully.']);
+    }
+
     public function show(Sale $sale): Response
     {
         $sale->load('items.productVariant.product', 'items.costLayers.stockLayer', 'createdBy', 'returns.items');
 
+        $variants = ProductVariant::query()
+            ->with(['product:id,name,category_id', 'product.category:id,name', 'stockBalance'])
+            ->where('status', 'active')
+            ->orderBy('sku')
+            ->get(['id', 'product_id', 'sku', 'style_name', 'color', 'size', 'sale_price_usd']);
+
         return Inertia::render('inventory/sales/show', [
+            'variants' => $variants->map(fn ($v) => [
+                'id' => $v->id,
+                'sku' => $v->sku,
+                'style_name' => $v->style_name,
+                'color' => $v->color,
+                'size' => $v->size,
+                'sale_price_usd' => $v->sale_price_usd,
+                'stock_on_hand' => $v->stockBalance?->qty_on_hand ?? 0,
+                'product' => [
+                    'id' => $v->product?->id,
+                    'name' => $v->product?->name,
+                    'category' => $v->product?->category?->name,
+                ],
+            ]),
             'sale' => [
                 'id' => $sale->id,
                 'invoice_no' => $sale->invoice_no,

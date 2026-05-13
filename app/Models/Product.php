@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 #[Fillable(['category_id', 'name', 'description', 'image_path', 'status'])]
 class Product extends Model
 {
-    use HasFactory;
+    use Auditable, HasFactory;
 
     public function imageUrl(): ?string
     {

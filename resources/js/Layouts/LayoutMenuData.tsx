@@ -47,10 +47,58 @@ const navdata = () => {
                     link: '/sales',
                 },
                 {
+                    id: 'pos',
+                    label: 'POS',
+                    icon: 'ri-cash-register-line',
+                    link: '/pos',
+                },
+                {
                     id: 'stock',
                     label: 'Stock',
                     icon: 'ri-inbox-archive-line',
                     link: '/stock',
+                },
+                {
+                    id: 'expenses',
+                    label: 'Expenses',
+                    icon: 'ri-money-dollar-circle-line',
+                    link: '/expenses',
+                },
+                {
+                    id: 'stock-adjustments',
+                    label: 'Stock Adjustments',
+                    icon: 'ri-tools-line',
+                    link: '/stock-adjustments',
+                },
+                {
+                    id: 'stock-counts',
+                    label: 'Stock Counts',
+                    icon: 'ri-checkbox-multiple-line',
+                    link: '/stock-counts',
+                },
+                {
+                    id: 'daily-closings',
+                    label: 'Daily Closings',
+                    icon: 'ri-calendar-check-line',
+                    link: '/daily-closings',
+                },
+                {
+                    id: 'reports',
+                    label: 'Reports',
+                    icon: 'ri-bar-chart-box-line',
+                    link: '/reports/daily',
+                },
+                {
+                    id: 'low-stock',
+                    label: 'Low Stock',
+                    icon: 'ri-alarm-warning-line',
+                    link: '/low-stock',
+                },
+                {
+                    id: 'audit-logs',
+                    label: 'Audit Logs',
+                    icon: 'ri-shield-check-line',
+                    link: '/audit-logs',
                 },
                 {
                     label: 'Settings',
