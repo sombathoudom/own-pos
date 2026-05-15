@@ -16,6 +16,7 @@ import {
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
 import { store as salesStore } from '@/routes/sales';
+import { getCurrentDate } from '@/utils/dateTime';
 
 type Variant = {
     id: number;
@@ -57,7 +58,7 @@ function PosIndex() {
         customer_phone: '',
         customer_address: '',
         source_page: 'Walk-in',
-        sale_date: new Date().toISOString().split('T')[0],
+        sale_date: getCurrentDate(),
         currency: 'USD',
         exchange_rate: '1',
         discount_usd: '0',

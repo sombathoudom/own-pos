@@ -1,14 +1,15 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { type FormEvent, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { Card, Col, Container, Form, Row } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
 import { index as expensesIndex } from '@/routes/expenses';
+import { getCurrentDate } from '@/utils/dateTime';
 
 function ExpensesCreate() {
     const { data, setData, post, processing, errors } = useForm({
-        expense_date: new Date().toISOString().split('T')[0],
+        expense_date: getCurrentDate(),
         category: 'other',
         amount_usd: '',
         amount_khr: '',
@@ -17,7 +18,7 @@ function ExpensesCreate() {
         note: '',
     });
 
-    const submit = (event: FormEvent<HTMLFormElement>) => {
+    const submit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         post(expensesIndex.url());
     };

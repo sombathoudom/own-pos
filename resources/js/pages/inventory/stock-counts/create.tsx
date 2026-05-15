@@ -1,9 +1,10 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { type FormEvent, type ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
+import { getCurrentDate } from '@/utils/dateTime';
 
 type CountVariant = {
     id: number;
@@ -17,7 +18,7 @@ type CountVariant = {
 function StockCountsCreate() {
     const { variants } = usePage<{ variants: CountVariant[] }>().props;
     const { data, setData, post, processing } = useForm({
-        count_date: new Date().toISOString().split('T')[0],
+        count_date: getCurrentDate(),
         note: '',
         items: [] as {
             product_variant_id: number;

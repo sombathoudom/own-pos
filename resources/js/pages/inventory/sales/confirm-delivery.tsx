@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { type FormEvent, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import {
     Alert,
     Button,
@@ -15,6 +15,7 @@ import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
 import { store as storeConfirmDelivery } from '@/routes/sales/confirm-delivery';
 import { show as showSale } from '@/routes/sales';
+import { getCurrentDate } from '@/utils/dateTime';
 
 type VariantOption = {
     id: number;
@@ -79,7 +80,7 @@ function ConfirmDeliveryPage() {
     }>().props;
 
     const { data, setData, post, processing, errors } = useForm({
-        confirmation_date: new Date().toISOString().split('T')[0],
+        confirmation_date: getCurrentDate(),
         status: 'delivered',
         items: sale.items.map<DeliveryItemForm>((item) => ({
             sale_item_id: item.id,
@@ -155,7 +156,7 @@ function ConfirmDeliveryPage() {
         );
     };
 
-    const submit = (event: FormEvent<HTMLFormElement>) => {
+    const submit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         post(storeConfirmDelivery.url(sale.id));
     };
@@ -252,12 +253,37 @@ function ConfirmDeliveryPage() {
                                                     </Form.Label>
                                                     <Form.Select
                                                         value={data.status}
-                                                        onChange={(e) =>
+                                                        onChange={(e) => {
+                                                            const newStatus =
+                                                                e.target.value;
                                                             setData(
                                                                 'status',
-                                                                e.target.value,
-                                                            )
-                                                        }
+                                                                newStatus,
+                                                            );
+
+                                                            // Auto-reject all items when cancelled or failed
+                                                            if (
+                                                                newStatus ===
+                                                                    'cancelled_at_door' ||
+                                                                newStatus ===
+                                                                    'failed_delivery'
+                                                            ) {
+                                                                setData(
+                                                                    'items',
+                                                                    data.items.map(
+                                                                        (
+                                                                            item,
+                                                                        ) => ({
+                                                                            ...item,
+                                                                            accepted_qty:
+                                                                                '0',
+                                                                            changed_qty:
+                                                                                '0',
+                                                                        }),
+                                                                    ),
+                                                                );
+                                                            }
+                                                        }}
                                                     >
                                                         <option value="delivered">
                                                             Delivered all

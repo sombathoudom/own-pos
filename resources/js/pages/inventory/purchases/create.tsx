@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import {
     Alert,
     Badge,
@@ -17,6 +17,7 @@ import {
     store as purchasesStore,
     index as purchasesIndex,
 } from '@/routes/purchases';
+import { getCurrentDate } from '@/utils/dateTime';
 
 type Supplier = { id: number; name: string };
 type Category = { id: number; name: string };
@@ -76,7 +77,7 @@ function PurchasesCreate() {
     const { data, setData, post, processing, errors, transform } =
         useForm<FormData>({
             supplier_id: '',
-            purchase_date: new Date().toISOString().split('T')[0],
+            purchase_date: getCurrentDate(),
             arrival_date: '',
             purchase_no: purchaseNo,
             exchange_rate: '1',

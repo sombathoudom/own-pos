@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import {
     Alert,
     Badge,
@@ -22,6 +22,7 @@ import {
     index as salesIndex,
 } from '@/routes/sales';
 import type { SaleIndexPageProps } from '@/types';
+import { getCurrentDate } from '@/utils/dateTime';
 
 function SalesIndex() {
     const { sales, filters, toast } = usePage<SaleIndexPageProps>().props;
@@ -34,7 +35,7 @@ function SalesIndex() {
         setSearch(filters.search ?? '');
     }, [filters.search]);
 
-    const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         router.get(
             salesIndex.url(),
@@ -86,7 +87,7 @@ function SalesIndex() {
         router.post(
             storeConfirmDelivery.url(sale.id),
             {
-                confirmation_date: new Date().toISOString().split('T')[0],
+                confirmation_date: getCurrentDate(),
                 status: 'delivered',
                 items: sale.items.map((item) => ({
                     sale_item_id: item.id,

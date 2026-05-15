@@ -1,10 +1,11 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { type FormEvent, type ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
 import { index as adjustmentsIndex } from '@/routes/stock-adjustments';
+import { getCurrentDate } from '@/utils/dateTime';
 type AdjustmentVariant = {
     id: number;
     sku: string;
@@ -17,7 +18,7 @@ type AdjustmentVariant = {
 function StockAdjustmentsCreate() {
     const { variants } = usePage<{ variants: AdjustmentVariant[] }>().props;
     const { data, setData, post, processing, errors } = useForm({
-        adjustment_date: new Date().toISOString().split('T')[0],
+        adjustment_date: getCurrentDate(),
         reason: '',
         note: '',
         items: [] as {

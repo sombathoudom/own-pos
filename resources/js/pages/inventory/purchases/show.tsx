@@ -16,6 +16,7 @@ import { router } from '@inertiajs/react';
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
 import { index as purchasesIndex } from '@/routes/purchases';
+import { getCurrentDate } from '@/utils/dateTime';
 
 type Supplier = { id: number; name: string };
 type User = { id: number; name: string };
@@ -74,9 +75,7 @@ function PurchasesShow() {
     const { purchase } = usePage<PurchasesShowProps>().props;
     const [showArriveModal, setShowArriveModal] = useState(false);
     const [arriving, setArriving] = useState(false);
-    const [arrivalDate, setArrivalDate] = useState(
-        new Date().toISOString().split('T')[0],
-    );
+    const [arrivalDate, setArrivalDate] = useState(getCurrentDate());
 
     const statusBadge = (status: string) => {
         if (status === 'in_transit')

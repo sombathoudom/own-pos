@@ -1,11 +1,12 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { type FormEvent, type ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Badge, Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import ReportsNav from '@/Components/Inventory/ReportsNav';
 import Pagination from '@/Components/Pagination';
 import Layout from '@/Layouts';
+import { formatDateTime } from '@/utils/dateTime';
 
 function ReportsStockLoss() {
     const { from, to, movements, totalLoss } = usePage<{
@@ -17,7 +18,7 @@ function ReportsStockLoss() {
     const [fromDate, setFromDate] = useState(from);
     const [toDate, setToDate] = useState(to);
 
-    const submit = (event: FormEvent<HTMLFormElement>) => {
+    const submit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         router.get(
             '/reports/stock-loss',
@@ -95,9 +96,9 @@ function ReportsStockLoss() {
                                                 (movement: any) => (
                                                     <tr key={movement.id}>
                                                         <td>
-                                                            {new Date(
+                                                            {formatDateTime(
                                                                 movement.created_at,
-                                                            ).toLocaleDateString()}
+                                                            )}
                                                         </td>
                                                         <td>
                                                             {

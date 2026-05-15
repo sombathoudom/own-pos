@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { Badge, Button, Card, Container, Form, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
@@ -13,6 +13,7 @@ import type {
     InventoryStockMovement,
     StockMovementIndexPageProps,
 } from '@/types';
+import { formatDateTime } from '@/utils/dateTime';
 
 const TYPE_OPTIONS = [
     { value: '', label: 'All Types' },
@@ -86,17 +87,6 @@ function StockMovements() {
         }
 
         return label;
-    };
-
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
     };
 
     return (
@@ -256,7 +246,7 @@ function StockMovements() {
                                                     </span>
                                                 </td>
                                                 <td className="small text-nowrap">
-                                                    {formatDate(
+                                                    {formatDateTime(
                                                         movement.created_at,
                                                     )}
                                                 </td>

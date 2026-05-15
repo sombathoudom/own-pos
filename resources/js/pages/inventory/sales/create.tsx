@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import {
     Alert,
     Badge,
@@ -14,6 +14,7 @@ import {
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
 import { store as salesStore, index as salesIndex } from '@/routes/sales';
+import { getCurrentDate } from '@/utils/dateTime';
 
 type Variant = {
     id: number;
@@ -66,7 +67,7 @@ function SalesCreate() {
         customer_name: '',
         customer_phone: '',
         source_page: 'Other',
-        sale_date: new Date().toISOString().split('T')[0],
+        sale_date: getCurrentDate(),
         currency: 'USD',
         exchange_rate: '1',
         discount_usd: '0',
@@ -152,7 +153,7 @@ function SalesCreate() {
         0,
     );
 
-    const submit = (e: FormEvent<HTMLFormElement>) => {
+    const submit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         post(salesStore.url());
     };

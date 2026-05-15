@@ -24,6 +24,7 @@ import {
     updatePayment,
 } from '@/routes/sales';
 import type { SaleShowPageProps } from '@/types';
+import { getCurrentDate } from '@/utils/dateTime';
 
 type ExchangeItemForm = {
     sale_item_id: number;
@@ -60,7 +61,7 @@ function SalesShow() {
         exchange_delivery_cost_usd: string;
         note: string;
     }>({
-        exchange_date: new Date().toISOString().split('T')[0],
+        exchange_date: getCurrentDate(),
         items: sale.items.map((item) => ({
             sale_item_id: item.id,
             qty: '',
@@ -162,7 +163,7 @@ function SalesShow() {
 
     const resetExchangeForm = () => {
         exchangeForm.setData({
-            exchange_date: new Date().toISOString().split('T')[0],
+            exchange_date: getCurrentDate(),
             items: sale.items.map((item) => ({
                 sale_item_id: item.id,
                 qty: '',
@@ -194,7 +195,7 @@ function SalesShow() {
         router.post(
             returnMethod.url(sale.id),
             {
-                returned_at: new Date().toISOString().split('T')[0],
+                returned_at: getCurrentDate(),
                 items,
                 note: returnNote || undefined,
             },
@@ -312,7 +313,7 @@ function SalesShow() {
         router.post(
             storeConfirmDelivery.url(sale.id),
             {
-                confirmation_date: new Date().toISOString().split('T')[0],
+                confirmation_date: getCurrentDate(),
                 status: 'delivered',
                 items: sale.items.map((item) => ({
                     sale_item_id: item.id,

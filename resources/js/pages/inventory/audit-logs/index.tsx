@@ -1,10 +1,11 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { Badge, Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Pagination from '@/Components/Pagination';
 import Layout from '@/Layouts';
+import { formatDateTime } from '@/utils/dateTime';
 
 function AuditLogsIndex() {
     const { logs, filters } = usePage<{
@@ -19,7 +20,7 @@ function AuditLogsIndex() {
         setTable(filters.table ?? '');
     }, [filters.search, filters.table]);
 
-    const submit = (event: FormEvent<HTMLFormElement>) => {
+    const submit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         router.get(
             '/audit-logs',
@@ -121,9 +122,9 @@ function AuditLogsIndex() {
                                             {logs.data.map((log: any) => (
                                                 <tr key={log.id}>
                                                     <td>
-                                                        {new Date(
+                                                        {formatDateTime(
                                                             log.created_at,
-                                                        ).toLocaleString()}
+                                                        )}
                                                     </td>
                                                     <td>
                                                         {log.user?.name ??
