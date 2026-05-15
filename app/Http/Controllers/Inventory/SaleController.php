@@ -136,6 +136,9 @@ class SaleController extends Controller
         $variants = ProductVariant::query()
             ->with(['product:id,name,category_id,image_path', 'product.category:id,name', 'stockBalance'])
             ->where('status', 'active')
+            ->whereHas('stockBalance', function ($query) {
+                $query->where('qty_on_hand', '>', 0);
+            })
             ->productWithSizes()
             ->get(['id', 'product_id', 'sku', 'style_name', 'color', 'size', 'sale_price_usd']);
 
@@ -182,7 +185,7 @@ class SaleController extends Controller
                     'source_page' => $validated['source_page'] ?? null,
                     'sale_date' => $validated['sale_date'],
                     'currency' => $validated['currency'] ?? 'USD',
-                    'exchange_rate' => $validated['exchange_rate'] ?? 1,
+                    'exchange_rate' => $validated['exchange_rate'] ?? 4100,
                     'discount_usd' => $validated['discount_usd'] ?? 0,
                     'customer_delivery_fee_usd' => $validated['customer_delivery_fee_usd'] ?? 0,
                     'actual_delivery_cost_usd' => $validated['actual_delivery_cost_usd'] ?? 0,

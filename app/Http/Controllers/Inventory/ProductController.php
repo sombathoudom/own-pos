@@ -59,7 +59,7 @@ class ProductController extends Controller
 
     public function create(): Response
     {
-        $categories = Category::where('status', 'active')->orderBy('name')->get(['id', 'name']);
+        $categories = Category::where('status', 'active')->orderBy('name')->get(['id', 'name', 'default_sale_price_usd']);
 
         return Inertia::render('inventory/products/create', [
             'categories' => $categories,

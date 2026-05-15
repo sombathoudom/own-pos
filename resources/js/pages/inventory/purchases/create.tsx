@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { type ReactNode, useMemo, useState } from 'react';
+import { FormEvent, type ReactNode, useMemo, useState } from 'react';
 import {
     Alert,
     Badge,
@@ -206,6 +206,47 @@ function PurchasesCreate() {
             cloned,
             ...data.productRows.slice(index + 1),
         ]);
+    };
+
+    const cloneSize = (sourceRowIndex: number, sourceSize: string) => {
+        const sourceRow = data.productRows[sourceRowIndex];
+        const sourceProduct = getProduct(sourceRow.product_id);
+        if (!sourceProduct) return;
+
+        // Find the variant with the source size
+        const sourceVariant = sourceProduct.variants.find(
+            (v) => v.size === sourceSize,
+        );
+        if (!sourceVariant) return;
+
+        const sourceQty =
+            sourceRow.variantQtys[String(sourceVariant.id)] || '0';
+        if (sourceQty === '0') return;
+
+        // Update all other rows with the same size
+        const updatedRows = data.productRows.map((row, rowIndex) => {
+            if (rowIndex === sourceRowIndex) return row;
+
+            const product = getProduct(row.product_id);
+            if (!product) return row;
+
+            // Find variant with matching size
+            const matchingVariant = product.variants.find(
+                (v) => v.size === sourceSize,
+            );
+            if (!matchingVariant) return row;
+
+            // Clone the quantity
+            return {
+                ...row,
+                variantQtys: {
+                    ...row.variantQtys,
+                    [String(matchingVariant.id)]: sourceQty,
+                },
+            };
+        });
+
+        setData('productRows', updatedRows);
     };
 
     const getProduct = (productId: string): Product | undefined => {
@@ -1082,6 +1123,33 @@ function PurchasesCreate() {
                                                                                                     '0.15rem 0.3rem',
                                                                                             }}
                                                                                         />
+                                                                                        {(row
+                                                                                            .variantQtys[
+                                                                                            String(
+                                                                                                variant.id,
+                                                                                            )
+                                                                                        ] ??
+                                                                                            '0') !==
+                                                                                            '0' && (
+                                                                                            <Button
+                                                                                                size="sm"
+                                                                                                variant="link"
+                                                                                                className="p-0 text-primary"
+                                                                                                title={`Clone ${variant.size} qty to all products`}
+                                                                                                onClick={() =>
+                                                                                                    cloneSize(
+                                                                                                        index,
+                                                                                                        variant.size,
+                                                                                                    )
+                                                                                                }
+                                                                                                style={{
+                                                                                                    fontSize:
+                                                                                                        '0.875rem',
+                                                                                                }}
+                                                                                            >
+                                                                                                <i className="ri-file-copy-line"></i>
+                                                                                            </Button>
+                                                                                        )}
                                                                                     </div>
                                                                                 ),
                                                                             )}

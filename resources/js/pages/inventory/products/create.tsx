@@ -46,12 +46,12 @@ type ProductCreatePageProps = {
     categories: InventoryCategory[];
 };
 
-const emptyVariant = (): VariantRow => ({
+const emptyVariant = (defaultPrice = '0'): VariantRow => ({
     sku: '',
     style_name: '',
     color: '',
     size: '',
-    sale_price_usd: '0',
+    sale_price_usd: defaultPrice,
 });
 
 const normalizeSkuSegment = (value: string): string => {
@@ -105,10 +105,23 @@ function ProductsCreate() {
     }, [data.image]);
 
     const addVariant = (): void => {
-        setData('variants', [...data.variants, emptyVariant()]);
+        const selectedCategory = categories.find(
+            (c) => String(c.id) === data.category_id,
+        );
+        const defaultPrice = selectedCategory?.default_sale_price_usd
+            ? String(selectedCategory.default_sale_price_usd)
+            : '0';
+        setData('variants', [...data.variants, emptyVariant(defaultPrice)]);
     };
 
     const addVariants = (sizes: string[]): void => {
+        const selectedCategory = categories.find(
+            (c) => String(c.id) === data.category_id,
+        );
+        const defaultPrice = selectedCategory?.default_sale_price_usd
+            ? String(selectedCategory.default_sale_price_usd)
+            : '0';
+
         const existingSizes = new Set(
             data.variants.map((v) => v.size.toUpperCase()),
         );
@@ -120,7 +133,7 @@ function ProductsCreate() {
                     style_name: '',
                     color: '',
                     size,
-                    sale_price_usd: '0',
+                    sale_price_usd: defaultPrice,
                 };
                 return {
                     ...variant,
@@ -249,13 +262,63 @@ function ProductsCreate() {
                                                     <Form.Select
                                                         id="category_id"
                                                         value={data.category_id}
-                                                        onChange={(event) =>
+                                                        onChange={(event) => {
+                                                            const categoryId =
+                                                                event.target
+                                                                    .value;
                                                             setData(
                                                                 'category_id',
-                                                                event.target
-                                                                    .value,
-                                                            )
-                                                        }
+                                                                categoryId,
+                                                            );
+
+                                                            // Auto-fill sale price from category
+                                                            if (categoryId) {
+                                                                const selectedCategory =
+                                                                    categories.find(
+                                                                        (c) =>
+                                                                            String(
+                                                                                c.id,
+                                                                            ) ===
+                                                                            categoryId,
+                                                                    );
+
+                                                                console.log(
+                                                                    'Selected category:',
+                                                                    selectedCategory,
+                                                                );
+
+                                                                if (
+                                                                    selectedCategory?.default_sale_price_usd
+                                                                ) {
+                                                                    const updatedVariants =
+                                                                        data.variants.map(
+                                                                            (
+                                                                                v,
+                                                                            ) => ({
+                                                                                ...v,
+                                                                                sale_price_usd:
+                                                                                    String(
+                                                                                        selectedCategory.default_sale_price_usd,
+                                                                                    ),
+                                                                            }),
+                                                                        );
+
+                                                                    console.log(
+                                                                        'Updating variants with price:',
+                                                                        selectedCategory.default_sale_price_usd,
+                                                                    );
+
+                                                                    setData(
+                                                                        'variants',
+                                                                        updatedVariants,
+                                                                    );
+                                                                } else {
+                                                                    console.log(
+                                                                        'No default price set for category',
+                                                                    );
+                                                                }
+                                                            }
+                                                        }}
                                                         isInvalid={
                                                             !!errors.category_id
                                                         }
@@ -580,7 +643,7 @@ function ProductsCreate() {
                                                                         <Form.Control
                                                                             size="sm"
                                                                             type="number"
-                                                                            min="0"
+                                                                            min="0.01"
                                                                             step="0.01"
                                                                             value={
                                                                                 variant.sale_price_usd
