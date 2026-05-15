@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Inventory;
 use App\Actions\Inventory\ReceivePurchase;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StorePurchaseRequest;
+use App\Http\Requests\Inventory\UpdatePurchaseRequest;
 use App\Models\Category;
 use App\Models\Expense;
 use App\Models\Product;
@@ -137,6 +138,52 @@ class PurchaseController extends Controller
         ]);
     }
 
+    public function edit(Purchase $purchase): Response
+    {
+        $purchase->load('items');
+
+        $suppliers = Supplier::where('status', 'active')->orderBy('name')->get(['id', 'name']);
+        $categories = Category::where('status', 'active')->orderBy('name')->get(['id', 'name']);
+        $products = Product::where('status', 'active')
+            ->with('variants:id,product_id,sku,color,size,sale_price_usd')
+            ->orderBy('name')
+            ->get(['id', 'name', 'category_id', 'image_path'])
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'category_id' => $p->category_id,
+                'image_url' => $p->imageUrl(),
+                'variants' => $p->variants,
+            ]);
+
+        return Inertia::render('inventory/purchases/edit', [
+            'purchase' => [
+                'id' => $purchase->id,
+                'purchase_no' => $purchase->purchase_no,
+                'purchase_date' => $purchase->purchase_date?->toDateString(),
+                'arrival_date' => $purchase->arrival_date?->toDateString(),
+                'currency' => $purchase->currency,
+                'exchange_rate' => $purchase->exchange_rate,
+                'purchase_delivery_cost_usd' => $purchase->purchase_delivery_cost_usd,
+                'other_cost_usd' => $purchase->other_cost_usd,
+                'status' => $purchase->status,
+                'note' => $purchase->note,
+                'supplier_id' => $purchase->supplier_id,
+                'items' => $purchase->items->map(fn ($item) => [
+                    'category_id' => $item->category_id,
+                    'product_id' => $item->product_id,
+                    'product_variant_id' => $item->product_variant_id,
+                    'qty' => (string) $item->qty,
+                    'unit_cost_usd' => $item->unit_cost_usd,
+                    'sale_price_usd' => $item->sale_price_usd,
+                ])->values()->all(),
+            ],
+            'suppliers' => $suppliers,
+            'categories' => $categories,
+            'products' => $products,
+        ]);
+    }
+
     public function arrive(Request $request, Purchase $purchase, ReceivePurchase $receivePurchase): RedirectResponse
     {
         if (! $purchase->isInTransit()) {
@@ -171,5 +218,71 @@ class PurchaseController extends Controller
         });
 
         return to_route('purchases.show', $purchase)->with('toast', ['type' => 'success', 'message' => 'Purchase arrived, stock updated, and costs recorded.']);
+    }
+
+    public function update(UpdatePurchaseRequest $request, Purchase $purchase, ReceivePurchase $receivePurchase): RedirectResponse
+    {
+        if (! $purchase->isInTransit()) {
+            return back()->withErrors(['general' => 'Only in-transit purchases can be updated.']);
+        }
+
+        $validated = $request->validated();
+        $wasArrived = $purchase->isArrived();
+        $arrivalDate = $validated['arrival_date'] ?? null;
+
+        DB::transaction(function () use ($purchase, $validated) {
+            $purchase->update([
+                'supplier_id' => $validated['supplier_id'] ?? null,
+                'purchase_date' => $validated['purchase_date'],
+                'currency' => $validated['currency'] ?? $purchase->currency,
+                'exchange_rate' => $validated['exchange_rate'] ?? $purchase->exchange_rate,
+                'purchase_delivery_cost_usd' => $validated['purchase_delivery_cost_usd'] ?? 0,
+                'other_cost_usd' => $validated['other_cost_usd'] ?? 0,
+                'note' => $validated['note'] ?? null,
+            ]);
+
+            $purchase->items()->delete();
+
+            foreach ($validated['items'] as $itemData) {
+                $purchase->items()->create([
+                    'category_id' => $itemData['category_id'],
+                    'product_id' => $itemData['product_id'],
+                    'product_variant_id' => $itemData['product_variant_id'],
+                    'qty' => $itemData['qty'],
+                    'unit_cost_usd' => $itemData['unit_cost_usd'],
+                    'subtotal_usd' => bcmul((string) $itemData['unit_cost_usd'], (string) $itemData['qty'], 4),
+                    'sale_price_usd' => $itemData['sale_price_usd'],
+                ]);
+            }
+        });
+
+        if ($arrivalDate && ! $wasArrived) {
+            DB::transaction(function () use ($purchase, $receivePurchase, $arrivalDate) {
+                $purchase->update([
+                    'arrival_date' => $arrivalDate,
+                    'status' => 'arrived',
+                ]);
+
+                $receivePurchase->handle($purchase->fresh());
+
+                $otherCost = (string) $purchase->other_cost_usd;
+                if (bccomp($otherCost, '0', 4) > 0) {
+                    Expense::create([
+                        'expense_date' => $arrivalDate,
+                        'category' => 'purchase_other_cost',
+                        'amount_usd' => $otherCost,
+                        'amount_khr' => '0',
+                        'currency' => $purchase->currency ?? 'USD',
+                        'exchange_rate' => $purchase->exchange_rate ?? 1,
+                        'note' => "Other cost for purchase #{$purchase->purchase_no}",
+                        'created_by' => auth()->id(),
+                    ]);
+                }
+            });
+
+            return to_route('purchases.show', $purchase)->with('toast', ['type' => 'success', 'message' => 'Purchase updated and marked as arrived.']);
+        }
+
+        return to_route('purchases.show', $purchase)->with('toast', ['type' => 'success', 'message' => 'Purchase updated successfully.']);
     }
 }

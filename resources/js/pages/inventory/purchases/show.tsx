@@ -116,16 +116,28 @@ function PurchasesShow() {
                                         <div className="d-flex gap-2">
                                             {statusBadge(purchase.status)}
                                             {canArrive && (
-                                                <Button
-                                                    variant="success"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        setShowArriveModal(true)
-                                                    }
-                                                >
-                                                    <i className="ri-check-line me-1"></i>
-                                                    Mark Arrived
-                                                </Button>
+                                                <>
+                                                    <Button
+                                                        variant="outline-primary"
+                                                        size="sm"
+                                                        href={`/purchases/${purchase.id}/edit`}
+                                                    >
+                                                        <i className="ri-pencil-line me-1"></i>
+                                                        Edit
+                                                    </Button>
+                                                    <Button
+                                                        variant="success"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            setShowArriveModal(
+                                                                true,
+                                                            )
+                                                        }
+                                                    >
+                                                        <i className="ri-check-line me-1"></i>
+                                                        Mark Arrived
+                                                    </Button>
+                                                </>
                                             )}
                                         </div>
                                     </div>

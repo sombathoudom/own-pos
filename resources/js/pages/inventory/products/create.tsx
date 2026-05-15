@@ -390,7 +390,6 @@ function ProductsCreate() {
                                                         Status
                                                     </Form.Label>
                                                     <Form.Select
-                                                        id="status"
                                                         value={data.status}
                                                         onChange={(event) =>
                                                             setData(

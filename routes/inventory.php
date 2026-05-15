@@ -22,7 +22,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('suppliers', SupplierController::class);
     Route::get('products/search', [ProductController::class, 'search'])->name('products.search');
     Route::resource('products', ProductController::class);
-    Route::resource('purchases', PurchaseController::class)->except(['edit', 'update', 'destroy']);
+    Route::resource('purchases', PurchaseController::class)->except(['destroy']);
     Route::post('purchases/{purchase}/arrive', [PurchaseController::class, 'arrive'])->name('purchases.arrive');
     Route::resource('sales', SaleController::class)->except(['edit', 'update', 'destroy']);
     Route::get('pos', [SaleController::class, 'pos'])->name('pos');

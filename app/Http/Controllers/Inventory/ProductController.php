@@ -138,7 +138,15 @@ class ProductController extends Controller
 
     public function destroy(Product $product): RedirectResponse
     {
-        $product->delete();
+        //     $hasSale = $product->variants()
+        //     ->whereHas('saleItems')
+        //     ->exists();
+
+        //     if ($hasSale) {
+        //         return 0; // Cannot delete: product already has sales
+        //     }
+
+        //     $product->delete();
 
         return to_route('products.index')->with('toast', ['type' => 'success', 'message' => 'Product deleted.']);
     }

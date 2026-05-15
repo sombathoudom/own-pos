@@ -166,7 +166,7 @@ function CreateCategory() {
                                                         Status
                                                     </Form.Label>
                                                     <Form.Select
-                                                        id="status"
+                                                        size="lg"
                                                         value={data.status}
                                                         onChange={(event) =>
                                                             setData(
