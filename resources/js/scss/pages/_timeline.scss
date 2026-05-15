@@ -104,7 +104,8 @@
         padding-left: 48px;
         padding-right: 0px;
 
-        &.right,  &.left {
+        &.right,
+        &.left {
             left: 0%;
 
             .icon {
@@ -117,7 +118,8 @@
 
             &::before {
                 left: 110px;
-                border-color: transparent transparent transparent var(--#{$prefix}border-color);
+                border-color: transparent transparent transparent
+                    var(--#{$prefix}border-color);
             }
 
             .date {
@@ -136,7 +138,7 @@
 
     &::after {
         position: absolute;
-        content: "";
+        content: '';
         width: 2px;
         height: 83%;
         top: 50px;
@@ -204,7 +206,7 @@
         border-radius: 6px;
         background: var(--#{$prefix}secondary-bg);
         max-width: 695px;
-        @media (max-width: 991.98px){
+        @media (max-width: 991.98px) {
             margin-right: 0;
         }
 
@@ -217,7 +219,8 @@
             border-style: solid;
             top: 26px;
             right: 100%;
-            border-color: transparent var(--#{$prefix}secondary-bg) transparent transparent;
+            border-color: transparent var(--#{$prefix}secondary-bg) transparent
+                transparent;
             border-width: 10px;
         }
 
@@ -230,7 +233,8 @@
             border-style: solid;
             right: 100%;
             top: 24px;
-            border-color: transparent var(--#{$prefix}border-color) transparent transparent;
+            border-color: transparent var(--#{$prefix}border-color) transparent
+                transparent;
             border-width: 12px;
         }
 
@@ -260,19 +264,20 @@
                 left: 30px;
                 margin-left: 0px;
                 top: -20px;
-                border-color: transparent transparent var(--#{$prefix}border-color) transparent;
+                border-color: transparent transparent
+                    var(--#{$prefix}border-color) transparent;
             }
 
             &::before {
                 left: 30px;
                 margin-left: 0px;
                 top: -19px;
-                border-color: transparent transparent var(--#{$prefix}secondary-bg) transparent;
+                border-color: transparent transparent
+                    var(--#{$prefix}secondary-bg) transparent;
                 border-width: 10px;
                 z-index: 1;
             }
         }
-
     }
 }
 
@@ -283,7 +288,7 @@
     margin: 0 auto;
 
     &::before {
-        content: "";
+        content: '';
         position: absolute;
         width: 100%;
         top: 174px;
@@ -299,7 +304,7 @@
             box-shadow: none;
 
             &::after {
-                content: "";
+                content: '';
                 position: absolute;
                 left: 0px;
                 right: 0px;
@@ -330,7 +335,8 @@
                 border-style: solid;
                 left: 0px;
                 top: -23px;
-                border-color: transparent transparent $timeline-color transparent;
+                border-color: transparent transparent $timeline-color
+                    transparent;
                 border-width: 12px;
                 right: 0;
                 margin: 0 auto;
@@ -355,7 +361,8 @@
                 &::before {
                     bottom: -23px;
                     top: auto;
-                    border-color: $timeline-color transparent transparent transparent;
+                    border-color: $timeline-color transparent transparent
+                        transparent;
                 }
             }
 
@@ -382,7 +389,7 @@
             opacity: 1;
             cursor: auto;
             backdrop-filter: blur(25px);
-            pointer-events: none
+            pointer-events: none;
         }
     }
 
@@ -390,7 +397,7 @@
         right: 0;
 
         &::after {
-            content: "\EA6E";
+            content: '\EA6E';
             font-family: remixicon;
         }
     }
@@ -399,7 +406,7 @@
         left: 0;
 
         &::after {
-            content: "\EA64";
+            content: '\EA64';
             font-family: remixicon;
         }
     }
@@ -426,7 +433,7 @@
         }
 
         &:before {
-            content: "";
+            content: '';
             position: absolute;
             border-left: 1px dashed var(--#{$prefix}border-color);
             left: 16px;
@@ -435,9 +442,9 @@
             z-index: 0;
         }
         &:last-child {
-           &::before {
-               border-color: transparent;
-           }
+            &::before {
+                border-color: transparent;
+            }
         }
     }
 }

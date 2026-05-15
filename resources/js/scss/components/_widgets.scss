@@ -1,6 +1,6 @@
-// 
+//
 // Widgets.scss
-// 
+//
 
 .main-chart {
     .chart-border-left {
@@ -12,8 +12,6 @@
         }
     }
 }
-
-
 
 /* Activity */
 
@@ -27,7 +25,7 @@
         border-left: 2px solid var(--#{$prefix}border-color);
 
         &:after {
-            content: "";
+            content: '';
             display: block;
             position: absolute;
             top: 4px;
@@ -55,11 +53,11 @@
 
         &:before,
         &:after {
-            content: "";
+            content: '';
             position: absolute;
             width: 8px;
             height: 69px;
-            background-color: rgba($success, .1);
+            background-color: rgba($success, 0.1);
             left: 3px;
             transform: rotate(32deg);
             top: -8px;
@@ -86,17 +84,17 @@
     }
 }
 
-
 // credit card widget
-.card-wrapper{
-    .jp-card{
-        .jp-card-back, .jp-card-front{
+.card-wrapper {
+    .jp-card {
+        .jp-card-back,
+        .jp-card-front {
             background-color: $success;
         }
     }
 }
 
-.notification-elem{
+.notification-elem {
     position: absolute;
     top: 0;
     right: 0;
@@ -113,7 +111,7 @@
 //ecommerce widgets
 .clothes-size {
     li {
-        input[type="radio"] {
+        input[type='radio'] {
             display: none;
         }
 
@@ -127,7 +125,7 @@
             color: $primary;
         }
 
-        input[type="radio"]:checked+label {
+        input[type='radio']:checked + label {
             background-color: $primary;
             border-color: $primary;
             color: $white;

@@ -2,8 +2,7 @@
 // _form-control.scss
 //
 
-
-.form-icon{
+.form-icon {
     position: relative;
     .form-control-icon {
         padding-left: calc(#{$input-padding-x} * 3);
@@ -17,7 +16,7 @@
         display: flex;
         align-items: center;
     }
-    &.right{
+    &.right {
         .form-control-icon {
             padding-right: calc(#{$input-padding-x} * 3);
             padding-left: $input-padding-x;

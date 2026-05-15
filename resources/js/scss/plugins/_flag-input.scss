@@ -21,7 +21,7 @@
             }
 
             &::-webkit-scrollbar-thumb {
-                background-color: rgba(var(--#{$prefix}dark-rgb), .075);
+                background-color: rgba(var(--#{$prefix}dark-rgb), 0.075);
                 border-radius: 8px;
             }
 
@@ -35,7 +35,7 @@
 [data-option-flag-img-name] {
     .flag-input {
         padding-left: 45px;
-        background-image: url("../images/flags/us.svg");
+        background-image: url('../images/flags/us.svg');
         background-repeat: no-repeat;
         background-position: 14px 8px;
         background-size: 18px;
@@ -45,8 +45,8 @@
 [data-option-flag-name],
 [data-option-flag-img-name] {
     &::before {
-        content: "\f0140";
-        font-family: "Material Design Icons";
+        content: '\f0140';
+        font-family: 'Material Design Icons';
         position: absolute;
         right: $input-padding-x;
         top: $input-padding-y;
@@ -54,13 +54,13 @@
     }
 }
 
-[data-option-countrycode="false"] {
+[data-option-countrycode='false'] {
     .country-codeno {
         display: none;
     }
 }
 
-[data-search-input="false"] {
+[data-search-input='false'] {
     .searchlist-input {
         display: none;
     }

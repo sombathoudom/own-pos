@@ -5,7 +5,7 @@
 .autoComplete_wrapper {
     display: block;
 
-    >input {
+    > input {
         display: block;
         width: 100%;
         height: auto;
@@ -37,7 +37,7 @@
         }
     }
 
-    >ul {
+    > ul {
         border-radius: $border-radius;
         border-color: $dropdown-border-color;
         background-color: $dropdown-bg;
@@ -47,7 +47,7 @@
         max-height: 160px;
         margin: 0;
         animation-name: DropDownSlide;
-        animation-duration: .3s;
+        animation-duration: 0.3s;
         animation-fill-mode: both;
 
         > li {
@@ -64,7 +64,7 @@
                 padding: 1px;
             }
 
-            &[aria-selected=true],
+            &[aria-selected='true'],
             &:hover {
                 color: $dropdown-link-hover-color;
                 @include gradient-bg($dropdown-link-hover-bg);
@@ -72,7 +72,7 @@
         }
 
         .no_result {
-            padding: $dropdown-item-padding-y *2 $dropdown-item-padding-x;
+            padding: $dropdown-item-padding-y * 2 $dropdown-item-padding-x;
             font-style: italic;
             font-weight: $font-weight-medium;
         }

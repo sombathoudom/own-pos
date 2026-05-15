@@ -46,8 +46,8 @@
 
 .administration {
     .director {
-        >li {
-            >a {
+        > li {
+            > a {
                 width: 50%;
                 margin: 0 auto 0px auto;
                 border-radius: 4px;
@@ -60,7 +60,7 @@
         width: 100%;
 
         &::after {
-            content: "";
+            content: '';
             display: block;
             width: 0;
             height: 130px;
@@ -69,7 +69,7 @@
             position: relative;
         }
 
-        >li {
+        > li {
             &:first-child {
                 width: 18.59%;
                 height: 64px;
@@ -91,7 +91,7 @@
 
     @media screen and (max-width: 767px) {
         .subdirector {
-            >li {
+            > li {
                 &:first-child {
                     width: 40%;
                     right: 10%;
@@ -109,7 +109,7 @@
 .departments {
     width: 100%;
 
-    >li {
+    > li {
         &:first-child {
             width: 18.59%;
             height: 64px;
@@ -139,7 +139,7 @@
     }
 
     &::after {
-        content: "";
+        content: '';
         display: block;
         position: absolute;
         width: 81.1%;
@@ -149,11 +149,11 @@
         border-left: 2px dashed var(--#{$prefix}border-color);
         margin: 0 auto;
         top: 130px;
-        left: 9.1%
+        left: 9.1%;
     }
 
     @media screen and (max-width: 767px) {
-        >li {
+        > li {
             &:first-child {
                 width: 40%;
                 left: 10%;
@@ -177,7 +177,7 @@
     width: 18.25%;
 
     &::before {
-        content: "";
+        content: '';
         display: block;
         position: absolute;
         width: 0;
@@ -189,7 +189,7 @@
         margin-left: -4px;
     }
 
-    >a {
+    > a {
         margin: 0 0 -26px -4px;
         z-index: 1;
     }
@@ -234,7 +234,7 @@
         margin-left: 0;
 
         &::before {
-            content: "";
+            content: '';
             display: block;
             position: absolute;
             width: 0;
@@ -253,8 +253,6 @@
         }
     }
 }
-
-
 
 // sitemap
 
@@ -284,7 +282,7 @@
     }
 
     @media (max-width: 575.98px) {
-        >ul {
+        > ul {
             position: relative;
             li {
                 padding-top: 10px;
@@ -293,7 +291,7 @@
                     position: relative;
 
                     &:before {
-                        content: "";
+                        content: '';
                         height: calc(100% - 14px);
                         border-right: 2px dashed var(--#{$prefix}border-color);
                         position: absolute;
@@ -311,7 +309,7 @@
                     padding: 4px 16px 4px 36px;
 
                     &:after {
-                        content: "";
+                        content: '';
                         width: 24px;
                         border-top: 2px dashed var(--#{$prefix}border-color);
                         position: absolute;
@@ -334,7 +332,7 @@
                 padding-top: 30px;
 
                 &:before {
-                    content: "";
+                    content: '';
                     height: 24px;
                     width: 0;
                     border-right: 2px dashed var(--#{$prefix}border-color);
@@ -346,7 +344,7 @@
                 }
 
                 &:after {
-                    content: "";
+                    content: '';
                     width: 100%;
                     border-top: 2px dashed var(--#{$prefix}border-color);
                     position: absolute;
@@ -362,7 +360,7 @@
 
                 &.parent-title {
                     &::before {
-                        content: "";
+                        content: '';
                         height: 23px;
                         border-right: 2px dashed var(--#{$prefix}border-color);
                         position: absolute;
@@ -378,7 +376,7 @@
                     position: relative;
 
                     &::before {
-                        content: "";
+                        content: '';
                         height: 21px;
                         border-right: 2px dashed var(--#{$prefix}border-color);
                         position: absolute;
@@ -395,13 +393,11 @@
         color: var(--#{$prefix}body-color);
         padding: 4px 0px;
         display: block;
-
     }
 }
 
-
 // vertical sitemap
-.verti-sitemap { 
+.verti-sitemap {
     a {
         color: var(--#{$prefix}body-color);
         display: block;
@@ -423,7 +419,7 @@
         position: relative;
         padding-top: 10px;
         &:before {
-            content: "";
+            content: '';
             border-left: 2px dashed var(--#{$prefix}border-color);
             position: absolute;
             top: 0;
@@ -431,12 +427,13 @@
             bottom: 0;
             left: 0;
         }
-        .list-wrap, li {
+        .list-wrap,
+        li {
             a {
                 position: relative;
                 padding: 10px 16px 4px 36px;
                 &::before {
-                    content: "";
+                    content: '';
                     width: 24px;
                     border-top: 2px dashed var(--#{$prefix}border-color);
                     position: absolute;
@@ -446,17 +443,18 @@
                 }
             }
         }
-        .second-list, .third-list {
+        .second-list,
+        .third-list {
             margin-left: 42px;
-            
         }
 
-        .third-list, .second-list {
+        .third-list,
+        .second-list {
             position: relative;
             li {
                 position: relative;
                 &:before {
-                    content: "";
+                    content: '';
                     height: 100%;
                     border-left: 2px dashed var(--#{$prefix}border-color);
                     position: absolute;
@@ -471,7 +469,7 @@
                 }
             }
         }
-        
+
         &:last-child {
             &::before {
                 height: 25px;
@@ -479,4 +477,3 @@
         }
     }
 }
-

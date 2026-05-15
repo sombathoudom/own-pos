@@ -14,13 +14,13 @@
     &.accordion-icon-none {
         .accordion-button {
             &::after {
-                content: "";
+                content: '';
                 background-image: none !important;
             }
 
             &:not(.collapsed) {
                 &::after {
-                    content: "";
+                    content: '';
                 }
             }
         }
@@ -33,8 +33,8 @@
     .accordion-button {
         &::after {
             background-image: none !important;
-            font-family: "Material Design Icons";
-            content: "\F0142";
+            font-family: 'Material Design Icons';
+            content: '\F0142';
             font-size: 1.1rem;
             vertical-align: middle;
             line-height: 0.8;
@@ -43,7 +43,7 @@
         &:not(.collapsed) {
             &::after {
                 background-image: none !important;
-                content: "\F0140";
+                content: '\F0140';
                 margin-right: -3px;
             }
         }
@@ -56,8 +56,8 @@
     .accordion-button {
         &::after {
             background-image: none !important;
-            font-family: "Material Design Icons";
-            content: "\F0415";
+            font-family: 'Material Design Icons';
+            content: '\F0415';
             font-size: 1.1rem;
             vertical-align: middle;
             line-height: 0.8;
@@ -66,13 +66,12 @@
         &:not(.collapsed) {
             &::after {
                 background-image: none !important;
-                content: "\F0374";
+                content: '\F0374';
                 margin-right: -3px;
             }
         }
     }
 }
-
 
 // left Icon accordion
 
@@ -122,10 +121,9 @@
     }
 }
 
-//accordion Color 
+//accordion Color
 
-@each $color,
-$value in $theme-colors {
+@each $color, $value in $theme-colors {
     .accordion-#{$color} {
         .accordion-item {
             border-color: rgba($value, 0.6);
@@ -160,9 +158,9 @@ $value in $theme-colors {
 }
 
 // rtl
-[dir="rtl"]{
+[dir='rtl'] {
     .custom-accordionwithicon {
-        .accordion-button::after{
+        .accordion-button::after {
             transform: rotate(180deg);
         }
     }

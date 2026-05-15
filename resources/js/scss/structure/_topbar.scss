@@ -29,11 +29,11 @@
     margin: 0 auto;
     height: $header-height;
     padding: 0 $grid-gutter-width 0 calc(#{$grid-gutter-width} * 0.5)
-    /*rtl: 0 0 0 calc(#{$grid-gutter-width} * 0.5) */
-    ;
+        /*rtl: 0 0 0 calc(#{$grid-gutter-width} * 0.5) */;
 
     @media (max-width: 767.98px) {
-        padding: 0 calc(#{$grid-gutter-width} * 0.5) 0 calc(#{$grid-gutter-width} * 0.5);
+        padding: 0 calc(#{$grid-gutter-width} * 0.5) 0
+            calc(#{$grid-gutter-width} * 0.5);
     }
 
     .topbar-head-dropdown {
@@ -59,7 +59,10 @@
         color: var(--#{$prefix}header-item-sub-color);
         transition: all 0.5s ease;
 
-        &:hover, &:focus, &:active, &.active {
+        &:hover,
+        &:focus,
+        &:active,
+        &.active {
             background-color: var(--#{$prefix}header-item-bg);
         }
 
@@ -68,7 +71,6 @@
             width: 36px;
         }
     }
-
 
     .user-name-sub-text {
         color: var(--#{$prefix}header-item-sub-color);
@@ -223,23 +225,23 @@
 
 // Full Screen
 .fullscreen-enable {
-    [data-toggle="fullscreen"] {
+    [data-toggle='fullscreen'] {
         .bx-fullscreen::before {
-            content: "\eacb";
+            content: '\eacb';
         }
     }
 }
 
 // Dark mode enable
-[data-bs-theme="dark"] {
+[data-bs-theme='dark'] {
     .light-dark-mode {
         .bx-moon::before {
-            content: "\ec34";
+            content: '\ec34';
         }
     }
 }
 
-[data-topbar="dark"] {
+[data-topbar='dark'] {
     .logo-dark {
         display: none;
     }
@@ -249,8 +251,8 @@
     }
 }
 
-[data-bs-theme="dark"] {
-    &[data-topbar="light"] {
+[data-bs-theme='dark'] {
+    &[data-topbar='light'] {
         .logo-dark {
             display: none;
         }
@@ -279,8 +281,8 @@
     }
 }
 
-[data-layout="vertical"] {
-    &[data-layout-style="detached"] {
+[data-layout='vertical'] {
+    &[data-layout-style='detached'] {
         @media (min-width: 1024.1px) {
             #page-topbar {
                 left: 0 !important;
@@ -301,7 +303,7 @@
                 margin: 0 auto;
             }
 
-            &:is([data-sidebar-size="sm"], [data-sidebar-size="sm-hover"]) {
+            &:is([data-sidebar-size='sm'], [data-sidebar-size='sm-hover']) {
                 .navbar-brand-box {
                     background-color: transparent !important;
                     position: relative;
@@ -319,7 +321,7 @@
             }
         }
 
-        &[data-topbar="dark"] {
+        &[data-topbar='dark'] {
             .horizontal-logo {
                 .logo-dark {
                     display: none;
@@ -333,7 +335,7 @@
     }
 }
 
-[data-layout="horizontal"] {
+[data-layout='horizontal'] {
     #page-topbar {
         left: 0;
         border-bottom: 1px solid var(--#{$prefix}header-border);
@@ -351,13 +353,17 @@
         }
 
         @media (max-width: 1024.1px) {
-            padding: calc(45px + #{$grid-gutter-width} * 1.8) calc(#{$grid-gutter-width} * 0.5) $footer-height calc(#{$grid-gutter-width} * 0.5);
+            padding: calc(45px + #{$grid-gutter-width} * 1.8)
+                calc(#{$grid-gutter-width} * 0.5) $footer-height
+                calc(#{$grid-gutter-width} * 0.5);
         }
 
-        padding: calc(45px + #{$grid-gutter-width}) calc(#{$grid-gutter-width} * 0.5) $footer-height calc(#{$grid-gutter-width} * 0.5);
+        padding: calc(45px + #{$grid-gutter-width})
+            calc(#{$grid-gutter-width} * 0.5) $footer-height
+            calc(#{$grid-gutter-width} * 0.5);
     }
 
-    &[data-layout-width="boxed"] {
+    &[data-layout-width='boxed'] {
         .page-content {
             @media (min-width: 1024.1px) {
                 min-height: calc(100vh - #{$footer-height + $header-height});
@@ -366,9 +372,8 @@
     }
 }
 
-[data-layout="vertical"] {
-
-    &:is([data-sidebar-size="sm"], [data-sidebar-size="sm-hover"]) {
+[data-layout='vertical'] {
+    &:is([data-sidebar-size='sm'], [data-sidebar-size='sm-hover']) {
         #page-topbar {
             @media (min-width: 768px) {
                 left: var(--#{$prefix}vertical-menu-width-sm);
@@ -376,7 +381,7 @@
         }
     }
 
-    &[data-sidebar-size="md"] {
+    &[data-sidebar-size='md'] {
         #page-topbar {
             @media (min-width: 768px) {
                 left: var(--#{$prefix}vertical-menu-width-md);
@@ -385,10 +390,12 @@
     }
 }
 
-[data-layout="twocolumn"] {
+[data-layout='twocolumn'] {
     #page-topbar {
         @media (min-width: 768px) {
-            left: calc(#{$twocolumn-menu-iconview-width} + #{$twocolumn-menu-width});
+            left: calc(
+                #{$twocolumn-menu-iconview-width} + #{$twocolumn-menu-width}
+            );
         }
     }
 

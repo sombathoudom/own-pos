@@ -3,10 +3,9 @@
 //
 
 .card {
-
     &::before,
     &::after {
-        content: "";
+        content: '';
         height: 13px;
         width: 13px;
         position: absolute;
@@ -14,21 +13,22 @@
     }
 
     &::before {
-        border-color: var(--#{$prefix}border-color) var(--#{$prefix}border-color) transparent transparent;
+        border-color: var(--#{$prefix}border-color)
+            var(--#{$prefix}border-color) transparent transparent;
         right: -3px;
         top: -3px;
         border-radius: 0 3px 0 0;
     }
 
     &::after {
-        border-color: transparent transparent var(--#{$prefix}border-color) var(--#{$prefix}border-color);
+        border-color: transparent transparent var(--#{$prefix}border-color)
+            var(--#{$prefix}border-color);
         left: -3px;
         bottom: -3px;
         border-radius: 0 0 0 3px;
     }
 
     &.card-border-effect-none {
-
         &::before,
         &::after {
             display: none;
@@ -36,22 +36,20 @@
     }
 }
 
-
-
 body {
     background-image: var(--#{$prefix}body-bg-image);
     background-attachment: fixed;
 
     &::before {
-        content: "";
+        content: '';
         position: absolute;
         inset: 0;
         z-index: -1;
-        background-color: rgba($white, 0.30);
+        background-color: rgba($white, 0.3);
     }
 }
 
-[data-topbar="light"] {
+[data-topbar='light'] {
     #page-topbar {
         &.topbar-shadow {
             background-color: var(--#{$prefix}secondary-bg);
@@ -59,7 +57,11 @@ body {
     }
 }
 
-[data-layout="vertical"][data-sidebar-size="sm"] .navbar-menu .navbar-nav .nav-item:hover>.menu-dropdown {
+[data-layout='vertical'][data-sidebar-size='sm']
+    .navbar-menu
+    .navbar-nav
+    .nav-item:hover
+    > .menu-dropdown {
     background-color: $white;
 }
 
@@ -105,7 +107,6 @@ body {
 }
 
 @media (min-width: 1350px) {
-
     .file-manager-sidebar,
     .email-detail-content,
     .file-manager-detail-content {
@@ -113,13 +114,13 @@ body {
     }
 }
 
-[data-sidebar="light"][data-layout="vertical"][data-sidebar-size="sm-hover"] {
+[data-sidebar='light'][data-layout='vertical'][data-sidebar-size='sm-hover'] {
     .navbar-menu:hover {
         background-color: var(--#{$prefix}white);
     }
 }
 
-[data-bs-theme="dark"] {
+[data-bs-theme='dark'] {
     body {
         background-size: cover;
 
@@ -128,38 +129,40 @@ body {
         }
     }
 
-    &[data-layout="vertical"][data-sidebar="dark"][data-sidebar-size="sm-hover"] {
+    &[data-layout='vertical'][data-sidebar='dark'][data-sidebar-size='sm-hover'] {
         .navbar-menu:hover {
             background-color: var(--#{$prefix}secondary-bg);
         }
     }
 
-    &[data-layout="vertical"][data-sidebar="dark"][data-sidebar-size="sm"] {
-        .navbar-menu .navbar-nav .nav-item:hover>.menu-dropdown {
+    &[data-layout='vertical'][data-sidebar='dark'][data-sidebar-size='sm'] {
+        .navbar-menu .navbar-nav .nav-item:hover > .menu-dropdown {
             background-color: var(--#{$prefix}secondary-bg);
         }
     }
 
-    &[data-layout="vertical"][data-sidebar-size="sm"] {
-        .navbar-menu .navbar-nav .nav-item:hover>a.menu-link {
+    &[data-layout='vertical'][data-sidebar-size='sm'] {
+        .navbar-menu .navbar-nav .nav-item:hover > a.menu-link {
             background-color: var(--#{$prefix}secondary-bg);
         }
     }
 }
 
-[data-layout="horizontal"] .navbar-nav .nav-item .nav-link[data-bs-toggle=collapse]:after {
+[data-layout='horizontal']
+    .navbar-nav
+    .nav-item
+    .nav-link[data-bs-toggle='collapse']:after {
     color: currentColor;
 }
 
-
 @media (max-width: 767.98px) {
-    [data-topbar="light"] {
+    [data-topbar='light'] {
         .app-menu {
             background-color: $white;
         }
     }
 
-    [data-bs-theme="dark"] {
+    [data-bs-theme='dark'] {
         .vertical-sidebar-enable .app-menu {
             background-color: var(--#{$prefix}secondary-bg);
         }
@@ -171,20 +174,19 @@ body {
     --#{$prefix}card-bg-fill: #{$card-bg-fill};
 
     @if $galaxy-body-img {
-        &[data-body-image="img-1"] {
+        &[data-body-image='img-1'] {
             --#{$prefix}body-bg-image: #{$body-bg-image-1};
         }
 
-        &[data-body-image="img-2"] {
+        &[data-body-image='img-2'] {
             --#{$prefix}body-bg-image: #{$body-bg-image-2};
         }
 
-        &[data-body-image="img-3"] {
+        &[data-body-image='img-3'] {
             --#{$prefix}body-bg-image: #{$body-bg-image-3};
         }
     }
 }
-
 
 //theme dark
 @if $enable-dark-mode {
@@ -193,29 +195,29 @@ body {
         --#{$prefix}card-bg-fill: #{$card-bg-fill-dark};
 
         @if $galaxy-body-img-dark {
-            &[data-body-image="img-1"] {
+            &[data-body-image='img-1'] {
                 --#{$prefix}body-bg-image: #{$body-bg-image-1-dark};
             }
 
-            &[data-body-image="img-2"] {
+            &[data-body-image='img-2'] {
                 --#{$prefix}body-bg-image: #{$body-bg-image-2-dark};
             }
 
-            &[data-body-image="img-3"] {
+            &[data-body-image='img-3'] {
                 --#{$prefix}body-bg-image: #{$body-bg-image-3-dark};
             }
 
-            [for="body-img-one"] {
+            [for='body-img-one'] {
                 background-image: $body-bg-image-1-dark;
                 background-size: cover;
             }
 
-            [for="body-img-two"] {
+            [for='body-img-two'] {
                 background-image: $body-bg-image-2-dark;
                 background-size: cover;
             }
 
-            [for="body-img-three"] {
+            [for='body-img-three'] {
                 background-image: $body-bg-image-3-dark;
                 background-size: cover;
             }

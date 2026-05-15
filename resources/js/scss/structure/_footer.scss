@@ -1,6 +1,6 @@
-// 
+//
 // _footer.scss
-// 
+//
 
 .footer {
     bottom: 0;
@@ -17,9 +17,8 @@
     }
 }
 
-[data-layout="vertical"] {
-
-    &:is([data-sidebar-size="sm"], [data-sidebar-size="sm-hover"]) {
+[data-layout='vertical'] {
+    &:is([data-sidebar-size='sm'], [data-sidebar-size='sm-hover']) {
         .footer {
             left: var(--#{$prefix}vertical-menu-width-sm);
 
@@ -28,7 +27,7 @@
             }
         }
     }
-    &[data-sidebar-size="md"] {
+    &[data-sidebar-size='md'] {
         .footer {
             left: var(--#{$prefix}vertical-menu-width-md);
 
@@ -37,29 +36,29 @@
             }
         }
     }
-
 }
 
-[data-layout="horizontal"]{
+[data-layout='horizontal'] {
     .footer {
         left: 0 !important;
-    } 
+    }
 }
 
-[data-layout="vertical"][data-layout-style="detached"] {
-
+[data-layout='vertical'][data-layout-style='detached'] {
     @media (min-width: 1024.1px) {
         .footer {
             left: 0 !important;
             background-color: transparent;
-        } 
+        }
     }
 }
 
-[data-layout="twocolumn"] { 
+[data-layout='twocolumn'] {
     .footer {
         @media (min-width: 768.1px) {
-            left: calc(#{$twocolumn-menu-iconview-width} + #{$twocolumn-menu-width});
+            left: calc(
+                #{$twocolumn-menu-iconview-width} + #{$twocolumn-menu-width}
+            );
         }
     }
 }

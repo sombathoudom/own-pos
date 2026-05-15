@@ -9,8 +9,8 @@
     }
 }
 
-.navbar-show{
-    .vertical-overlay{
+.navbar-show {
+    .vertical-overlay {
         display: block;
     }
 }
@@ -21,7 +21,7 @@
     padding: 90px 0;
     position: relative;
 
-    @media (max-width:767.98px) {
+    @media (max-width: 767.98px) {
         padding: 50px 0;
     }
 }
@@ -30,7 +30,7 @@
     position: relative;
 
     &::before {
-        content: "";
+        content: '';
         position: absolute;
         width: 24px;
         height: 24px;
@@ -82,12 +82,12 @@
 }
 
 //navbar-light
-.navbar-light{
+.navbar-light {
     .navbar-brand {
         .card-logo-dark {
             display: none;
         }
-    
+
         .card-logo-light {
             display: block;
         }
@@ -111,7 +111,7 @@
             .card-logo-dark {
                 display: block;
             }
-        
+
             .card-logo-light {
                 display: none;
             }
@@ -134,7 +134,7 @@
 }
 
 .bg-overlay-pattern {
-    background-image: url("../images/landing/bg-pattern.png");
+    background-image: url('../images/landing/bg-pattern.png');
     background-color: transparent;
     background-position: center;
     background-size: cover;
@@ -173,7 +173,7 @@
     max-height: 45px;
     width: auto;
     margin: 12px auto;
-    transition: all .4s;
+    transition: all 0.4s;
 }
 
 // plan
@@ -193,7 +193,7 @@
         left: 75%;
         top: 7%;
         width: 50%;
-        opacity: .1;
+        opacity: 0.1;
     }
 }
 
@@ -237,12 +237,11 @@
 
 // dark
 
-[data-bs-theme="dark"] {
+[data-bs-theme='dark'] {
     .layout-wrapper.landing {
-
         .demo-img-patten-top,
         .demo-img-patten-bottom {
-            opacity: .2;
+            opacity: 0.2;
         }
 
         footer.bg-dark {
@@ -251,13 +250,13 @@
     }
 
     //navbar-light
-    .navbar-light{
-        &.is-sticky { 
+    .navbar-light {
+        &.is-sticky {
             .navbar-brand {
                 .card-logo-dark {
                     display: none;
                 }
-        
+
                 .card-logo-light {
                     display: block;
                 }

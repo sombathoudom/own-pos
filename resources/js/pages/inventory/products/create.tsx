@@ -109,7 +109,9 @@ function ProductsCreate() {
     };
 
     const addVariants = (sizes: string[]): void => {
-        const existingSizes = new Set(data.variants.map((v) => v.size.toUpperCase()));
+        const existingSizes = new Set(
+            data.variants.map((v) => v.size.toUpperCase()),
+        );
         const newVariants = sizes
             .filter((size) => !existingSizes.has(size.toUpperCase()))
             .map((size) => {

@@ -1,13 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
-import {
-    Badge,
-    Button,
-    Card,
-    Container,
-    Form,
-    Table,
-} from 'react-bootstrap';
+import { Badge, Button, Card, Container, Form, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Pagination from '@/Components/Pagination';
@@ -54,8 +47,18 @@ function StockMovements() {
 
     const typeBadge = (qtyChange: number) => {
         if (qtyChange > 0)
-            return <Badge bg="success"><i className="ri-arrow-down-line me-1" />Inbound</Badge>;
-        return <Badge bg="danger"><i className="ri-arrow-up-line me-1" />Outbound</Badge>;
+            return (
+                <Badge bg="success">
+                    <i className="ri-arrow-down-line me-1" />
+                    Inbound
+                </Badge>
+            );
+        return (
+            <Badge bg="danger">
+                <i className="ri-arrow-up-line me-1" />
+                Outbound
+            </Badge>
+        );
     };
 
     const referenceLabel = (movement: InventoryStockMovement) => {
@@ -118,7 +121,7 @@ function StockMovements() {
                         <Card.Body>
                             <Form
                                 onSubmit={handleFilter}
-                                className="d-flex flex-wrap gap-2 mb-3"
+                                className="d-flex mb-3 flex-wrap gap-2"
                             >
                                 <Form.Control
                                     placeholder="Filter by Variant ID..."
@@ -135,7 +138,10 @@ function StockMovements() {
                                     style={{ maxWidth: 160 }}
                                 >
                                     {TYPE_OPTIONS.map((opt) => (
-                                        <option key={opt.value} value={opt.value}>
+                                        <option
+                                            key={opt.value}
+                                            value={opt.value}
+                                        >
                                             {opt.label}
                                         </option>
                                     ))}
@@ -169,15 +175,19 @@ function StockMovements() {
                             <div className="table-responsive">
                                 <Table
                                     hover
-                                    className="align-middle table-nowrap"
+                                    className="table-nowrap align-middle"
                                 >
                                     <thead className="table-light">
                                         <tr>
                                             <th>Type</th>
                                             <th>SKU</th>
                                             <th>Product</th>
-                                            <th className="text-end">Qty Change</th>
-                                            <th className="text-end">Unit Cost</th>
+                                            <th className="text-end">
+                                                Qty Change
+                                            </th>
+                                            <th className="text-end">
+                                                Unit Cost
+                                            </th>
                                             <th>Reference</th>
                                             <th>Note</th>
                                             <th>Date</th>
@@ -187,24 +197,40 @@ function StockMovements() {
                                         {movements.data.map((movement) => (
                                             <tr key={movement.id}>
                                                 <td>
-                                                    {typeBadge(movement.qty_change)}
+                                                    {typeBadge(
+                                                        movement.qty_change,
+                                                    )}
                                                 </td>
                                                 <td>
                                                     <span className="fw-medium">
-                                                        {movement.productVariant?.sku || '—'}
+                                                        {movement.productVariant
+                                                            ?.sku || '—'}
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    {movement.productVariant?.product?.name || '—'}
+                                                    {movement.productVariant
+                                                        ?.product?.name || '—'}
                                                     <div className="small text-muted">
-                                                        {movement.productVariant?.color && (
-                                                            <>{movement.productVariant.color} · </>
+                                                        {movement.productVariant
+                                                            ?.color && (
+                                                            <>
+                                                                {
+                                                                    movement
+                                                                        .productVariant
+                                                                        .color
+                                                                }{' '}
+                                                                ·{' '}
+                                                            </>
                                                         )}
-                                                        {movement.productVariant?.size}
+                                                        {
+                                                            movement
+                                                                .productVariant
+                                                                ?.size
+                                                        }
                                                     </div>
                                                 </td>
                                                 <td
-                                                    className={`text-end fw-bold ${
+                                                    className={`fw-bold text-end ${
                                                         movement.qty_change > 0
                                                             ? 'text-success'
                                                             : 'text-danger'
@@ -216,7 +242,8 @@ function StockMovements() {
                                                     {movement.qty_change}
                                                 </td>
                                                 <td className="text-end">
-                                                    ${Number(
+                                                    $
+                                                    {Number(
                                                         movement.unit_cost_usd,
                                                     ).toFixed(2)}
                                                 </td>
@@ -224,12 +251,14 @@ function StockMovements() {
                                                     {referenceLabel(movement)}
                                                 </td>
                                                 <td>
-                                                    <span className="text-muted small">
+                                                    <span className="small text-muted">
                                                         {movement.note || '—'}
                                                     </span>
                                                 </td>
-                                                <td className="text-nowrap small">
-                                                    {formatDate(movement.created_at)}
+                                                <td className="small text-nowrap">
+                                                    {formatDate(
+                                                        movement.created_at,
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))}
@@ -237,7 +266,7 @@ function StockMovements() {
                                             <tr>
                                                 <td
                                                     colSpan={8}
-                                                    className="text-center text-muted py-4"
+                                                    className="py-4 text-center text-muted"
                                                 >
                                                     <i className="ri-inbox-line fs-2 d-block mb-2" />
                                                     No movements found.

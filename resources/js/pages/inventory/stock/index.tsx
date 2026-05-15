@@ -1,6 +1,20 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
-import { Badge, Button, Card, Container, Form, Row, Table } from 'react-bootstrap';
+import {
+    type FormEvent,
+    type ReactNode,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
+import {
+    Badge,
+    Button,
+    Card,
+    Container,
+    Form,
+    Row,
+    Table,
+} from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Pagination from '@/Components/Pagination';
@@ -39,12 +53,10 @@ function StockIndex() {
         const outOfStock = data.filter(
             (v) => (v.stockBalance?.qty_on_hand ?? 0) === 0,
         ).length;
-        const lowStock = data.filter(
-            (v) => {
-                const qty = v.stockBalance?.qty_on_hand ?? 0;
-                return qty > 0 && qty <= 5;
-            },
-        ).length;
+        const lowStock = data.filter((v) => {
+            const qty = v.stockBalance?.qty_on_hand ?? 0;
+            return qty > 0 && qty <= 5;
+        }).length;
 
         return { totalSkus, totalQty, outOfStock, lowStock };
     }, [variants.data]);
@@ -67,12 +79,16 @@ function StockIndex() {
                         <div className="col-md-3">
                             <Card className="h-100">
                                 <Card.Body className="d-flex align-items-center gap-3">
-                                    <div className="avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center">
-                                        <i className="ri-archive-line text-primary fs-4" />
+                                    <div className="avatar-sm bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center bg-primary">
+                                        <i className="ri-archive-line fs-4 text-primary" />
                                     </div>
                                     <div>
-                                        <p className="text-muted mb-0">Total SKUs</p>
-                                        <h5 className="mb-0">{stats.totalSkus}</h5>
+                                        <p className="mb-0 text-muted">
+                                            Total SKUs
+                                        </p>
+                                        <h5 className="mb-0">
+                                            {stats.totalSkus}
+                                        </h5>
                                     </div>
                                 </Card.Body>
                             </Card>
@@ -84,8 +100,12 @@ function StockIndex() {
                                         <i className="ri-stack-line text-success fs-4" />
                                     </div>
                                     <div>
-                                        <p className="text-muted mb-0">Total Quantity</p>
-                                        <h5 className="mb-0">{stats.totalQty}</h5>
+                                        <p className="mb-0 text-muted">
+                                            Total Quantity
+                                        </p>
+                                        <h5 className="mb-0">
+                                            {stats.totalQty}
+                                        </h5>
                                     </div>
                                 </Card.Body>
                             </Card>
@@ -97,8 +117,12 @@ function StockIndex() {
                                         <i className="ri-error-warning-line text-warning fs-4" />
                                     </div>
                                     <div>
-                                        <p className="text-muted mb-0">Low Stock</p>
-                                        <h5 className="mb-0">{stats.lowStock}</h5>
+                                        <p className="mb-0 text-muted">
+                                            Low Stock
+                                        </p>
+                                        <h5 className="mb-0">
+                                            {stats.lowStock}
+                                        </h5>
                                     </div>
                                 </Card.Body>
                             </Card>
@@ -110,8 +134,12 @@ function StockIndex() {
                                         <i className="ri-close-circle-line text-danger fs-4" />
                                     </div>
                                     <div>
-                                        <p className="text-muted mb-0">Out of Stock</p>
-                                        <h5 className="mb-0">{stats.outOfStock}</h5>
+                                        <p className="mb-0 text-muted">
+                                            Out of Stock
+                                        </p>
+                                        <h5 className="mb-0">
+                                            {stats.outOfStock}
+                                        </h5>
                                     </div>
                                 </Card.Body>
                             </Card>
@@ -132,11 +160,11 @@ function StockIndex() {
                         <Card.Body>
                             <Form
                                 onSubmit={handleSearch}
-                                className="d-flex gap-2 mb-3"
+                                className="d-flex mb-3 gap-2"
                                 style={{ maxWidth: 500 }}
                             >
                                 <div className="position-relative flex-grow-1">
-                                    <i className="ri-search-line position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
+                                    <i className="ri-search-line position-absolute translate-middle-y start-0 top-50 ms-3 text-muted" />
                                     <Form.Control
                                         placeholder="Search SKU, product name, color, size..."
                                         value={search}
@@ -173,15 +201,19 @@ function StockIndex() {
                             <div className="table-responsive">
                                 <Table
                                     hover
-                                    className="align-middle table-nowrap"
+                                    className="table-nowrap align-middle"
                                 >
                                     <thead className="table-light">
                                         <tr>
                                             <th>SKU</th>
                                             <th>Product</th>
                                             <th>Variant</th>
-                                            <th className="text-end">Qty On Hand</th>
-                                            <th className="text-end">Sale Price</th>
+                                            <th className="text-end">
+                                                Qty On Hand
+                                            </th>
+                                            <th className="text-end">
+                                                Sale Price
+                                            </th>
                                             <th>Status</th>
                                         </tr>
                                     </thead>
@@ -194,34 +226,46 @@ function StockIndex() {
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    {variant.product?.name || '—'}
+                                                    {variant.product?.name ||
+                                                        '—'}
                                                 </td>
                                                 <td>
                                                     <div className="d-flex gap-1">
                                                         {variant.color && (
-                                                            <Badge bg="info" className="fw-normal">
+                                                            <Badge
+                                                                bg="info"
+                                                                className="fw-normal"
+                                                            >
                                                                 {variant.color}
                                                             </Badge>
                                                         )}
                                                         {variant.size && (
-                                                            <Badge bg="secondary" className="fw-normal">
+                                                            <Badge
+                                                                bg="secondary"
+                                                                className="fw-normal"
+                                                            >
                                                                 {variant.size}
                                                             </Badge>
                                                         )}
-                                                        {!variant.color && !variant.size && '—'}
+                                                        {!variant.color &&
+                                                            !variant.size &&
+                                                            '—'}
                                                     </div>
                                                 </td>
-                                                <td className="text-end fw-medium">
-                                                    {variant.stockBalance?.qty_on_hand ?? 0}
+                                                <td className="fw-medium text-end">
+                                                    {variant.stockBalance
+                                                        ?.qty_on_hand ?? 0}
                                                 </td>
                                                 <td className="text-end">
-                                                    ${Number(
+                                                    $
+                                                    {Number(
                                                         variant.sale_price_usd,
                                                     ).toFixed(2)}
                                                 </td>
                                                 <td>
                                                     {stockBadge(
-                                                        variant.stockBalance?.qty_on_hand ?? 0,
+                                                        variant.stockBalance
+                                                            ?.qty_on_hand ?? 0,
                                                     )}
                                                 </td>
                                             </tr>
@@ -230,7 +274,7 @@ function StockIndex() {
                                             <tr>
                                                 <td
                                                     colSpan={6}
-                                                    className="text-center text-muted py-4"
+                                                    className="py-4 text-center text-muted"
                                                 >
                                                     <i className="ri-inbox-line fs-2 d-block mb-2" />
                                                     No stock entries found.

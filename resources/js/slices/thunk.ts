@@ -1,3 +1,2 @@
 // Front
-export * from "./layouts/thunk";
-
+export * from './layouts/thunk';

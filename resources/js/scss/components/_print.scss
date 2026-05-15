@@ -1,4 +1,4 @@
-// 
+//
 // print.scss
 //
 
@@ -22,17 +22,17 @@
         margin: 0;
     }
 
-    .card{
+    .card {
         border: 0;
         box-shadow: none !important;
     }
 
-    .invoice-details{
-        .d-sm-flex{
+    .invoice-details {
+        .d-sm-flex {
             display: flex !important;
         }
     }
-    .address{
+    .address {
         &.col-sm-6 {
             flex: 0 0 auto !important;
             width: 50% !important;

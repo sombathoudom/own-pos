@@ -1,20 +1,19 @@
-// 
+//
 // _dashboard.scss
-// 
+//
 
 .dash-filter-picker {
     min-width: 210px !important;
 }
 
-
 // Flatpickr Calendar
 
-.upcoming-scheduled{
+.upcoming-scheduled {
     position: relative;
     @media (max-width: 575.98px) {
         top: 35px !important;
     }
-    .flatpickr-months{
+    .flatpickr-months {
         position: absolute !important;
         top: -45px !important;
         left: auto !important;
@@ -22,15 +21,16 @@
         width: 200px;
         background-color: transparent !important;
 
-        .flatpickr-month{
+        .flatpickr-month {
             color: $gray-600 !important;
             fill: $gray-600 !important;
         }
-        .flatpickr-prev-month, .flatpickr-next-month{
+        .flatpickr-prev-month,
+        .flatpickr-next-month {
             display: none;
         }
     }
-    .flatpickr-calendar{
+    .flatpickr-calendar {
         box-shadow: none !important;
         .flatpickr-current-month {
             font-size: 13px;
@@ -42,7 +42,7 @@
             border-radius: 4px;
             height: 26px;
         }
-        .flatpickr-weekdays{
+        .flatpickr-weekdays {
             background-color: var(--#{$prefix}light);
             border: none;
             span.flatpickr-weekday {
@@ -50,17 +50,17 @@
                 background-color: var(--#{$prefix}light);
             }
         }
-        .flatpickr-day{
-            &.today{
+        .flatpickr-day {
+            &.today {
                 color: $white !important;
                 background-color: $success;
                 border-color: $success !important;
-                &:hover{
+                &:hover {
                     color: $success !important;
                     background-color: rgba($success, 0.2) !important;
                 }
             }
-            &.selected{
+            &.selected {
                 background-color: $success !important;
                 border-color: $success !important;
                 color: $white;
@@ -83,25 +83,25 @@
         &:last-child {
             border: 0px;
         }
-        @media (min-width: 768px) and (max-width: 1399.98px) { 
+        @media (min-width: 768px) and (max-width: 1399.98px) {
             &:nth-child(3) {
                 border-right: 0px;
             }
-            &:last-child { 
+            &:last-child {
                 border-right: 1px solid var(--#{$prefix}border-color);
             }
-         }
+        }
         @media (max-width: 767.98px) {
             border-right: 0px;
             border-bottom: 1px solid var(--#{$prefix}border-color);
         }
     }
-}   
+}
 
-
-@media (min-width: 1400px) and (max-width: 1599.98px) { 
+@media (min-width: 1400px) and (max-width: 1599.98px) {
     .project-wrapper {
-        >.col-xxl-8, .col-xxl-4{
+        > .col-xxl-8,
+        .col-xxl-4 {
             width: 100%;
         }
     }
@@ -139,7 +139,7 @@
     }
 }
 
-[data-layout-width="boxed"] {
+[data-layout-width='boxed'] {
     .dash-countdown {
         .countdownlist {
             flex-wrap: wrap;
@@ -162,7 +162,7 @@
         height: 28px;
         background-color: rgba($primary, 0.1);
         color: $primary;
-        border-radius: .3rem;
+        border-radius: 0.3rem;
         right: 16px !important;
     }
     .swiper-button-prev {
@@ -172,15 +172,16 @@
 }
 
 .dash-collection {
-    .content{
+    .content {
         background-color: rgba($white, 0.25);
         backdrop-filter: blur(5px);
     }
 }
 
-.dash-nft{
+.dash-nft {
     @media (max-width: 1441.98px) {
-        .col-xxl-9, .col-xxl-3 {
+        .col-xxl-9,
+        .col-xxl-3 {
             width: 100% !important;
             max-width: 100% !important;
         }

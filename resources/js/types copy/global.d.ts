@@ -1,7 +1,7 @@
 export {};
 
 declare global {
-  interface Window {
-    bootstrap: any;
-  }
+    interface Window {
+        bootstrap: any;
+    }
 }

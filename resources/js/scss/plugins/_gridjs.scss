@@ -1,6 +1,6 @@
-// 
+//
 // _gridjs.scss
-// 
+//
 
 .gridjs-container {
     color: $table-color;
@@ -26,7 +26,7 @@
     }
 
     &::-webkit-scrollbar-thumb {
-        background-color: rgba(var(--#{$prefix}dark-rgb), .075);
+        background-color: rgba(var(--#{$prefix}dark-rgb), 0.075);
         border-radius: 10px;
         border: 2px solid var(--#{$prefix}secondary-bg);
     }
@@ -46,7 +46,8 @@
     width: 100%;
 }
 
-.gridjs-tbody, td.gridjs-td{
+.gridjs-tbody,
+td.gridjs-td {
     background-color: $table-bg;
 }
 
@@ -60,20 +61,18 @@ th {
     &.gridjs-th {
         border-top: 0;
         color: $table-color;
-        background-color: rgba(var(--#{$prefix}light-rgb), .75);
-
+        background-color: rgba(var(--#{$prefix}light-rgb), 0.75);
     }
 
     &.gridjs-th-sort {
-
         &:focus,
         &:hover {
-            background-color: rgba(var(--#{$prefix}light-rgb), .85);
+            background-color: rgba(var(--#{$prefix}light-rgb), 0.85);
         }
     }
 }
 
-.gridjs-head{
+.gridjs-head {
     padding-top: 0;
 }
 
@@ -90,7 +89,6 @@ th {
 }
 
 .gridjs-pagination {
-
     .gridjs-pages button {
         margin-left: 0.3rem;
         border-radius: $border-radius !important;
@@ -98,7 +96,7 @@ th {
         background-color: $pagination-bg;
         color: $pagination-color;
 
-        &:last-child{
+        &:last-child {
             border-right: 1px solid $pagination-border-color;
         }
 
@@ -139,8 +137,8 @@ th {
     float: left;
 
     &::before {
-        content: "\f0d1";
-        font-family: "remixicon";
+        content: '\f0d1';
+        font-family: 'remixicon';
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
@@ -155,7 +153,8 @@ input.gridjs-input {
     background-color: $input-bg;
     color: $input-color;
     line-height: $input-line-height;
-    padding: $input-padding-y $input-padding-x $input-padding-y $input-padding-x*2.25;
+    padding: $input-padding-y $input-padding-x $input-padding-y
+        $input-padding-x * 2.25;
     border-radius: $input-border-radius;
     @include font-size($input-font-size);
 
@@ -165,7 +164,7 @@ input.gridjs-input {
         background-color: $input-focus-bg;
     }
 
-    &::placeholder{
+    &::placeholder {
         color: $input-placeholder-color;
     }
 }
@@ -191,49 +190,50 @@ th.gridjs-th-sort .gridjs-th-content {
     width: calc(100% - 10px);
 }
 
-button{
-    &.gridjs-sort-asc, &.gridjs-sort-desc{
+button {
+    &.gridjs-sort-asc,
+    &.gridjs-sort-desc {
         background-size: 7px;
     }
 }
 
-
 // card table
 
-.table-card{
-
-    .gridjs-head{
+.table-card {
+    .gridjs-head {
         padding: 16px 16px 5px;
     }
 
-    .gridjs-wrapper{
+    .gridjs-wrapper {
         border-top: 0;
         border-radius: 0;
         border-width: 1px 0;
     }
 
-    .gridjs-footer{
+    .gridjs-footer {
         padding: 8px 16px;
     }
 }
 
 // gridjs selection
 .gridjs-tr-selected {
-    td{
+    td {
         background-color: $table-active-bg;
     }
-    .gridjs-td .gridjs-checkbox[type=checkbox]{
+    .gridjs-td .gridjs-checkbox[type='checkbox'] {
         background-color: $form-check-input-checked-bg-color;
         border-color: $form-check-input-checked-border-color;
         @if $enable-gradients {
-            background-image: escape-svg($form-check-input-checked-bg-image), var(--#{$prefix}gradient);
-          } @else {
+            background-image:
+                escape-svg($form-check-input-checked-bg-image),
+                var(--#{$prefix}gradient);
+        } @else {
             background-image: escape-svg($form-check-input-checked-bg-image);
-          }
+        }
     }
 }
-.gridjs-td{
-    .gridjs-checkbox{
+.gridjs-td {
+    .gridjs-checkbox {
         width: $form-check-input-width;
         height: $form-check-input-width;
         vertical-align: top;
@@ -245,14 +245,15 @@ button{
         appearance: none;
         print-color-adjust: exact; // Keep themed appearance for print
         @include transition($form-check-transition);
-        &[type="checkbox"] {
-          @include border-radius($form-check-input-border-radius);
+        &[type='checkbox'] {
+            @include border-radius($form-check-input-border-radius);
         }
     }
 }
 
-.gridjs-border-none{
-    td.gridjs-td, th.gridjs-th{
+.gridjs-border-none {
+    td.gridjs-td,
+    th.gridjs-th {
         border-right-width: 0;
         border-left-width: 0;
     }
@@ -262,7 +263,7 @@ button{
     background-color: var(--#{$prefix}secondary-bg);
 }
 
-[data-bs-theme="dark"] {
+[data-bs-theme='dark'] {
     button {
         &:is(.gridjs-sort-neutral, .gridjs-sort-asc, .gridjs-sort-desc) {
             filter: $btn-close-white-filter;

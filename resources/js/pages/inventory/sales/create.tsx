@@ -394,10 +394,14 @@ function SalesCreate() {
                                         })()}
 
                                         {/* Variant Search */}
-                                        <div className="position-relative mb-3">
+                                        <div className="position-relative mb-4">
+                                            <Form.Label className="fw-semibold mb-2">
+                                                <i className="ri-search-line me-1"></i>
+                                                Search Products
+                                            </Form.Label>
                                             <Form.Control
                                                 type="text"
-                                                placeholder="Search by SKU, product, color, size..."
+                                                placeholder="Search by SKU, product name, color, size..."
                                                 value={search}
                                                 onChange={(e) => {
                                                     setSearch(e.target.value);
@@ -407,14 +411,16 @@ function SalesCreate() {
                                                     setShowPicker(true)
                                                 }
                                                 autoComplete="off"
+                                                size="lg"
+                                                className="shadow-sm"
                                             />
                                             {showPicker &&
                                                 filteredVariants.length > 0 && (
                                                     <div
-                                                        className="position-absolute w-100 rounded border bg-white shadow-sm"
+                                                        className="position-absolute rounded-3 w-100 border bg-white shadow"
                                                         style={{
                                                             zIndex: 1000,
-                                                            maxHeight: 320,
+                                                            maxHeight: 400,
                                                             overflowY: 'auto',
                                                         }}
                                                     >
@@ -427,13 +433,18 @@ function SalesCreate() {
                                                                 const outOfStock =
                                                                     variant.stock_on_hand <=
                                                                     0;
+                                                                const lowStock =
+                                                                    variant.stock_on_hand <=
+                                                                        5 &&
+                                                                    variant.stock_on_hand >
+                                                                        0;
                                                                 return (
                                                                     <button
                                                                         key={
                                                                             variant.id
                                                                         }
                                                                         type="button"
-                                                                        className="d-flex align-items-center hover-bg-light w-100 gap-2 border-0 bg-white px-3 py-2 text-start"
+                                                                        className="d-flex align-items-start border-bottom w-100 gap-3 border-0 bg-white px-3 py-3 text-start"
                                                                         style={{
                                                                             cursor:
                                                                                 outOfStock ||
@@ -445,6 +456,25 @@ function SalesCreate() {
                                                                                 inCart
                                                                                     ? 0.5
                                                                                     : 1,
+                                                                            transition:
+                                                                                'background-color 0.15s',
+                                                                        }}
+                                                                        onMouseEnter={(
+                                                                            e,
+                                                                        ) => {
+                                                                            if (
+                                                                                !inCart &&
+                                                                                !outOfStock
+                                                                            ) {
+                                                                                e.currentTarget.style.backgroundColor =
+                                                                                    '#f8f9fa';
+                                                                            }
+                                                                        }}
+                                                                        onMouseLeave={(
+                                                                            e,
+                                                                        ) => {
+                                                                            e.currentTarget.style.backgroundColor =
+                                                                                'white';
                                                                         }}
                                                                         onMouseDown={(
                                                                             e,
@@ -464,42 +494,58 @@ function SalesCreate() {
                                                                         }
                                                                     >
                                                                         <div className="min-w-0 flex-grow-1">
-                                                                            <div className="fw-medium text-truncate">
+                                                                            <div className="fw-semibold text-truncate mb-1">
                                                                                 {variantLabel(
                                                                                     variant,
                                                                                 )}
                                                                             </div>
-                                                                            <div className="small text-muted">
-                                                                                {
-                                                                                    variant.sku
-                                                                                }{' '}
-                                                                                &middot;
-                                                                                Stock:{' '}
-                                                                                <span
-                                                                                    className={
-                                                                                        variant.stock_on_hand <=
-                                                                                        5
-                                                                                            ? 'text-danger fw-semibold'
-                                                                                            : ''
-                                                                                    }
+                                                                            <div className="d-flex align-items-center flex-wrap gap-2">
+                                                                                <Badge
+                                                                                    bg="secondary"
+                                                                                    className="font-monospace"
                                                                                 >
                                                                                     {
-                                                                                        variant.stock_on_hand
+                                                                                        variant.sku
+                                                                                    }
+                                                                                </Badge>
+                                                                                <span className="small text-muted">
+                                                                                    $
+                                                                                    {
+                                                                                        variant.sale_price_usd
                                                                                     }
                                                                                 </span>
                                                                             </div>
                                                                         </div>
-                                                                        {inCart && (
-                                                                            <Badge bg="success">
-                                                                                In
-                                                                                Cart
-                                                                            </Badge>
-                                                                        )}
-                                                                        {outOfStock && (
-                                                                            <Badge bg="danger">
-                                                                                Out
-                                                                            </Badge>
-                                                                        )}
+                                                                        <div className="text-end">
+                                                                            {inCart && (
+                                                                                <Badge bg="success">
+                                                                                    In
+                                                                                    Cart
+                                                                                </Badge>
+                                                                            )}
+                                                                            {outOfStock && (
+                                                                                <Badge bg="danger">
+                                                                                    Out
+                                                                                    of
+                                                                                    Stock
+                                                                                </Badge>
+                                                                            )}
+                                                                            {!inCart &&
+                                                                                !outOfStock && (
+                                                                                    <div>
+                                                                                        <div className="small mb-1 text-muted">
+                                                                                            Stock
+                                                                                        </div>
+                                                                                        <div
+                                                                                            className={`fw-bold fs-5 ${lowStock ? 'text-warning' : 'text-success'}`}
+                                                                                        >
+                                                                                            {
+                                                                                                variant.stock_on_hand
+                                                                                            }
+                                                                                        </div>
+                                                                                    </div>
+                                                                                )}
+                                                                        </div>
                                                                     </button>
                                                                 );
                                                             },
@@ -520,7 +566,7 @@ function SalesCreate() {
                                         </div>
 
                                         {/* Cart Items */}
-                                        <div className="vstack gap-2">
+                                        <div className="vstack gap-3">
                                             {data.items.map((item, index) => {
                                                 const variant = getVariant(
                                                     item.product_variant_id,
@@ -538,118 +584,230 @@ function SalesCreate() {
                                                         key={
                                                             item.product_variant_id
                                                         }
-                                                        className="d-flex align-items-center gap-2 rounded border p-2"
+                                                        className="rounded-3 bg-light border p-3"
+                                                        style={{
+                                                            boxShadow:
+                                                                '0 2px 4px rgba(0,0,0,0.05)',
+                                                        }}
                                                     >
-                                                        <div className="min-w-0 flex-grow-1">
-                                                            <div className="fw-medium text-truncate">
-                                                                {variantLabel(
-                                                                    variant,
+                                                        {/* Product Info Row */}
+                                                        <div className="d-flex align-items-start justify-content-between mb-3">
+                                                            <div className="me-2 flex-grow-1">
+                                                                <div className="fw-bold fs-6 mb-1">
+                                                                    {variantLabel(
+                                                                        variant,
+                                                                    )}
+                                                                </div>
+                                                                <div className="d-flex align-items-center gap-2">
+                                                                    <Badge
+                                                                        bg="secondary"
+                                                                        className="font-monospace"
+                                                                    >
+                                                                        {
+                                                                            variant.sku
+                                                                        }
+                                                                    </Badge>
+                                                                    <span className="small text-muted">
+                                                                        Stock:{' '}
+                                                                        <span
+                                                                            className={
+                                                                                variant.stock_on_hand <=
+                                                                                5
+                                                                                    ? 'text-danger fw-bold'
+                                                                                    : 'fw-semibold'
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                variant.stock_on_hand
+                                                                            }
+                                                                        </span>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline-danger"
+                                                                size="sm"
+                                                                onClick={() =>
+                                                                    removeItem(
+                                                                        index,
+                                                                    )
+                                                                }
+                                                                className="ms-2"
+                                                            >
+                                                                <i className="ri-delete-bin-line"></i>
+                                                            </Button>
+                                                        </div>
+
+                                                        {/* Quantity & Price Controls */}
+                                                        <div className="row g-2">
+                                                            {/* Quantity with +/- buttons */}
+                                                            <div className="col-md-4 col-12">
+                                                                <Form.Label className="small mb-1 text-muted">
+                                                                    Quantity
+                                                                </Form.Label>
+                                                                <div className="input-group">
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline-secondary"
+                                                                        size="sm"
+                                                                        onClick={() => {
+                                                                            const newQty =
+                                                                                Math.max(
+                                                                                    1,
+                                                                                    qtyNum -
+                                                                                        1,
+                                                                                );
+                                                                            updateItem(
+                                                                                index,
+                                                                                'qty',
+                                                                                newQty.toString(),
+                                                                            );
+                                                                        }}
+                                                                        disabled={
+                                                                            qtyNum <=
+                                                                            1
+                                                                        }
+                                                                    >
+                                                                        <i className="ri-subtract-line"></i>
+                                                                    </Button>
+                                                                    <Form.Control
+                                                                        type="number"
+                                                                        min="1"
+                                                                        max={
+                                                                            variant.stock_on_hand
+                                                                        }
+                                                                        value={
+                                                                            item.qty
+                                                                        }
+                                                                        onChange={(
+                                                                            e,
+                                                                        ) =>
+                                                                            updateItem(
+                                                                                index,
+                                                                                'qty',
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                            )
+                                                                        }
+                                                                        isInvalid={
+                                                                            overStock
+                                                                        }
+                                                                        className="fw-bold fs-5 text-center"
+                                                                        style={{
+                                                                            maxWidth: 80,
+                                                                        }}
+                                                                    />
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline-secondary"
+                                                                        size="sm"
+                                                                        onClick={() => {
+                                                                            const newQty =
+                                                                                Math.min(
+                                                                                    variant.stock_on_hand,
+                                                                                    qtyNum +
+                                                                                        1,
+                                                                                );
+                                                                            updateItem(
+                                                                                index,
+                                                                                'qty',
+                                                                                newQty.toString(),
+                                                                            );
+                                                                        }}
+                                                                        disabled={
+                                                                            qtyNum >=
+                                                                            variant.stock_on_hand
+                                                                        }
+                                                                    >
+                                                                        <i className="ri-add-line"></i>
+                                                                    </Button>
+                                                                </div>
+                                                                {overStock && (
+                                                                    <div className="small text-danger mt-1">
+                                                                        Exceeds
+                                                                        stock
+                                                                    </div>
                                                                 )}
                                                             </div>
-                                                            <div className="small text-muted">
-                                                                {variant.sku}{' '}
-                                                                &middot; Stock:{' '}
-                                                                {
-                                                                    variant.stock_on_hand
-                                                                }
+
+                                                            {/* Unit Price */}
+                                                            <div className="col-md-3 col-6">
+                                                                <Form.Label className="small mb-1 text-muted">
+                                                                    Unit Price
+                                                                </Form.Label>
+                                                                <Form.Control
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min="0"
+                                                                    value={
+                                                                        item.unit_price_usd
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) =>
+                                                                        updateItem(
+                                                                            index,
+                                                                            'unit_price_usd',
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        )
+                                                                    }
+                                                                    placeholder="0.00"
+                                                                />
+                                                            </div>
+
+                                                            {/* Discount */}
+                                                            <div className="col-md-2 col-6">
+                                                                <Form.Label className="small mb-1 text-muted">
+                                                                    Discount
+                                                                </Form.Label>
+                                                                <Form.Control
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min="0"
+                                                                    value={
+                                                                        item.discount_usd
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) =>
+                                                                        updateItem(
+                                                                            index,
+                                                                            'discount_usd',
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        )
+                                                                    }
+                                                                    placeholder="0.00"
+                                                                />
+                                                            </div>
+
+                                                            {/* Item Total */}
+                                                            <div className="col-md-3 col-12">
+                                                                <Form.Label className="small mb-1 text-muted">
+                                                                    Total
+                                                                </Form.Label>
+                                                                <div
+                                                                    className="fw-bold text-success d-flex align-items-center"
+                                                                    style={{
+                                                                        fontSize:
+                                                                            '1.25rem',
+                                                                        height: 38,
+                                                                    }}
+                                                                >
+                                                                    $
+                                                                    {itemTotal(
+                                                                        item,
+                                                                    ).toFixed(
+                                                                        2,
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <Form.Control
-                                                            size="sm"
-                                                            type="number"
-                                                            min="1"
-                                                            max={
-                                                                variant.stock_on_hand
-                                                            }
-                                                            value={item.qty}
-                                                            onChange={(e) =>
-                                                                updateItem(
-                                                                    index,
-                                                                    'qty',
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                            isInvalid={
-                                                                overStock
-                                                            }
-                                                            style={{
-                                                                width: 70,
-                                                            }}
-                                                        />
-                                                        <div
-                                                            style={{
-                                                                width: 100,
-                                                            }}
-                                                        >
-                                                            <Form.Control
-                                                                size="sm"
-                                                                type="number"
-                                                                step="0.01"
-                                                                min="0"
-                                                                value={
-                                                                    item.unit_price_usd
-                                                                }
-                                                                onChange={(e) =>
-                                                                    updateItem(
-                                                                        index,
-                                                                        'unit_price_usd',
-                                                                        e.target
-                                                                            .value,
-                                                                    )
-                                                                }
-                                                                placeholder="Price"
-                                                            />
-                                                        </div>
-                                                        <div
-                                                            style={{
-                                                                width: 80,
-                                                            }}
-                                                        >
-                                                            <Form.Control
-                                                                size="sm"
-                                                                type="number"
-                                                                step="0.01"
-                                                                min="0"
-                                                                value={
-                                                                    item.discount_usd
-                                                                }
-                                                                onChange={(e) =>
-                                                                    updateItem(
-                                                                        index,
-                                                                        'discount_usd',
-                                                                        e.target
-                                                                            .value,
-                                                                    )
-                                                                }
-                                                                placeholder="Disc"
-                                                            />
-                                                        </div>
-                                                        <div
-                                                            className="text-end"
-                                                            style={{
-                                                                minWidth: 70,
-                                                            }}
-                                                        >
-                                                            <div className="fw-semibold">
-                                                                $
-                                                                {itemTotal(
-                                                                    item,
-                                                                ).toFixed(2)}
-                                                            </div>
-                                                        </div>
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline-danger"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                removeItem(
-                                                                    index,
-                                                                )
-                                                            }
-                                                        >
-                                                            &times;
-                                                        </Button>
                                                     </div>
                                                 );
                                             })}

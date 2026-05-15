@@ -10,48 +10,46 @@ table.dataTable th.dataTables_empty {
     --vz-table-accent-bg: var(--#{$prefix}secondary-bg);
 }
 
-table.dataTable>thead .sorting:before,
-table.dataTable>thead .sorting_asc:before,
-table.dataTable>thead .sorting_desc:before,
-table.dataTable>thead .sorting_asc_disabled:before,
-table.dataTable>thead .sorting_desc_disabled:before {
-    content:"\f0360";
+table.dataTable > thead .sorting:before,
+table.dataTable > thead .sorting_asc:before,
+table.dataTable > thead .sorting_desc:before,
+table.dataTable > thead .sorting_asc_disabled:before,
+table.dataTable > thead .sorting_desc_disabled:before {
+    content: '\f0360';
     position: absolute;
     right: 0.5rem;
     top: 12px;
-    font-size: .8rem;
-    font-family: "Material Design Icons";
+    font-size: 0.8rem;
+    font-family: 'Material Design Icons';
 }
 
-table.dataTable>thead .sorting:after,
-table.dataTable>thead .sorting_asc:after,
-table.dataTable>thead .sorting_desc:after,
-table.dataTable>thead .sorting_asc_disabled:after,
-table.dataTable>thead .sorting_desc_disabled:after {
-    content: "\f035d";
+table.dataTable > thead .sorting:after,
+table.dataTable > thead .sorting_asc:after,
+table.dataTable > thead .sorting_desc:after,
+table.dataTable > thead .sorting_asc_disabled:after,
+table.dataTable > thead .sorting_desc_disabled:after {
+    content: '\f035d';
     position: absolute;
     right: 0.5rem;
     top: 18px;
-    font-size: .8rem;
-    font-family: "Material Design Icons";
+    font-size: 0.8rem;
+    font-family: 'Material Design Icons';
 }
 
-table.dataTable>tbody>tr.child span.dtr-title {
+table.dataTable > tbody > tr.child span.dtr-title {
     font-weight: $font-weight-semibold;
     min-width: 150px;
 }
 
-
-//responsive 
+//responsive
 table {
     &.dataTable {
         &.dtr-inline {
             &.collapsed {
-                >tbody {
-                    >tr {
-
-                        >th,
-                        >td {
+                > tbody {
+                    > tr {
+                        > th,
+                        > td {
                             &.dtr-control {
                                 &::before {
                                     background-color: $primary;
@@ -62,7 +60,7 @@ table {
 
                         &.parent {
                             &.parent {
-                                >th {
+                                > th {
                                     &.dtr-control {
                                         &::before {
                                             background-color: $danger;
@@ -71,7 +69,7 @@ table {
                                 }
                             }
 
-                            >td {
+                            > td {
                                 &.dtr-control {
                                     &::before {
                                         background-color: $danger;
@@ -84,8 +82,8 @@ table {
             }
         }
 
-        >tbody {
-            >tr {
+        > tbody {
+            > tr {
                 &.child {
                     span {
                         &.dtr-title {
@@ -98,9 +96,7 @@ table {
     }
 }
 
-
 .table-card {
-
     .dataTables_length,
     .dataTables_filter {
         padding: $card-cap-padding-y $card-cap-padding-x;
@@ -131,8 +127,7 @@ table {
     }
 }
 
-
-div{
+div {
     &.dtr-modal {
         div {
             &.dtr-modal-display {
@@ -148,7 +143,7 @@ div{
                     font-weight: $font-weight-semibold;
                     margin-bottom: 15px;
                 }
-                .dtr-details{
+                .dtr-details {
                     tr {
                         td {
                             padding: $table-cell-padding-y $table-cell-padding-x;
@@ -173,7 +168,6 @@ div{
     }
 }
 
-
 .dt-buttons {
     :is(button.dt-button, div.dt-button, a.dt-button, input.dt-button) {
         border-color: var(--#{$prefix}border-color);
@@ -196,7 +190,7 @@ div{
     box-shadow: none;
 }
 
-:is(button, div, a, input):is(.dt-button:focus:not(.disabled)){
+:is(button, div, a, input):is(.dt-button:focus:not(.disabled)) {
     border-color: var(--#{$prefix}border-color);
     background: var(--#{$prefix}light);
     color: var(--#{$prefix}body-color);
@@ -204,8 +198,12 @@ div{
     box-shadow: none;
 }
 
-:is(button, div, a, input):is(.dt-button:active:not(.disabled):hover:not(.disabled)),
-:is(button, div, a, input):is(.dt-button.active:not(.disabled):hover:not(.disabled)) {
+:is(button, div, a, input):is(
+    .dt-button:active:not(.disabled):hover:not(.disabled)
+),
+:is(button, div, a, input):is(
+    .dt-button.active:not(.disabled):hover:not(.disabled)
+) {
     border-color: var(--#{$prefix}border-color);
     background: var(--#{$prefix}light);
     color: var(--#{$prefix}body-color);

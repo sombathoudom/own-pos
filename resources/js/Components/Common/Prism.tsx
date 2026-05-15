@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import Prism from "prismjs";
+import React, { useEffect, useRef } from 'react';
+import Prism from 'prismjs';
 
 const PrismCode = (props: any) => {
     const ref: any = useRef(null);

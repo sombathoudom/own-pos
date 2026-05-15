@@ -4,13 +4,20 @@ import { Spinner } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const Loader = (props : any) => {
+const Loader = (props: any) => {
     return (
         <React.Fragment>
             <div className="d-flex justify-content-center mx-2 mt-2">
-                <Spinner variant="primary" animation='border'> </Spinner>
+                <Spinner variant="primary" animation="border">
+                    {' '}
+                </Spinner>
             </div>
-            {toast.error(props.error, { position: "top-right", hideProgressBar: false, progress: undefined, toastId: "" })}
+            {toast.error(props.error, {
+                position: 'top-right',
+                hideProgressBar: false,
+                progress: undefined,
+                toastId: '',
+            })}
         </React.Fragment>
     );
 };

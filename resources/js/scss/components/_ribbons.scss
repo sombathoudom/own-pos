@@ -1,4 +1,4 @@
-// 
+//
 // ribbons.scss
 //
 
@@ -23,7 +23,7 @@
             display: inline-block;
 
             &::before {
-                content: "";
+                content: '';
                 position: absolute;
                 right: -17px;
                 top: 0;
@@ -31,14 +31,13 @@
             }
 
             &::after {
-                content: "";
+                content: '';
                 position: absolute;
                 right: -17px;
                 bottom: 0;
                 border: 14px solid transparent;
             }
         }
-
     }
 
     // ribbon circle
@@ -60,7 +59,7 @@
 
     &.ribbon-fill {
         overflow: hidden;
-            
+
         .ribbon {
             transform: rotate(-45deg);
             width: 93px;
@@ -137,15 +136,13 @@
                 }
             }
         }
-
     }
 
     .ribbon-content {
         clear: both;
     }
 
-    @each $color,
-    $value in $theme-colors {
+    @each $color, $value in $theme-colors {
         .ribbon-#{$color} {
             background: ($value);
 
@@ -185,7 +182,6 @@
         }
     }
 
-
     // Icon ribbon
 
     .icon-ribbon {
@@ -195,7 +191,6 @@
         font-size: 40px;
         padding: 0;
     }
-
 
     /* Ribbon two */
     .ribbon-two {
@@ -216,14 +211,16 @@
             transform: rotate(-45deg);
             width: 100px;
             display: block;
-            box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.06), 0 1px 0 0 rgba(0, 0, 0, 0.02);
+            box-shadow:
+                0 0 8px 0 rgba(0, 0, 0, 0.06),
+                0 1px 0 0 rgba(0, 0, 0, 0.02);
             position: absolute;
             top: 19px;
             left: -21px;
             font-weight: $font-weight-semibold;
 
             &:before {
-                content: "";
+                content: '';
                 position: absolute;
                 left: 0;
                 top: 100%;
@@ -233,7 +230,7 @@
             }
 
             &:after {
-                content: "";
+                content: '';
                 position: absolute;
                 right: 0;
                 top: 100%;
@@ -244,10 +241,8 @@
         }
     }
 
-    @each $color,
-    $value in $theme-colors {
+    @each $color, $value in $theme-colors {
         .ribbon-two-#{$color} {
-
             span {
                 background: ($value);
 
@@ -263,9 +258,7 @@
             }
         }
     }
-
 }
-
 
 .ribbon-box {
     &.right {
@@ -297,7 +290,7 @@
         &::after,
         &::before {
             position: absolute;
-            content: "";
+            content: '';
         }
 
         &::before {
@@ -318,7 +311,7 @@
 
     &::after {
         position: absolute;
-        content: "";
+        content: '';
         width: 0;
         height: 0;
         border-left: 44px solid transparent;
@@ -327,10 +320,8 @@
     }
 }
 
-@each $color,
-$value in $theme-colors {
+@each $color, $value in $theme-colors {
     .ribbon-three-#{$color} {
-
         span {
             background: ($value);
 
@@ -374,17 +365,17 @@ $value in $theme-colors {
         .trending-ribbon {
             transform: translateX(50px);
             transition: all 0.5s ease;
-    
+
             .trending-ribbon-text {
                 transition: all 0.5s ease;
                 opacity: 0;
             }
         }
-    
+
         &:hover {
             .trending-ribbon {
                 transform: translateX(0);
-    
+
                 .trending-ribbon-text {
                     opacity: 1;
                 }

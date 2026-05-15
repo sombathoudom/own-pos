@@ -1,6 +1,6 @@
-// 
+//
 // _buttons.scss
-// 
+//
 
 button,
 a {
@@ -11,7 +11,7 @@ a {
     box-shadow: $element-shadow;
 }
 
-:is(.btn.show, .btn:first-child:active, :not(.btn-check)+.btn:active) {
+:is(.btn.show, .btn:first-child:active, :not(.btn-check) + .btn:active) {
     border-color: transparent;
 }
 
@@ -20,8 +20,12 @@ a {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    height: calc(#{$btn-padding-y * 2} + #{$btn-line-height}em + #{$border-width * 2});
-    width: calc(#{$btn-padding-y * 2} + #{$btn-line-height}em + #{$border-width * 2});
+    height: calc(
+        #{$btn-padding-y * 2} + #{$btn-line-height}em + #{$border-width * 2}
+    );
+    width: calc(
+        #{$btn-padding-y * 2} + #{$btn-line-height}em + #{$border-width * 2}
+    );
     padding: 0;
 
     :is(i, svg, img) {
@@ -29,30 +33,45 @@ a {
     }
 
     &.btn-sm {
-        height: calc(#{$btn-padding-y-sm * 2} + #{$btn-line-height}em + #{$border-width * 2});
-        width: calc(#{$btn-padding-y-sm * 2} + #{$btn-line-height}em + #{$border-width * 2});
+        height: calc(
+            #{$btn-padding-y-sm * 2} + #{$btn-line-height}em + #{$border-width *
+                2}
+        );
+        width: calc(
+            #{$btn-padding-y-sm * 2} + #{$btn-line-height}em + #{$border-width *
+                2}
+        );
     }
 
     &.btn-lg {
-        height: calc(#{$btn-padding-y-lg * 2} + #{$btn-line-height}em + #{$border-width * 2});
-        width: calc(#{$btn-padding-y-lg * 2} + #{$btn-line-height}em + #{$border-width * 2});
+        height: calc(
+            #{$btn-padding-y-lg * 2} + #{$btn-line-height}em + #{$border-width *
+                2}
+        );
+        width: calc(
+            #{$btn-padding-y-lg * 2} + #{$btn-line-height}em + #{$border-width *
+                2}
+        );
     }
 }
 
 //
 // Soft Buttons
-// 
+//
 
 @each $state in map-keys($theme-colors) {
-
     .btn-#{$state} {
         --#{$prefix}btn-bg: var(--#{$prefix}#{$state});
         --#{$prefix}btn-border-color: var(--#{$prefix}#{$state});
         --#{$prefix}btn-hover-bg: var(--#{$prefix}#{$state}-text-emphasis);
-        --#{$prefix}btn-hover-border-color: var(--#{$prefix}#{$state}-text-emphasis);
+        --#{$prefix}btn-hover-border-color: var(
+            --#{$prefix}#{$state}-text-emphasis
+        );
         --#{$prefix}btn-focus-shadow-rgb: var(--#{$prefix}#{$state}-rgb);
         --#{$prefix}btn-active-bg: var(--#{$prefix}#{$state}-text-emphasis);
-        --#{$prefix}btn-active-border-color: var(--#{$prefix}#{$state}-text-emphasis);
+        --#{$prefix}btn-active-border-color: var(
+            --#{$prefix}#{$state}-text-emphasis
+        );
     }
 
     .btn-outline-#{$state} {
@@ -132,7 +151,9 @@ a {
 
 .btn-animation {
     overflow: hidden;
-    transition: border-color 0.3s, background-color 0.3s;
+    transition:
+        border-color 0.3s,
+        background-color 0.3s;
     transition-timing-function: cubic-bezier(0.2, 1, 0.3, 1);
 
     &::after {
@@ -145,13 +166,17 @@ a {
         opacity: 0;
         transform: translate3d(0, 25%, 0);
         padding: $btn-padding-y $btn-padding-x;
-        transition: transform 0.3s, opacity 0.3s;
+        transition:
+            transform 0.3s,
+            opacity 0.3s;
         transition-timing-function: cubic-bezier(0.2, 1, 0.3, 1);
     }
 
-    >span {
+    > span {
         display: block;
-        transition: transform 0.3s, opacity 0.3s;
+        transition:
+            transform 0.3s,
+            opacity 0.3s;
         transition-timing-function: cubic-bezier(0.2, 1, 0.3, 1);
     }
 
@@ -161,13 +186,12 @@ a {
             transform: translate3d(0, 0, 0);
         }
 
-        >span {
+        > span {
             opacity: 0;
             transform: translate3d(0, -25%, 0);
         }
     }
 }
-
 
 @mixin button-variant($bg) {
     &.btn-animation {
@@ -181,8 +205,7 @@ a {
     }
 }
 
-@each $color,
-$value in $theme-colors {
+@each $color, $value in $theme-colors {
     .btn-#{$color} {
         @include button-variant($value);
     }
@@ -201,8 +224,8 @@ $value in $theme-colors {
         border: none;
     }
 
-    .btn-check:active+.btn-light,
-    .btn-check:checked+.btn-light,
+    .btn-check:active + .btn-light,
+    .btn-check:checked + .btn-light,
     .btn-light.active,
     .btn-light.dropdown-toggle.show,
     .btn-light:active {
@@ -212,7 +235,6 @@ $value in $theme-colors {
 }
 
 .btn-load {
-
     .spinner-border,
     .spinner-grow {
         height: 19px;
@@ -221,9 +243,7 @@ $value in $theme-colors {
 }
 
 //Border Bottom Buttons Style
-@each $color,
-$value in $theme-colors {
-
+@each $color, $value in $theme-colors {
     :is(.btn-#{$color}, .btn-outline-#{$color}, .btn-soft-#{$color}) {
         &.btn-border {
             border-bottom: 2px solid darken($value, 8%);

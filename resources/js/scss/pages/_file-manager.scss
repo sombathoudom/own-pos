@@ -19,7 +19,7 @@
 
             &.active,
             &:hover,
-            &[aria-expanded="true"]{
+            &[aria-expanded='true'] {
                 color: $success;
             }
         }
@@ -30,7 +30,7 @@
                 position: relative;
 
                 &::before {
-                    content: "\f0374";
+                    content: '\f0374';
                     position: absolute;
                     left: 0px;
                     font-family: Material Design Icons;
@@ -71,7 +71,7 @@
     }
 }
 
-.file-menu-sidebar-scroll{
+.file-menu-sidebar-scroll {
     height: calc(100vh - 375px);
     @media (max-width: 991.98px) {
         height: calc(100vh - 190px);
@@ -82,24 +82,24 @@
     background-color: var(--#{$prefix}secondary-bg);
 }
 
-.file-manager-content-scroll{
+.file-manager-content-scroll {
     height: calc(100vh - 185px);
     @media (max-width: 991.98px) {
         height: calc(100vh - 144px);
     }
 
-    .simplebar-content{
+    .simplebar-content {
         height: 100%;
     }
 }
 
-.file-detail-content-scroll{
+.file-detail-content-scroll {
     height: calc(100vh - 180px);
     @media (max-width: 991.98px) {
         height: 100vh;
     }
 
-    .simplebar-content{
+    .simplebar-content {
         height: 100%;
     }
 }
@@ -111,13 +111,13 @@
     display: none;
 }
 
-.file-detail-show{
-    .file-manager-detail-content{
+.file-detail-show {
+    .file-manager-detail-content {
         display: block;
     }
 }
 
-#file-overview{
+#file-overview {
     display: none;
 }
 

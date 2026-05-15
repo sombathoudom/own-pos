@@ -1,4 +1,4 @@
-// 
+//
 // type.scss
 //
 
@@ -7,8 +7,8 @@
     &.blockquote {
         padding: 16px;
         border-left: 3px solid;
-        
-        &.blockquote-outline{
+
+        &.blockquote-outline {
             background-color: var(--#{$prefix}secondary-bg) !important;
             border: 1px solid;
             border-left: 3px solid;
@@ -16,8 +16,7 @@
     }
 }
 
-@each $color,
-$value in $theme-colors {
+@each $color, $value in $theme-colors {
     .custom-blockquote {
         &.blockquote {
             &.blockquote-#{$color} {
@@ -29,7 +28,7 @@ $value in $theme-colors {
                 }
             }
 
-            &.blockquote-outline{
+            &.blockquote-outline {
                 &.blockquote-#{$color} {
                     border-color: var(--#{$prefix}#{$color});
 

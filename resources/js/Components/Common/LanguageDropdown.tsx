@@ -1,20 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Dropdown } from 'react-bootstrap';
-import { get } from "lodash";
+import { get } from 'lodash';
 
-import { router } from "@inertiajs/react";
+import { router } from '@inertiajs/react';
 
 //i18n
-import i18n from "../../i18n";
-import languages from "../../common/languages";
-
+import i18n from '../../i18n';
+import languages from '../../common/languages';
 
 const LanguageDropdown = () => {
     // Declare a new state variable, which we'll call "menu"
-    const [selectedLang, setSelectedLang] = useState("");
+    const [selectedLang, setSelectedLang] = useState('');
 
     useEffect(() => {
-        const currentLanguage: any = localStorage.getItem("I18N_LANGUAGE");
+        const currentLanguage: any = localStorage.getItem('I18N_LANGUAGE');
         setSelectedLang(currentLanguage);
     }, []);
 
@@ -39,29 +38,42 @@ const LanguageDropdown = () => {
     //     );
     // };
 
-
     const changeLanguageAction = (lang: string) => {
         i18n.changeLanguage(lang);
-        localStorage.setItem("I18N_LANGUAGE", lang);
+        localStorage.setItem('I18N_LANGUAGE', lang);
         setSelectedLang(lang);
 
-        router.post(route("locale.set"), { locale: lang }, {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => router.reload({ preserveScroll: true, preserveState: true }),
-        });
+        router.post(
+            route('locale.set'),
+            { locale: lang },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () =>
+                    router.reload({
+                        preserveScroll: true,
+                        preserveState: true,
+                    }),
+            },
+        );
     };
 
-
-
-    const [isLanguageDropdown, setIsLanguageDropdown] = useState < boolean > (false);
+    const [isLanguageDropdown, setIsLanguageDropdown] =
+        useState<boolean>(false);
     const toggleLanguageDropdown = () => {
         setIsLanguageDropdown(!isLanguageDropdown);
     };
     return (
         <React.Fragment>
-            <Dropdown show={isLanguageDropdown} onClick={toggleLanguageDropdown} className="ms-1  topbar-head-dropdown header-item">
-                <Dropdown.Toggle className="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle arrow-none" as="button">
+            <Dropdown
+                show={isLanguageDropdown}
+                onClick={toggleLanguageDropdown}
+                className="topbar-head-dropdown header-item ms-1"
+            >
+                <Dropdown.Toggle
+                    className="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle arrow-none"
+                    as="button"
+                >
                     <img
                         src={get(languages, `${selectedLang}.flag`)}
                         alt="Header Language"
@@ -70,12 +82,13 @@ const LanguageDropdown = () => {
                     />
                 </Dropdown.Toggle>
                 <Dropdown.Menu className="notify-item language py-2">
-                    {Object.keys(languages).map(key => (
+                    {Object.keys(languages).map((key) => (
                         <Dropdown.Item
                             key={key}
                             onClick={() => changeLanguageAction(key)}
-                            className={`notify-item ${selectedLang === key ? "active" : "none"
-                                }`}
+                            className={`notify-item ${
+                                selectedLang === key ? 'active' : 'none'
+                            }`}
                         >
                             <img
                                 src={get(languages, `${key}.flag`)}

@@ -76,11 +76,11 @@
     }
 }
 
-.email-chat-list{
-    a{
+.email-chat-list {
+    a {
         padding: 6px 24px;
-        &.active{
-            background-color: rgba(var(--#{$prefix}light-rgb), .7);
+        &.active {
+            background-color: rgba(var(--#{$prefix}light-rgb), 0.7);
         }
     }
 }
@@ -100,7 +100,7 @@
     transition: all 0.2s;
 }
 
-.unreadConversations-alert{
+.unreadConversations-alert {
     position: fixed;
     bottom: $footer-height;
     left: 50%;
@@ -129,7 +129,7 @@
     }
 
     .email-content {
-            margin-right: 0;
+        margin-right: 0;
     }
 }
 
@@ -160,7 +160,7 @@
         height: 50px;
         line-height: 50px;
         cursor: default;
-        transition-duration: .3s;
+        transition-duration: 0.3s;
         clear: both;
 
         a {
@@ -169,7 +169,7 @@
 
         &:hover {
             background: var(--#{$prefix}light);
-            transition-duration: .05s;
+            transition-duration: 0.05s;
         }
 
         .col-mail {
@@ -243,7 +243,7 @@
                 overflow: hidden;
                 white-space: nowrap;
 
-                .teaser{
+                .teaser {
                     color: var(--#{$prefix}secondary-color);
                 }
             }
@@ -261,7 +261,6 @@
             background-color: var(--#{$prefix}light);
         }
 
-
         &.unread {
             color: var(--#{$prefix}body-color);
 
@@ -273,18 +272,19 @@
     }
 }
 
-#unreadConversations, #email-topbar-actions{
+#unreadConversations,
+#email-topbar-actions {
     display: none;
 }
 
-#elmLoader{
+#elmLoader {
     display: flex;
     width: 100%;
     justify-content: center;
-    align-items: center; 
-    position: absolute; 
-    left: 0; 
-    top: 0; 
+    align-items: center;
+    position: absolute;
+    left: 0;
+    top: 0;
     bottom: 0;
 }
 
@@ -317,7 +317,6 @@
     }
 }
 
-
 @media (max-width: 575.98px) {
     .message-list li .col-mail-1 {
         width: 180px;
@@ -330,7 +329,7 @@
     }
 }
 
-.email-chat-detail{
+.email-chat-detail {
     width: 350px;
     position: fixed;
     max-width: 100%;
@@ -338,7 +337,7 @@
     right: $footer-height;
     z-index: 9;
     display: none;
-    .card{
+    .card {
         box-shadow: $box-shadow-lg;
     }
 
@@ -348,7 +347,7 @@
     }
 }
 
-.message-list-scroll{
+.message-list-scroll {
     position: relative;
     overflow-y: auto;
     &::-webkit-scrollbar {
@@ -364,7 +363,7 @@
     }
 
     &::-webkit-scrollbar-thumb {
-        background-color: rgba(var(--#{$prefix}body-color-rgb), .075);
+        background-color: rgba(var(--#{$prefix}body-color-rgb), 0.075);
         border-radius: 10px;
         border: 2px solid var(--#{$prefix}secondary-bg);
     }
@@ -376,8 +375,8 @@
 }
 
 // for horizontal layout
-[data-layout="horizontal"]{
-    .email-wrapper{
+[data-layout='horizontal'] {
+    .email-wrapper {
         @media (min-width: 1025px) {
             margin-left: 0 !important;
             margin-right: 0 !important;
@@ -387,27 +386,26 @@
         }
     }
 
-    .email-menu-sidebar{
+    .email-menu-sidebar {
         height: calc(100vh - #{$header-height} - #{$footer-height} - 54px);
         @media (max-width: 991.98px) {
-            height: 100vh
+            height: 100vh;
         }
-        .email-menu-sidebar-scroll{
+        .email-menu-sidebar-scroll {
             height: calc(100vh - 330px);
             @media (max-width: 991.98px) {
-                height: calc(100vh - 150px)
+                height: calc(100vh - 150px);
             }
         }
     }
-    
+
     .message-list-content {
         height: calc(100vh - 289px);
-        
     }
 
-    .email-detail-content-scroll{
+    .email-detail-content-scroll {
         height: calc(100vh - 435px);
-        @media (max-width: 1349.98px){
+        @media (max-width: 1349.98px) {
             height: calc(100vh - 252px);
         }
     }

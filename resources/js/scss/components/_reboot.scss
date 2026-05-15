@@ -1,4 +1,4 @@
-// 
+//
 // reboot.scss
 //
 
@@ -7,18 +7,7 @@ html {
     min-height: 100%;
 }
 
-:is(.h1,
-.h2,
-.h3,
-.h4,
-.h5,
-.h6,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6) {
+:is(.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6) {
     font-family: $headings-font-family;
 }
 
@@ -28,7 +17,7 @@ label {
 }
 b,
 strong {
-  font-weight: $font-weight-semibold;
+    font-weight: $font-weight-semibold;
 }
 
 // blockquote
@@ -46,18 +35,20 @@ strong {
 
 // container
 
-:is(.container,
-.container-lg,
-.container-md,
-.container-sm,
-.container-xl,
-.container-xxl) {
+:is(
+    .container,
+    .container-lg,
+    .container-md,
+    .container-sm,
+    .container-xl,
+    .container-xxl
+) {
     @media (min-width: 1200px) {
         max-width: 1140px;
     }
 }
 
 // row
-.row>*{
+.row > * {
     position: relative;
 }

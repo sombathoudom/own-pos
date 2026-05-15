@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
-import {
-    Col,
-    Row,
-    Button,
-    Dropdown,
-} from "react-bootstrap";
-import Flatpickr from "react-flatpickr";
-import Select from "react-select";
+import { Col, Row, Button, Dropdown } from 'react-bootstrap';
+import Flatpickr from 'react-flatpickr';
+import Select from 'react-select';
 import { Link } from '@inertiajs/react';
 
 const ProductsGlobalFilter = () => {
@@ -18,7 +13,7 @@ const ProductsGlobalFilter = () => {
                         href="/apps-ecommerce-add-product"
                         className="btn btn-success"
                     >
-                        <i className="ri-add-line align-bottom me-1"></i> Add
+                        <i className="ri-add-line me-1 align-bottom"></i> Add
                         Product
                     </Link>
                 </div>
@@ -36,10 +31,10 @@ const CustomersGlobalFilter = () => {
     const customerstatus = [
         {
             options: [
-                { label: "Status", value: "Status" },
-                { label: "All", value: "All" },
-                { label: "Active", value: "Active" },
-                { label: "Block", value: "Block" },
+                { label: 'Status', value: 'Status' },
+                { label: 'All', value: 'All' },
+                { label: 'Active', value: 'Active' },
+                { label: 'Block', value: 'Block' },
             ],
         },
     ];
@@ -55,9 +50,9 @@ const CustomersGlobalFilter = () => {
                                 placeholder="Select a date"
                                 options={{
                                     altInput: true,
-                                    altFormat: "F j, Y",
-                                    mode: "multiple",
-                                    dateFormat: "d.m.y",
+                                    altFormat: 'F j, Y',
+                                    mode: 'multiple',
+                                    dateFormat: 'd.m.y',
                                 }}
                             />
                         </div>
@@ -83,7 +78,7 @@ const CustomersGlobalFilter = () => {
                                 type="button"
                                 className="btn btn-primary w-100"
                             >
-                                {" "}
+                                {' '}
                                 <i className="ri-equalizer-fill me-2 align-bottom"></i>
                                 Filters
                             </button>
@@ -110,14 +105,14 @@ const OrderGlobalFilter = () => {
     const orderstatus: any = [
         {
             options: [
-                { label: "Status", value: "Status" },
-                { label: "All", value: "All" },
-                { label: "Pending", value: "Pending" },
-                { label: "Inprogress", value: "Inprogress" },
-                { label: "Cancelled", value: "Cancelled" },
-                { label: "Pickups", value: "Pickups" },
-                { label: "Returns", value: "Returns" },
-                { label: "Delivered", value: "Delivered" },
+                { label: 'Status', value: 'Status' },
+                { label: 'All', value: 'All' },
+                { label: 'Pending', value: 'Pending' },
+                { label: 'Inprogress', value: 'Inprogress' },
+                { label: 'Cancelled', value: 'Cancelled' },
+                { label: 'Pickups', value: 'Pickups' },
+                { label: 'Returns', value: 'Returns' },
+                { label: 'Delivered', value: 'Delivered' },
             ],
         },
     ];
@@ -125,12 +120,12 @@ const OrderGlobalFilter = () => {
     const orderpayement = [
         {
             options: [
-                { label: "Select Payment", value: "Select Payment" },
-                { label: "All", value: "All" },
-                { label: "Mastercard", value: "Mastercard" },
-                { label: "Paypal", value: "Paypal" },
-                { label: "Visa", value: "Visa" },
-                { label: "COD", value: "COD" },
+                { label: 'Select Payment', value: 'Select Payment' },
+                { label: 'All', value: 'All' },
+                { label: 'Mastercard', value: 'Mastercard' },
+                { label: 'Paypal', value: 'Paypal' },
+                { label: 'Visa', value: 'Visa' },
+                { label: 'COD', value: 'COD' },
             ],
         },
     ];
@@ -144,9 +139,9 @@ const OrderGlobalFilter = () => {
                         placeholder="Select a date"
                         options={{
                             altInput: true,
-                            altFormat: "F j, Y",
-                            mode: "multiple",
-                            dateFormat: "d.m.y",
+                            altFormat: 'F j, Y',
+                            mode: 'multiple',
+                            dateFormat: 'd.m.y',
                         }}
                     />
                 </div>
@@ -179,7 +174,7 @@ const OrderGlobalFilter = () => {
             <Col sm={4} className="col-xxl-1">
                 <div>
                     <button type="button" className="btn btn-primary w-100">
-                        {" "}
+                        {' '}
                         <i className="ri-equalizer-fill me-1 align-bottom"></i>
                         Filters
                     </button>
@@ -201,9 +196,9 @@ const ContactsGlobalFilter = () => {
             options: [
                 { label: 'Owner', value: 'Owner' },
                 { label: 'Company', value: 'Company' },
-                { label: 'Location', value: 'Location' }
-            ]
-        }
+                { label: 'Location', value: 'Location' },
+            ],
+        },
     ];
 
     return (
@@ -225,7 +220,7 @@ const ContactsGlobalFilter = () => {
 };
 
 const CompaniesGlobalFilter = () => {
-    const [sortBy, setsortBy] = useState("Owner");
+    const [sortBy, setsortBy] = useState('Owner');
 
     function handlesortBy(sortBy: any) {
         setsortBy(sortBy);
@@ -234,9 +229,9 @@ const CompaniesGlobalFilter = () => {
     const sortbyname: any = [
         {
             options: [
-                { label: "Owner", value: "Owner" },
-                { label: "Company", value: "Company" },
-                { label: "Location", value: "Location" },
+                { label: 'Owner', value: 'Owner' },
+                { label: 'Company', value: 'Company' },
+                { label: 'Location', value: 'Location' },
             ],
         },
     ];
@@ -263,28 +258,40 @@ const CryptoOrdersGlobalFilter = () => {
         <React.Fragment>
             <Col xl={2} md={6}>
                 <div className="input-group">
-                    <span className="input-group-text" id="basic-addon1"><i className="ri-calendar-2-line"></i></span>
+                    <span className="input-group-text" id="basic-addon1">
+                        <i className="ri-calendar-2-line"></i>
+                    </span>
                     <Flatpickr
                         placeholder="Select date"
                         className="form-control"
                         options={{
-                            mode: "range",
-                            dateFormat: "d M, Y"
+                            mode: 'range',
+                            dateFormat: 'd M, Y',
                         }}
                     />
                 </div>
             </Col>
             <Col xl={2} md={4}>
-                <select className="form-control" data-choices data-choices-search-false name="choices-single-default"
-                    id="choices-single-default">
+                <select
+                    className="form-control"
+                    data-choices
+                    data-choices-search-false
+                    name="choices-single-default"
+                    id="choices-single-default"
+                >
                     <option defaultValue="all">Select Type</option>
                     <option value="Buy">Sell</option>
                     <option value="Sell">Buy</option>
                 </select>
             </Col>
             <Col xl={2} md={4}>
-                <select className="form-control" data-choices data-choices-search-false name="choices-single-default2"
-                    id="choices-single-default2">
+                <select
+                    className="form-control"
+                    data-choices
+                    data-choices-search-false
+                    name="choices-single-default2"
+                    id="choices-single-default2"
+                >
                     <option defaultValue="all">Select Status</option>
                     <option value="Successful">Successful</option>
                     <option value="Cancelled">Cancelled</option>
@@ -301,7 +308,6 @@ const CryptoOrdersGlobalFilter = () => {
 const InvoiceListGlobalSearch = () => {
     const [isStatus, setisStatus] = useState(null);
 
-
     function handleisStatus(isStatus: any) {
         setisStatus(isStatus);
     }
@@ -309,12 +315,12 @@ const InvoiceListGlobalSearch = () => {
     const allstatus = [
         {
             options: [
-                { label: "Status", value: "Status" },
-                { label: "All", value: "All" },
-                { label: "Unpaid", value: "Unpaid" },
-                { label: "Paid", value: "Paid" },
-                { label: "Cancel", value: "Cancel" },
-                { label: "Refund", value: "Refund" },
+                { label: 'Status', value: 'Status' },
+                { label: 'All', value: 'All' },
+                { label: 'Unpaid', value: 'Unpaid' },
+                { label: 'Paid', value: 'Paid' },
+                { label: 'Cancel', value: 'Cancel' },
+                { label: 'Refund', value: 'Refund' },
             ],
         },
     ];
@@ -327,9 +333,9 @@ const InvoiceListGlobalSearch = () => {
                     placeholder="Select a date"
                     options={{
                         altInput: true,
-                        altFormat: "F j, Y",
-                        mode: "multiple",
-                        dateFormat: "d.m.y",
+                        altFormat: 'F j, Y',
+                        mode: 'multiple',
+                        dateFormat: 'd.m.y',
                     }}
                 />
             </Col>
@@ -348,11 +354,10 @@ const InvoiceListGlobalSearch = () => {
 
             <Col sm={4} xxl={1}>
                 <Button variant="primary" className="w-100">
-                    <i className="ri-equalizer-fill me-1 align-bottom"></i>{" "}
+                    <i className="ri-equalizer-fill me-1 align-bottom"></i>{' '}
                     Filters
                 </Button>
             </Col>
-
         </React.Fragment>
     );
 };
@@ -365,14 +370,20 @@ const TicketsListGlobalFilter = () => {
                     className="form-control"
                     placeholder="Select date range"
                     options={{
-                        mode: "range",
-                        dateFormat: "d M, Y"
+                        mode: 'range',
+                        dateFormat: 'd M, Y',
                     }}
                 />
             </Col>
             <Col xxl={3} sm={4}>
                 <div className="input-light">
-                    <select className="form-control" data-choices data-choices-search-false name="choices-single-default" id="idStatus">
+                    <select
+                        className="form-control"
+                        data-choices
+                        data-choices-search-false
+                        name="choices-single-default"
+                        id="idStatus"
+                    >
                         <option value="">Status</option>
                         <option defaultValue="all">All</option>
                         <option value="Open">Open</option>
@@ -383,7 +394,9 @@ const TicketsListGlobalFilter = () => {
                 </div>
             </Col>
             <Col xxl={1} sm={4}>
-                <button type="button" className="btn btn-primary w-100"> <i className="ri-equalizer-fill me-1 align-bottom"></i>
+                <button type="button" className="btn btn-primary w-100">
+                    {' '}
+                    <i className="ri-equalizer-fill me-1 align-bottom"></i>
                     Filters
                 </button>
             </Col>
@@ -396,8 +409,16 @@ const NFTRankingGlobalFilter = () => {
         <React.Fragment>
             <Col xxl={2} sm={4} className="ms-auto">
                 <div>
-                    <select className="form-control" data-choices data-choices-search-false name="choices-single-default" id="idStatus">
-                        <option value="All Time" defaultValue="">All Time</option>
+                    <select
+                        className="form-control"
+                        data-choices
+                        data-choices-search-false
+                        name="choices-single-default"
+                        id="idStatus"
+                    >
+                        <option value="All Time" defaultValue="">
+                            All Time
+                        </option>
                         <option value="1 Day">1 Day</option>
                         <option value="7 Days">7 Days</option>
                         <option value="15 Days">15 Days</option>
@@ -418,17 +439,23 @@ const TaskListGlobalFilter = () => {
                     placeholder="Select date range"
                     className="form-control bg-light border-light"
                     options={{
-                        mode: "range",
-                        dateFormat: "d M, Y"
+                        mode: 'range',
+                        dateFormat: 'd M, Y',
                     }}
                 />
             </div>
 
             <div className="col-xxl-3 col-sm-4">
                 <div className="input-light">
-                    <select className="form-control" data-choices data-choices-search-false name="status" id="idStatus">
+                    <select
+                        className="form-control"
+                        data-choices
+                        data-choices-search-false
+                        name="status"
+                        id="idStatus"
+                    >
                         <option value="">Status</option>
-                        <option defaultValue="all"  >All</option>
+                        <option defaultValue="all">All</option>
                         <option value="New">New</option>
                         <option value="Pending">Pending</option>
                         <option value="Inprogress">Inprogress</option>
@@ -437,7 +464,9 @@ const TaskListGlobalFilter = () => {
                 </div>
             </div>
             <div className="col-xxl-1 col-sm-4">
-                <button type="button" className="btn btn-primary w-100"> <i className="ri-equalizer-fill me-1 align-bottom"></i>
+                <button type="button" className="btn btn-primary w-100">
+                    {' '}
+                    <i className="ri-equalizer-fill me-1 align-bottom"></i>
                     Filters
                 </button>
             </div>
@@ -445,27 +474,32 @@ const TaskListGlobalFilter = () => {
     );
 };
 
-
 const LeadsGlobalFilter = ({ onClickDelete }: any) => {
     return (
         <React.Fragment>
             <div className="col-sm-auto ms-auto">
                 <div className="hstack gap-2">
-                    <button className="btn btn-soft-danger" onClick={onClickDelete}
-                    ><i className="ri-delete-bin-2-line"></i></button>
-                    <button type="button" className="btn btn-info"
-                    //  onClick={toggleInfo}
+                    <button
+                        className="btn btn-soft-danger"
+                        onClick={onClickDelete}
                     >
-                        <i className="ri-filter-3-line align-bottom me-1"></i>{" "}
+                        <i className="ri-delete-bin-2-line"></i>
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-info"
+                        //  onClick={toggleInfo}
+                    >
+                        <i className="ri-filter-3-line me-1 align-bottom"></i>{' '}
                         Fliters
                     </button>
                     <button
                         type="button"
                         className="btn btn-success add-btn"
                         id="create-btn"
-                    // onClick={() => { setIsEdit(false); toggle(); }}
+                        // onClick={() => { setIsEdit(false); toggle(); }}
                     >
-                        <i className="ri-add-line align-bottom me-1"></i> Add
+                        <i className="ri-add-line me-1 align-bottom"></i> Add
                         Leads
                     </button>
                     <Dropdown>
@@ -478,22 +512,15 @@ const LeadsGlobalFilter = ({ onClickDelete }: any) => {
                         >
                             <i className="ri-settings-4-line"></i>
                         </Dropdown.Toggle>
-                        <Dropdown.Menu
-                        >
+                        <Dropdown.Menu>
                             <li>
-                                <Dropdown.Item>
-                                    Copy
-                                </Dropdown.Item>
+                                <Dropdown.Item>Copy</Dropdown.Item>
                             </li>
                             <li>
-                                <Dropdown.Item>
-                                    Move to pipline
-                                </Dropdown.Item>
+                                <Dropdown.Item>Move to pipline</Dropdown.Item>
                             </li>
                             <li>
-                                <Dropdown.Item>
-                                    Add to exceptions
-                                </Dropdown.Item>
+                                <Dropdown.Item>Add to exceptions</Dropdown.Item>
                             </li>
                             <li>
                                 <Dropdown.Item>
@@ -524,5 +551,5 @@ export {
     TicketsListGlobalFilter,
     NFTRankingGlobalFilter,
     TaskListGlobalFilter,
-    LeadsGlobalFilter
+    LeadsGlobalFilter,
 };

@@ -27,7 +27,7 @@
         overflow: hidden;
         .label-icon {
             &:after {
-                content: "";
+                content: '';
                 position: absolute;
                 border: 6px solid transparent;
                 border-left-color: $primary;
@@ -36,7 +36,6 @@
         }
     }
 }
-
 
 // Alert border left example
 
@@ -55,17 +54,18 @@
 
 //alert additional example
 
-.alert-additional { 
+.alert-additional {
     padding: 0;
 
-    .alert-body{
+    .alert-body {
         padding: $alert-padding-y $alert-padding-x;
     }
     .alert-content {
         padding: $alert-padding-y $alert-padding-x;
         border-bottom-left-radius: $alert-border-radius;
         border-bottom-right-radius: $alert-border-radius;
-        margin: 0 (-$alert-border-width) (-$alert-border-width) (-$alert-border-width);
+        margin: 0 (-$alert-border-width) (-$alert-border-width)
+            (-$alert-border-width);
     }
 }
 
@@ -85,7 +85,6 @@
 // Alert example loop
 
 @each $color, $value in $theme-colors {
-
     // alert border left
     .alert-border-left {
         &.alert-#{$color} {
@@ -99,7 +98,6 @@
             border-top-color: var(--#{$prefix}#{$color});
         }
     }
-    
 
     // rounded label
 
@@ -126,13 +124,12 @@
         }
     }
 
-    .alert{
+    .alert {
         &.alert-#{$color} {
-            .btn-close::after{
+            .btn-close::after {
                 color: var(--#{$prefix}#{$color});
             }
         }
-        
     }
 
     //alert additional example
@@ -143,18 +140,17 @@
                 color: color-contrast($value);
             }
         }
-    }   
+    }
 }
 .alert-dismissible {
     .btn-close {
         background: transparent !important;
         &::after {
             background: transparent !important;
-            content: "\F0156" !important;
+            content: '\F0156' !important;
             font-size: 18px;
-            line-height:15px;
-            font-family: "Material Design Icons" !important;
+            line-height: 15px;
+            font-family: 'Material Design Icons' !important;
         }
     }
 }
-   

@@ -153,7 +153,9 @@ function ProductsEdit() {
     const removeVariant = (index: number): void => {
         setData(
             'new_variants',
-            data.new_variants.filter((_, currentIndex) => currentIndex !== index),
+            data.new_variants.filter(
+                (_, currentIndex) => currentIndex !== index,
+            ),
         );
     };
 
@@ -178,9 +180,9 @@ function ProductsEdit() {
         index: number,
         field: keyof VariantRow,
     ): string | undefined => {
-        return errors[`new_variants.${index}.${field}` as keyof typeof errors] as
-            | string
-            | undefined;
+        return errors[
+            `new_variants.${index}.${field}` as keyof typeof errors
+        ] as string | undefined;
     };
 
     const submit = (event: FormEvent<HTMLFormElement>): void => {
@@ -500,7 +502,10 @@ function ProductsEdit() {
                                                     </thead>
                                                     <tbody>
                                                         {data.new_variants.map(
-                                                            (variant, index) => {
+                                                            (
+                                                                variant,
+                                                                index,
+                                                            ) => {
                                                                 const suggestedSku =
                                                                     buildSmartSku(
                                                                         data.name,
@@ -508,7 +513,11 @@ function ProductsEdit() {
                                                                     );
 
                                                                 return (
-                                                                    <tr key={index}>
+                                                                    <tr
+                                                                        key={
+                                                                            index
+                                                                        }
+                                                                    >
                                                                         <td>
                                                                             <div className="d-flex gap-2">
                                                                                 <Form.Control
@@ -790,10 +799,10 @@ function ProductsEdit() {
                                             </span>
                                             {data.new_variants.length > 0 && (
                                                 <span>
-                                                    {data.new_variants.length} new
-                                                    variant
-                                                    {data.new_variants.length !==
-                                                    1
+                                                    {data.new_variants.length}{' '}
+                                                    new variant
+                                                    {data.new_variants
+                                                        .length !== 1
                                                         ? 's'
                                                         : ''}{' '}
                                                     to add

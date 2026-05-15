@@ -1,11 +1,11 @@
-import React from "react";
+import React from 'react';
 
-export default function InputError({ message, className = '', ...props }:any) {
+export default function InputError({ message, className = '', ...props }: any) {
     return message ? (
         <React.Fragment>
-        <p {...props} className={'invalid-feedback ' + className}>
-            {message}
-        </p>
+            <p {...props} className={'invalid-feedback ' + className}>
+                {message}
+            </p>
         </React.Fragment>
     ) : null;
 }

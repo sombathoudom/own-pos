@@ -2,9 +2,7 @@
 // _list-group.scss
 //
 
-
-@each $color,
-$value in $theme-colors {
+@each $color, $value in $theme-colors {
     .list-group-fill-#{$color} {
         &.list-group-item {
             color: color-contrast($value);
@@ -25,7 +23,7 @@ $value in $theme-colors {
             color: $white;
         }
         .list-text {
-            color: rgba($white, 0.50);
+            color: rgba($white, 0.5);
         }
     }
 }

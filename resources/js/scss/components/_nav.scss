@@ -3,8 +3,8 @@
 //
 
 :is(.nav-tabs, .nav-pills) {
-    >li {
-        >a {
+    > li {
+        > a {
             color: var(--#{$prefix}body-color);
             font-weight: $font-weight-medium;
         }
@@ -12,15 +12,14 @@
 }
 
 .nav-pills {
-    >a {
+    > a {
         color: var(--#{$prefix}body-color);
         font-weight: $font-weight-medium;
     }
 }
 
 .nav-pills {
-
-    :is(.nav-link.active, .show>.nav-link) {
+    :is(.nav-link.active, .show > .nav-link) {
         box-shadow: $element-shadow;
     }
 }
@@ -36,7 +35,7 @@
             font-weight: $font-weight-medium;
 
             &::after {
-                content: "";
+                content: '';
                 background: $primary;
                 height: 1px;
                 position: absolute;
@@ -85,7 +84,7 @@
 //Navtab custom
 .navtab-bg {
     li {
-        >a {
+        > a {
             background-color: $gray-300;
             margin: 0 5px;
         }
@@ -101,7 +100,7 @@
             text-align: center;
 
             &:before {
-                content: "";
+                content: '';
                 position: absolute;
                 border: 6px solid transparent;
                 bottom: -12px;
@@ -185,7 +184,7 @@
 
         @media (min-width: 992px) {
             &::before {
-                content: "";
+                content: '';
                 position: absolute;
                 right: -20px;
                 top: 50%;
@@ -222,7 +221,7 @@
             }
 
             &::before {
-                content: "";
+                content: '';
                 position: absolute;
                 top: 0;
                 width: 0;
@@ -257,8 +256,7 @@
     }
 }
 
-@each $color,
-$value in $theme-colors {
+@each $color, $value in $theme-colors {
     .nav-border-top-#{$color} {
         .nav-link {
             &.active {
@@ -298,8 +296,7 @@ $value in $theme-colors {
     }
 }
 
-@each $color,
-$value in $theme-colors {
+@each $color, $value in $theme-colors {
     .nav-custom-#{$color} {
         background-color: $value;
     }
@@ -309,8 +306,7 @@ $value in $theme-colors {
     background-color: var(--#{$prefix}light);
 }
 
-@each $color,
-$value in $theme-colors {
+@each $color, $value in $theme-colors {
     .nav-#{$color} {
         .nav-link {
             &.active {
@@ -411,7 +407,7 @@ $value in $theme-colors {
             color: var(--#{$prefix}body-color);
 
             &::before {
-                content: "";
+                content: '';
                 position: absolute;
                 border: 7px solid transparent;
                 right: -14px;
@@ -479,7 +475,7 @@ $value in $theme-colors {
                     color: $success;
 
                     &:before {
-                        content: "\eb80";
+                        content: '\eb80';
                     }
                 }
             }
@@ -511,8 +507,7 @@ $value in $theme-colors {
     }
 }
 
-@each $color,
-$value in $theme-colors {
+@each $color, $value in $theme-colors {
     .nav-#{$color} {
         &.nav-custom-outline {
             .nav-link {
@@ -542,7 +537,7 @@ $value in $theme-colors {
             &::before,
             &::after {
                 display: block;
-                content: " ";
+                content: ' ';
                 position: absolute;
                 top: -1px;
                 bottom: -1px;
@@ -576,4 +571,3 @@ $value in $theme-colors {
         }
     }
 }
-

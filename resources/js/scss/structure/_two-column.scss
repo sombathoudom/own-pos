@@ -1,15 +1,15 @@
 //
 // _two-column.scss
-// 
+//
 
-[data-layout="twocolumn"] {
+[data-layout='twocolumn'] {
     .app-menu {
         padding-bottom: 0;
         width: $twocolumn-menu-width;
         left: $twocolumn-menu-iconview-width;
 
         .menu-link {
-            letter-spacing: .05em;
+            letter-spacing: 0.05em;
             cursor: default;
             font-size: 11px;
             text-transform: uppercase;
@@ -31,19 +31,19 @@
                 padding-top: 16px;
             }
 
-            >li:not(.twocolumn-item-show) {
+            > li:not(.twocolumn-item-show) {
                 display: none;
             }
 
             .twocolumn-item-show {
-                >div {
+                > div {
                     display: block !important;
                     height: auto !important;
                 }
             }
 
-            >.nav-item {
-                >.menu-dropdown {
+            > .nav-item {
+                > .menu-dropdown {
                     display: block !important;
                     height: auto !important;
                 }
@@ -69,14 +69,22 @@
     }
 
     .main-content {
-        margin-left: calc(#{$twocolumn-menu-width} + #{$twocolumn-menu-iconview-width});
+        margin-left: calc(
+            #{$twocolumn-menu-width} + #{$twocolumn-menu-iconview-width}
+        );
 
-        @media (max-width:767.98px) {
+        @media (max-width: 767.98px) {
             margin-left: $twocolumn-menu-iconview-width;
         }
     }
 
-    &:is([data-sidebar="dark"], [data-sidebar="gradient"], [data-sidebar="gradient-2"], [data-sidebar="gradient-3"], [data-sidebar="gradient-4"]) {   
+    &:is(
+        [data-sidebar='dark'],
+        [data-sidebar='gradient'],
+        [data-sidebar='gradient-2'],
+        [data-sidebar='gradient-3'],
+        [data-sidebar='gradient-4']
+    ) {
         .app-menu {
             .navbar-brand-box {
                 .logo-light {
@@ -106,7 +114,7 @@
             list-style-type: none;
             .nav-icon {
                 &::after {
-                    content: "";
+                    content: '';
                     position: absolute;
                     top: 0;
                     right: 0;
@@ -154,7 +162,6 @@
 
     @media (max-width: 991.98px) {
         .logo {
-
             span.logo-lg {
                 display: block;
             }
@@ -165,7 +172,7 @@
         }
     }
 
-    &[data-sidebar="light"] {
+    &[data-sidebar='light'] {
         .app-menu {
             .navbar-brand-box {
                 .logo-light {
@@ -179,9 +186,8 @@
         }
     }
 
-    &[data-sidebar="dark"] {
+    &[data-sidebar='dark'] {
         .app-menu {
-
             .navbar-brand-box {
                 .logo-light {
                     display: block;
@@ -228,7 +234,6 @@
                 left: 0;
             }
         }
-
     }
 
     #page-topbar,
@@ -250,7 +255,7 @@
     }
 }
 
-[data-layout="twocolumn"] {
+[data-layout='twocolumn'] {
     @media (max-width: 767.98px) {
         .app-menu {
             left: 0;

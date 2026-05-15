@@ -1,4 +1,4 @@
-//sort data 
+//sort data
 export const SorttingData = ({ data, item, setState }: any) => {
     const manyTodos = [...data].sort((search1, search2) => {
         const item1 = search1[item].toLowerCase();
@@ -39,7 +39,7 @@ export const handleSearchData = ({ data, item, setState }: any) => {
                 (field) =>
                     typeof field === 'string' &&
                     field.toLowerCase().includes(item?.toLowerCase()),
-            )
-        )
-    )
-}
+            ),
+        ),
+    );
+};

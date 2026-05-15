@@ -13,7 +13,8 @@
             border-radius: 4px;
             display: block;
             margin-bottom: 8px;
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 color: $success;
             }
         }
@@ -36,7 +37,7 @@
     }
 
     &::-webkit-scrollbar-thumb {
-        background-color: rgba(var(--#{$prefix}body-color-rgb), .075);
+        background-color: rgba(var(--#{$prefix}body-color-rgb), 0.075);
         border-radius: 8px;
     }
 
@@ -46,10 +47,10 @@
 }
 
 .todo-task {
-    table{
-        .form-check{
+    table {
+        .form-check {
             .form-check-input {
-                &:checked+.form-check-label {
+                &:checked + .form-check-label {
                     text-decoration: line-through;
                 }
             }
@@ -57,10 +58,10 @@
     }
 }
 
-.task-handle{
+.task-handle {
     cursor: move;
 }
 
-#task-error-msg{
+#task-error-msg {
     display: none;
 }

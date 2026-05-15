@@ -4,8 +4,8 @@ const FullScreenDropdown: React.FC = () => {
     const [isFullScreenMode, setIsFullScreenMode] = useState<boolean>(true);
 
     const toggleFullscreen = () => {
-        let document : any = window.document;
-        document.body.classList.add("fullscreen-enable");
+        let document: any = window.document;
+        document.body.classList.add('fullscreen-enable');
 
         if (
             !document.fullscreenElement &&
@@ -37,22 +37,28 @@ const FullScreenDropdown: React.FC = () => {
                 !document.mozFullScreen &&
                 !document.msFullscreenElement
             )
-                document.body.classList.remove("fullscreen-enable");
+                document.body.classList.remove('fullscreen-enable');
         };
-        document.addEventListener("fullscreenchange", exitHandler);
-        document.addEventListener("webkitfullscreenchange", exitHandler);
-        document.addEventListener("mozfullscreenchange", exitHandler);
+        document.addEventListener('fullscreenchange', exitHandler);
+        document.addEventListener('webkitfullscreenchange', exitHandler);
+        document.addEventListener('mozfullscreenchange', exitHandler);
     };
 
     return (
         <>
-            <div className="ms-1 header-item d-none d-sm-flex">
+            <div className="header-item d-none d-sm-flex ms-1">
                 <button
                     onClick={toggleFullscreen}
                     type="button"
                     className="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
                 >
-                    <i className={isFullScreenMode ? 'bx bx-fullscreen fs-22' : "bx bx-exit-fullscreen fs-22"}></i>
+                    <i
+                        className={
+                            isFullScreenMode
+                                ? 'bx bx-fullscreen fs-22'
+                                : 'bx bx-exit-fullscreen fs-22'
+                        }
+                    ></i>
                 </button>
             </div>
         </>

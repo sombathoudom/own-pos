@@ -13,11 +13,8 @@ ul {
     @include media-breakpoint-up($breakpoint) {
         $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
 
-        @each $prop,
-        $abbrev in (margin: m, padding: p) {
-
-            @each $size,
-            $length in $spacers {
+        @each $prop, $abbrev in (margin: m, padding: p) {
+            @each $size, $length in $spacers {
                 .#{$abbrev}#{$infix}-#{$size} {
                     #{$prop}: $length !important;
                 }
@@ -35,8 +32,7 @@ ul {
         }
 
         // Negative margins (e.g., where `.mb-n1` is negative version of `.mb-1`)
-        @each $size,
-        $length in $spacers {
+        @each $size, $length in $spacers {
             @if $size !=0 {
                 .m#{$infix}-n#{$size} {
                     margin: -$length !important;
@@ -97,7 +93,6 @@ ul {
     }
 }
 
-
 // Responsive alignment
 
 @each $breakpoint in map-keys($grid-breakpoints) {
@@ -117,7 +112,6 @@ ul {
         }
     }
 }
-
 
 // Float
 
@@ -141,9 +135,8 @@ ul {
 
 // Breadcrumb
 .breadcrumb-item {
-
     // The separator between breadcrumbs (by default, a forward-slash: "/")
-    +.breadcrumb-item {
+    + .breadcrumb-item {
         padding-right: $breadcrumb-item-padding-x;
         padding-left: 0px;
 
@@ -151,13 +144,21 @@ ul {
             float: right; // Suppress inline spacings and underlining of the separator
             padding-left: $breadcrumb-item-padding-x;
             padding-right: 0px;
-            content: var(--#{$variable-prefix}breadcrumb-divider, escape-svg($breadcrumb-divider)) #{"/* rtl:"} var(--#{$variable-prefix}breadcrumb-divider, escape-svg($breadcrumb-divider-flipped)) #{"*/"};
+            content: var(
+                    --#{$variable-prefix}breadcrumb-divider,
+                    escape-svg($breadcrumb-divider)
+                )
+                #{'/* rtl:'}
+                var(
+                    --#{$variable-prefix}breadcrumb-divider,
+                    escape-svg($breadcrumb-divider-flipped)
+                )
+                #{'*/'};
         }
     }
 }
 
-
-//Buttons 
+//Buttons
 
 //button with icon
 .btn-label {
@@ -179,24 +180,22 @@ ul {
     }
 }
 
-.btn-group>:not(.btn-check)+.btn {
+.btn-group > :not(.btn-check) + .btn {
     border-radius: 0px;
     border-top-left-radius: $btn-border-radius;
     border-bottom-left-radius: $btn-border-radius;
 }
 
-
-.btn-group>.btn:not(:last-child):not(.dropdown-toggle) {
+.btn-group > .btn:not(:last-child):not(.dropdown-toggle) {
     border-radius: 0px;
     border-top-right-radius: $btn-border-radius;
     border-bottom-right-radius: $btn-border-radius;
 }
 
-
 // Dropdown
 
 .dropdown-toggle::after {
-    margin-right: .255em;
+    margin-right: 0.255em;
     margin-left: auto;
 }
 
@@ -222,7 +221,7 @@ ul {
     }
 }
 
-// Accordion 
+// Accordion
 .accordion-button::after {
     margin-right: auto;
     margin-left: 0px;
@@ -244,7 +243,7 @@ ul {
 
 //modal
 .modal-header .btn-close {
-    margin: -.625rem auto -.625rem -.625rem
+    margin: -0.625rem auto -0.625rem -0.625rem;
 }
 
 //Offcanvas
@@ -254,15 +253,15 @@ ul {
         right: 0;
         left: 0px;
         border-left: 1px solid var(--vz-border-color);
-        transform: translateX(100%)
+        transform: translateX(100%);
     }
-    
+
     &.offcanvas-end {
         top: 0;
         left: 0;
         right: auto !important;
         border-right: 1px solid var(--vz-border-color);
-        transform: translateX(-100%)
+        transform: translateX(-100%);
     }
 }
 
@@ -270,13 +269,12 @@ ul {
 .progress-step-arrow {
     .progress-bar {
         &::after {
-            content: "";
+            content: '';
             left: -20px;
             right: auto;
         }
     }
 }
-
 
 @mixin progress-variant($bg) {
     .progress-bar {
@@ -294,17 +292,15 @@ ul {
     }
 }
 
-@each $color,
-$value in $theme-colors {
+@each $color, $value in $theme-colors {
     .progress-#{$color} {
         @include progress-variant($value);
     }
 }
 
-
 .toast-header {
     .btn-close {
-        margin-left: $toast-padding-x * -.5;
+        margin-left: $toast-padding-x * -0.5;
         margin-right: $toast-padding-x;
     }
 }
@@ -327,27 +323,27 @@ $value in $theme-colors {
     padding-right: 0px;
 }
 
-.list-group-horizontal-md>.list-group-item:first-child {
+.list-group-horizontal-md > .list-group-item:first-child {
     border-bottom-right-radius: $border-radius;
     border-top-right-radius: $border-radius;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
 }
 
-.list-group-horizontal-md>.list-group-item:last-child {
+.list-group-horizontal-md > .list-group-item:last-child {
     border-top-left-radius: $border-radius;
     border-bottom-left-radius: $border-radius;
     border-bottom-right-radius: 0;
     border-top-right-radius: 0;
 }
 
-.list-group-horizontal-md>.list-group-item+.list-group-item {
+.list-group-horizontal-md > .list-group-item + .list-group-item {
     border-top-width: 1px;
     border-right-width: 0;
     border-left-width: 1px;
 }
 
-.list-group-horizontal-md>.list-group-item+.list-group-item.active {
+.list-group-horizontal-md > .list-group-item + .list-group-item.active {
     margin-right: -1px;
     border-right-width: 1px;
 }
@@ -372,7 +368,7 @@ $value in $theme-colors {
 
         &.ribbon-shape {
             &::before {
-                content: "";
+                content: '';
                 left: -17px;
                 right: auto;
             }
@@ -382,7 +378,6 @@ $value in $theme-colors {
                 right: auto;
             }
         }
-
     }
 
     // ribbon circle
@@ -457,11 +452,9 @@ $value in $theme-colors {
                 }
             }
         }
-
     }
 
-    @each $color,
-    $value in $theme-colors {
+    @each $color, $value in $theme-colors {
         .ribbon-#{$color} {
             &.ribbon-shape {
                 &::before {
@@ -493,14 +486,12 @@ $value in $theme-colors {
         }
     }
 
-
     // Icon ribbon
 
     .icon-ribbon {
         right: 24px;
         left: auto;
     }
-
 
     /* Ribbon two */
     .ribbon-two {
@@ -529,10 +520,8 @@ $value in $theme-colors {
         }
     }
 
-    @each $color,
-    $value in $theme-colors {
+    @each $color, $value in $theme-colors {
         .ribbon-two-#{$color} {
-
             span {
                 &:before {
                     border-right: 3px solid darken(($value), 15%);
@@ -544,7 +533,6 @@ $value in $theme-colors {
             }
         }
     }
-
 }
 
 .ribbon-box {
@@ -593,10 +581,9 @@ $value in $theme-colors {
     }
 }
 
-
 .form-icon {
     .form-control-icon {
-        padding-right: $input-padding-x*3;
+        padding-right: $input-padding-x * 3;
         padding-left: $input-padding-x;
     }
 
@@ -607,7 +594,7 @@ $value in $theme-colors {
 
     &.right {
         .form-control-icon {
-            padding-left: $input-padding-x*3;
+            padding-left: $input-padding-x * 3;
             padding-right: $input-padding-x;
         }
 
@@ -618,15 +605,18 @@ $value in $theme-colors {
     }
 }
 
-
-.input-group:not(.has-validation)>:not(:last-child):not(.dropdown-toggle):not(.dropdown-menu) {
+.input-group:not(.has-validation)
+    > :not(:last-child):not(.dropdown-toggle):not(.dropdown-menu) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: $border-radius;
     border-top-right-radius: $border-radius;
 }
 
-.input-group>:not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
+.input-group
+    > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(
+        .valid-feedback
+    ):not(.invalid-tooltip):not(.invalid-feedback) {
     margin-right: -1px;
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
@@ -634,13 +624,14 @@ $value in $theme-colors {
     border-top-left-radius: $border-radius;
 }
 
-.input-group.has-validation>:nth-last-child(n+3):not(.dropdown-toggle):not(.dropdown-menu) {
+.input-group.has-validation
+    > :nth-last-child(n + 3):not(.dropdown-toggle):not(.dropdown-menu) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: $border-radius;
     border-top-right-radius: $border-radius;
 }
 
-.dropdown-menu{
+.dropdown-menu {
     text-align: right;
 }

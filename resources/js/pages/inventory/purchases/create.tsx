@@ -1,10 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import {
-    type FormEvent,
-    type ReactNode,
-    useMemo,
-    useState,
-} from 'react';
+import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
 import {
     Alert,
     Badge,
@@ -131,11 +126,7 @@ function PurchasesCreate() {
 
     const selectedProductIds = useMemo(
         () =>
-            new Set(
-                data.productRows
-                    .map((r) => r.product_id)
-                    .filter(Boolean),
-            ),
+            new Set(data.productRows.map((r) => r.product_id).filter(Boolean)),
         [data.productRows],
     );
 
@@ -325,9 +316,7 @@ function PurchasesCreate() {
                                                             (s: Supplier) => (
                                                                 <option
                                                                     key={s.id}
-                                                                    value={
-                                                                        s.id
-                                                                    }
+                                                                    value={s.id}
                                                                 >
                                                                     {s.name}
                                                                 </option>
@@ -379,7 +368,9 @@ function PurchasesCreate() {
                                                     <Form.Control
                                                         id="arrival_date"
                                                         type="date"
-                                                        value={data.arrival_date}
+                                                        value={
+                                                            data.arrival_date
+                                                        }
                                                         onChange={(e) =>
                                                             setData(
                                                                 'arrival_date',
@@ -436,7 +427,9 @@ function PurchasesCreate() {
                                                         type="number"
                                                         step="0.0001"
                                                         min="0"
-                                                        value={data.exchange_rate}
+                                                        value={
+                                                            data.exchange_rate
+                                                        }
                                                         onChange={(e) =>
                                                             setData(
                                                                 'exchange_rate',
@@ -555,8 +548,9 @@ function PurchasesCreate() {
                                             <h4 className="card-title mb-0">
                                                 Purchase Items
                                             </h4>
-                                            <span className="text-muted small">
-                                                {data.productRows.length} product
+                                            <span className="small text-muted">
+                                                {data.productRows.length}{' '}
+                                                product
                                                 {data.productRows.length !== 1
                                                     ? 's'
                                                     : ''}
@@ -564,11 +558,22 @@ function PurchasesCreate() {
                                         </div>
 
                                         {(() => {
-                                            const itemsError = (errors as Record<string, unknown>).items;
+                                            const itemsError = (
+                                                errors as Record<
+                                                    string,
+                                                    unknown
+                                                >
+                                            ).items;
                                             if (!itemsError) return null;
                                             return (
-                                                <Alert variant="danger" className="mb-3">
-                                                    {typeof itemsError === 'string' ? itemsError : 'Please check your items.'}
+                                                <Alert
+                                                    variant="danger"
+                                                    className="mb-3"
+                                                >
+                                                    {typeof itemsError ===
+                                                    'string'
+                                                        ? itemsError
+                                                        : 'Please check your items.'}
                                                 </Alert>
                                             );
                                         })()}
@@ -593,7 +598,7 @@ function PurchasesCreate() {
                                             {showPicker &&
                                                 filteredProducts.length > 0 && (
                                                     <div
-                                                        className="position-absolute w-100 bg-white border rounded shadow-sm"
+                                                        className="position-absolute w-100 rounded border bg-white shadow-sm"
                                                         style={{
                                                             zIndex: 1000,
                                                             maxHeight: 320,
@@ -607,7 +612,7 @@ function PurchasesCreate() {
                                                                         product.id
                                                                     }
                                                                     type="button"
-                                                                    className="d-flex align-items-center gap-2 w-100 text-start border-0 bg-white px-3 py-2 hover-bg-light"
+                                                                    className="d-flex align-items-center hover-bg-light w-100 gap-2 border-0 bg-white px-3 py-2 text-start"
                                                                     style={{
                                                                         cursor: 'pointer',
                                                                     }}
@@ -621,7 +626,7 @@ function PurchasesCreate() {
                                                                     }}
                                                                 >
                                                                     <div
-                                                                        className="flex-shrink-0 rounded border bg-light"
+                                                                        className="bg-light flex-shrink-0 rounded border"
                                                                         style={{
                                                                             width: 40,
                                                                             height: 40,
@@ -635,15 +640,15 @@ function PurchasesCreate() {
                                                                                 alt={
                                                                                     product.name
                                                                                 }
-                                                                                className="w-100 h-100 object-fit-cover rounded"
+                                                                                className="object-fit-cover h-100 w-100 rounded"
                                                                             />
                                                                         ) : (
-                                                                            <div className="d-flex align-items-center justify-content-center w-100 h-100 text-muted">
+                                                                            <div className="d-flex align-items-center justify-content-center h-100 w-100 text-muted">
                                                                                 <i className="ri-image-line"></i>
                                                                             </div>
                                                                         )}
                                                                     </div>
-                                                                    <div className="flex-grow-1 min-w-0">
+                                                                    <div className="min-w-0 flex-grow-1">
                                                                         <div className="fw-medium text-truncate">
                                                                             {
                                                                                 product.name
@@ -678,7 +683,7 @@ function PurchasesCreate() {
                                                 filteredProducts.length ===
                                                     0 && (
                                                     <div
-                                                        className="position-absolute w-100 bg-white border rounded shadow-sm px-3 py-2 text-muted small"
+                                                        className="position-absolute small w-100 rounded border bg-white px-3 py-2 text-muted shadow-sm"
                                                         style={{ zIndex: 1000 }}
                                                     >
                                                         No products found.
@@ -729,11 +734,10 @@ function PurchasesCreate() {
                                                                                         !prod
                                                                                     )
                                                                                         return;
-                                                                                    const variantQtys:
-                                                                                        Record<
-                                                                                            string,
-                                                                                            string
-                                                                                        > =
+                                                                                    const variantQtys: Record<
+                                                                                        string,
+                                                                                        string
+                                                                                    > =
                                                                                         {};
                                                                                     for (const v of prod.variants) {
                                                                                         variantQtys[
@@ -826,9 +830,8 @@ function PurchasesCreate() {
                                                         );
                                                     }
 
-                                                    const rowQty = rowTotalQty(
-                                                        row,
-                                                    );
+                                                    const rowQty =
+                                                        rowTotalQty(row);
 
                                                     return (
                                                         <Card
@@ -839,7 +842,7 @@ function PurchasesCreate() {
                                                                 <div className="d-flex align-items-start gap-3">
                                                                     {/* Product Image */}
                                                                     <div
-                                                                        className="flex-shrink-0 rounded border bg-light"
+                                                                        className="bg-light flex-shrink-0 rounded border"
                                                                         style={{
                                                                             width: 64,
                                                                             height: 64,
@@ -853,17 +856,17 @@ function PurchasesCreate() {
                                                                                 alt={
                                                                                     product.name
                                                                                 }
-                                                                                className="w-100 h-100 object-fit-cover rounded"
+                                                                                className="object-fit-cover h-100 w-100 rounded"
                                                                             />
                                                                         ) : (
-                                                                            <div className="d-flex align-items-center justify-content-center w-100 h-100 text-muted">
+                                                                            <div className="d-flex align-items-center justify-content-center h-100 w-100 text-muted">
                                                                                 <i className="ri-image-line fs-4"></i>
                                                                             </div>
                                                                         )}
                                                                     </div>
 
-                                                                    <div className="flex-grow-1 min-w-0">
-                                                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                                                    <div className="min-w-0 flex-grow-1">
+                                                                        <div className="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
                                                                             <div>
                                                                                 <h6 className="mb-0">
                                                                                     {
@@ -907,10 +910,15 @@ function PurchasesCreate() {
                                                                             </div>
                                                                         </div>
 
-                                                                        <div className="d-flex flex-wrap gap-3 mb-3">
-                                                                            <div style={{ minWidth: 100 }}>
-                                                                                <div className="small text-muted mb-1">
-                                                                                    Unit Cost
+                                                                        <div className="d-flex mb-3 flex-wrap gap-3">
+                                                                            <div
+                                                                                style={{
+                                                                                    minWidth: 100,
+                                                                                }}
+                                                                            >
+                                                                                <div className="small mb-1 text-muted">
+                                                                                    Unit
+                                                                                    Cost
                                                                                 </div>
                                                                                 <Form.Control
                                                                                     size="sm"
@@ -933,33 +941,51 @@ function PurchasesCreate() {
                                                                                     }
                                                                                 />
                                                                             </div>
-                                                                            <div style={{ minWidth: 90 }}>
-                                                                                <div className="small text-muted mb-1">
-                                                                                    Delivery / Unit
+                                                                            <div
+                                                                                style={{
+                                                                                    minWidth: 90,
+                                                                                }}
+                                                                            >
+                                                                                <div className="small mb-1 text-muted">
+                                                                                    Delivery
+                                                                                    /
+                                                                                    Unit
                                                                                 </div>
                                                                                 <div className="form-control form-control-sm bg-light text-muted">
-                                                                                    ${getDeliveryPerUnit(
+                                                                                    $
+                                                                                    {getDeliveryPerUnit(
                                                                                         row,
                                                                                     ).toFixed(
                                                                                         2,
                                                                                     )}
                                                                                 </div>
                                                                             </div>
-                                                                            <div style={{ minWidth: 90 }}>
-                                                                                <div className="small text-muted mb-1">
-                                                                                    Landed Cost
+                                                                            <div
+                                                                                style={{
+                                                                                    minWidth: 90,
+                                                                                }}
+                                                                            >
+                                                                                <div className="small mb-1 text-muted">
+                                                                                    Landed
+                                                                                    Cost
                                                                                 </div>
                                                                                 <div className="form-control form-control-sm bg-light fw-semibold text-dark">
-                                                                                    ${getLandedUnitCost(
+                                                                                    $
+                                                                                    {getLandedUnitCost(
                                                                                         row,
                                                                                     ).toFixed(
                                                                                         2,
                                                                                     )}
                                                                                 </div>
                                                                             </div>
-                                                                            <div style={{ minWidth: 100 }}>
-                                                                                <div className="small text-muted mb-1">
-                                                                                    Sale Price
+                                                                            <div
+                                                                                style={{
+                                                                                    minWidth: 100,
+                                                                                }}
+                                                                            >
+                                                                                <div className="small mb-1 text-muted">
+                                                                                    Sale
+                                                                                    Price
                                                                                 </div>
                                                                                 <Form.Control
                                                                                     size="sm"
@@ -984,13 +1010,14 @@ function PurchasesCreate() {
                                                                             </div>
                                                                             <div className="d-flex align-items-end">
                                                                                 <div className="small text-muted">
-                                                                                    Qty:{" "}
+                                                                                    Qty:{' '}
                                                                                     <span className="fw-semibold text-dark">
                                                                                         {
                                                                                             rowQty
                                                                                         }
                                                                                     </span>{' '}
-                                                                                    &middot; Sub:{" "}
+                                                                                    &middot;
+                                                                                    Sub:{' '}
                                                                                     <span className="fw-semibold text-dark">
                                                                                         $
                                                                                         {rowSubtotal(
@@ -1012,7 +1039,7 @@ function PurchasesCreate() {
                                                                                         key={
                                                                                             variant.id
                                                                                         }
-                                                                                        className="d-flex align-items-center gap-1 border rounded px-2 py-1 bg-light-subtle"
+                                                                                        className="d-flex align-items-center bg-light-subtle gap-1 rounded border px-2 py-1"
                                                                                     >
                                                                                         <span className="small fw-medium text-nowrap">
                                                                                             {variantLabel(
@@ -1048,8 +1075,10 @@ function PurchasesCreate() {
                                                                                             style={{
                                                                                                 width: 56,
                                                                                                 border: 'none',
-                                                                                                background: 'transparent',
-                                                                                                padding: '0.15rem 0.3rem',
+                                                                                                background:
+                                                                                                    'transparent',
+                                                                                                padding:
+                                                                                                    '0.15rem 0.3rem',
                                                                                             }}
                                                                                         />
                                                                                     </div>
@@ -1065,7 +1094,7 @@ function PurchasesCreate() {
                                             )}
 
                                             {data.productRows.length === 0 && (
-                                                <div className="text-center text-muted py-5 border rounded bg-light-subtle">
+                                                <div className="bg-light-subtle rounded border py-5 text-center text-muted">
                                                     <i className="ri-shopping-cart-line fs-1 d-block mb-2"></i>
                                                     <p className="mb-0">
                                                         Search and select
@@ -1086,7 +1115,7 @@ function PurchasesCreate() {
                                             Order Summary
                                         </h4>
 
-                                        <div className="vstack gap-3 mb-3">
+                                        <div className="vstack mb-3 gap-3">
                                             <div className="d-flex justify-content-between align-items-center">
                                                 <span className="text-muted">
                                                     Total Shirts
@@ -1096,11 +1125,10 @@ function PurchasesCreate() {
                                                 </span>
                                             </div>
 
-                                            {Object.entries(
-                                                categoryBreakdown,
-                                            ).length > 0 && (
+                                            {Object.entries(categoryBreakdown)
+                                                .length > 0 && (
                                                 <div>
-                                                    <div className="small text-muted mb-2">
+                                                    <div className="small mb-2 text-muted">
                                                         By Category
                                                     </div>
                                                     <div className="vstack gap-1">
@@ -1158,7 +1186,8 @@ function PurchasesCreate() {
                                                     ${otherCost.toFixed(2)}
                                                 </span>
                                             </div>
-                                            {Number(data.exchange_rate) !== 1 && (
+                                            {Number(data.exchange_rate) !==
+                                                1 && (
                                                 <div className="d-flex justify-content-between small">
                                                     <span className="text-muted">
                                                         Exchange Rate

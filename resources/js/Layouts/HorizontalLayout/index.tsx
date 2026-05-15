@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
-import PropTypes from "prop-types";
-import { Col, Collapse, Row } from "react-bootstrap";
+import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
+import { Col, Collapse, Row } from 'react-bootstrap';
 
 // Import Data
-import navdata from "../LayoutMenuData";
+import navdata from '../LayoutMenuData';
 //i18n
-import { withTranslation } from "react-i18next";
-import { Link } from "@inertiajs/react";
+import { withTranslation } from 'react-i18next';
+import { Link } from '@inertiajs/react';
 
 const HorizontalLayout = (props: any) => {
     const [isMoreMenu, setIsMoreMenu] = useState<boolean>(false);
@@ -15,7 +15,7 @@ const HorizontalLayout = (props: any) => {
     let splitMenuItems: Array<any> = [];
     let menuSplitContainer = 6;
     navData.forEach(function (value: any, key: number) {
-        if (value["isHeader"]) {
+        if (value['isHeader']) {
             menuSplitContainer++;
         }
         if (key >= menuSplitContainer) {
@@ -29,10 +29,10 @@ const HorizontalLayout = (props: any) => {
         }
     });
     menuItems.push({
-        id: "more",
-        label: "More",
-        icon: "ri-briefcase-2-line",
-        link: "/#",
+        id: 'more',
+        label: 'More',
+        icon: 'ri-briefcase-2-line',
+        link: '/#',
         stateVariables: isMoreMenu,
         subItems: splitMenuItems,
         click: function (e: any) {
@@ -44,11 +44,11 @@ const HorizontalLayout = (props: any) => {
     const path = window.location.pathname;
 
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         const initMenu = () => {
             const pathName = path;
-            const ul = document.getElementById("navbar-nav") as HTMLElement;
-            const items: any = ul.getElementsByTagName("a");
+            const ul = document.getElementById('navbar-nav') as HTMLElement;
+            const items: any = ul.getElementsByTagName('a');
             let itemsArray = [...items]; // converts NodeList to Array
             removeActivation(itemsArray);
             let matchingMenuItem = itemsArray.find((x) => {
@@ -62,40 +62,40 @@ const HorizontalLayout = (props: any) => {
     }, [path, props.layoutType]);
 
     function activateParentDropdown(item: any) {
-        item.classList.add("active");
-        let parentCollapseDiv = item.closest(".collapse.menu-dropdown");
+        item.classList.add('active');
+        let parentCollapseDiv = item.closest('.collapse.menu-dropdown');
 
         if (parentCollapseDiv) {
             // to set aria expand true remaining
-            parentCollapseDiv.classList.add("show");
-            parentCollapseDiv.parentElement.children[0].classList.add("active");
+            parentCollapseDiv.classList.add('show');
+            parentCollapseDiv.parentElement.children[0].classList.add('active');
             parentCollapseDiv.parentElement.children[0].setAttribute(
-                "aria-expanded",
-                "true",
+                'aria-expanded',
+                'true',
             );
             if (
                 parentCollapseDiv.parentElement.closest(
-                    ".collapse.menu-dropdown",
+                    '.collapse.menu-dropdown',
                 )
             ) {
                 parentCollapseDiv.parentElement
-                    .closest(".collapse")
-                    .classList.add("show");
+                    .closest('.collapse')
+                    .classList.add('show');
                 var parentElementDiv =
                     parentCollapseDiv.parentElement.closest(
-                        ".collapse",
+                        '.collapse',
                     ).previousElementSibling;
                 if (parentElementDiv)
-                    if (parentElementDiv.closest(".collapse"))
+                    if (parentElementDiv.closest('.collapse'))
                         parentElementDiv
-                            .closest(".collapse")
-                            .classList.add("show");
-                parentElementDiv.classList.add("active");
+                            .closest('.collapse')
+                            .classList.add('show');
+                parentElementDiv.classList.add('active');
                 var parentElementSibling =
                     parentElementDiv.parentElement.parentElement.parentElement
                         .previousElementSibling;
                 if (parentElementSibling) {
-                    parentElementSibling.classList.add("active");
+                    parentElementSibling.classList.add('active');
                 }
             }
             return false;
@@ -105,25 +105,25 @@ const HorizontalLayout = (props: any) => {
 
     const removeActivation = (items: any) => {
         let actiItems = items.filter((x: any) =>
-            x.classList.contains("active"),
+            x.classList.contains('active'),
         );
 
         actiItems.forEach((item: any) => {
-            if (item.classList.contains("menu-link")) {
-                if (!item.classList.contains("active")) {
-                    item.setAttribute("aria-expanded", false);
+            if (item.classList.contains('menu-link')) {
+                if (!item.classList.contains('active')) {
+                    item.setAttribute('aria-expanded', false);
                 }
                 if (item.nextElementSibling) {
-                    item.nextElementSibling.classList.remove("show");
+                    item.nextElementSibling.classList.remove('show');
                 }
             }
-            if (item.classList.contains("nav-link")) {
+            if (item.classList.contains('nav-link')) {
                 if (item.nextElementSibling) {
-                    item.nextElementSibling.classList.remove("show");
+                    item.nextElementSibling.classList.remove('show');
                 }
-                item.setAttribute("aria-expanded", false);
+                item.setAttribute('aria-expanded', false);
             }
-            item.classList.remove("active");
+            item.classList.remove('active');
         });
     };
     return (
@@ -132,31 +132,31 @@ const HorizontalLayout = (props: any) => {
                 return (
                     <React.Fragment key={key}>
                         {/* Main Header */}
-                        {!item["isHeader"] ? (
+                        {!item['isHeader'] ? (
                             item.subItems ? (
                                 <li className="nav-item">
                                     <Link
                                         onClick={item.click}
                                         className="nav-link menu-link"
-                                        href={item.link ? item.link : "/#"}
+                                        href={item.link ? item.link : '/#'}
                                         data-bs-toggle="collapse"
                                     >
-                                        <i className={item.icon}></i>{" "}
+                                        <i className={item.icon}></i>{' '}
                                         <span data-key="t-apps">
                                             {props.t(item.label)}
                                         </span>
                                     </Link>
                                     <Collapse
                                         className={
-                                            item.id === "baseUi" &&
+                                            item.id === 'baseUi' &&
                                             item.subItems.length > 13
-                                                ? "menu-dropdown mega-dropdown-menu"
-                                                : "menu-dropdown"
+                                                ? 'menu-dropdown mega-dropdown-menu'
+                                                : 'menu-dropdown'
                                         }
                                         in={item.stateVariables}
                                     >
                                         {/* subItms  */}
-                                        {item.id === "baseUi" &&
+                                        {item.id === 'baseUi' &&
                                         item.subItems.length > 13 ? (
                                             <React.Fragment>
                                                 <div className="menu-dropdown mega-dropdown-menu">
@@ -259,7 +259,7 @@ const HorizontalLayout = (props: any) => {
                                                                             href={
                                                                                 subItem.link
                                                                                     ? subItem.link
-                                                                                    : "/#"
+                                                                                    : '/#'
                                                                             }
                                                                             className="nav-link"
                                                                         >
@@ -278,7 +278,7 @@ const HorizontalLayout = (props: any) => {
                                                                             href="/#"
                                                                             data-bs-toggle="collapse"
                                                                         >
-                                                                            {" "}
+                                                                            {' '}
                                                                             {props.t(
                                                                                 subItem.label,
                                                                             )}
@@ -314,7 +314,7 @@ const HorizontalLayout = (props: any) => {
                                                                                                             href={
                                                                                                                 subChildItem.link
                                                                                                                     ? subChildItem.link
-                                                                                                                    : "/#"
+                                                                                                                    : '/#'
                                                                                                             }
                                                                                                             className="nav-link"
                                                                                                         >
@@ -333,7 +333,7 @@ const HorizontalLayout = (props: any) => {
                                                                                                             href="/#"
                                                                                                             data-bs-toggle="collapse"
                                                                                                         >
-                                                                                                            {" "}
+                                                                                                            {' '}
                                                                                                             {props.t(
                                                                                                                 subChildItem.label,
                                                                                                             )}
@@ -368,7 +368,7 @@ const HorizontalLayout = (props: any) => {
                                                                                                                                     href={
                                                                                                                                         subSubChildItem.link
                                                                                                                                             ? subSubChildItem.link
-                                                                                                                                            : "/#"
+                                                                                                                                            : '/#'
                                                                                                                                     }
                                                                                                                                     className="nav-link"
                                                                                                                                 >
@@ -401,9 +401,9 @@ const HorizontalLayout = (props: any) => {
                                 <li className="nav-item">
                                     <Link
                                         className="nav-link menu-link"
-                                        href={item.link ? item.link : "/#"}
+                                        href={item.link ? item.link : '/#'}
                                     >
-                                        <i className={item.icon}></i>{" "}
+                                        <i className={item.icon}></i>{' '}
                                         <span>{props.t(item.label)}</span>
                                     </Link>
                                 </li>

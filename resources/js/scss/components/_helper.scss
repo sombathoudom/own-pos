@@ -20,10 +20,10 @@ $border-style-mixing: double, dashed, groove, outset, ridge, dotted, inset;
     .border-start-#{$border-style-mixing} {
         border-left-style: #{$border-style-mixing} !important;
     }
-    
+
     // List Group Flush Style
     .list-group-flush {
-        &.border-#{$border-style-mixing} { 
+        &.border-#{$border-style-mixing} {
             border: none !important;
             .list-group-item {
                 border-style: #{$border-style-mixing} !important;
@@ -44,7 +44,7 @@ $border-style-mixing: double, dashed, groove, outset, ridge, dotted, inset;
 
 // Background pattern
 .bg-pattern {
-    background: url("../images/modal-bg.png") $modal-content-bg;
+    background: url('../images/modal-bg.png') $modal-content-bg;
 }
 
 // Fixed minimum width
@@ -102,24 +102,23 @@ $border-style-mixing: double, dashed, groove, outset, ridge, dotted, inset;
 // Dual Icons
 .icon-dual {
     color: $gray-500;
-    fill: rgba($gray-500,0.16);
+    fill: rgba($gray-500, 0.16);
 }
 
-@each $color,
-$value in $theme-colors {
+@each $color, $value in $theme-colors {
     .icon-dual-#{$color} {
         color: $value;
         fill: rgba($value, 0.16);
     }
 }
 
-// Search 
-.search-box{
+// Search
+.search-box {
     position: relative;
-    .form-control{
+    .form-control {
         padding-left: 40px;
     }
-    .search-icon{
+    .search-icon {
         font-size: 14px;
         position: absolute;
         left: 13px;
@@ -130,7 +129,6 @@ $value in $theme-colors {
         color: var(--#{$prefix}secondary-color);
     }
 }
-
 
 // overlay
 
@@ -155,7 +153,7 @@ $value in $theme-colors {
     z-index: 1000;
 }
 
-// 
+//
 code {
     user-select: all;
 }
@@ -168,8 +166,7 @@ code {
 }
 
 .layout-rightside-col {
-
-    @media (max-width: 1699.98px) { 
+    @media (max-width: 1699.98px) {
         display: none;
         position: fixed !important;
         height: 100vh;
@@ -177,14 +174,13 @@ code {
         top: 0px;
         bottom: 0px;
         z-index: 1004;
-        .overlay{
+        .overlay {
             position: fixed;
             top: 0;
             right: 0px;
             bottom: 0px;
             left: 0px;
             background-color: rgba($dark, 0.2);
-           
         }
         .layout-rightside {
             margin-top: 0px;
@@ -198,9 +194,9 @@ code {
     }
 }
 
-:is([data-layout="horizontal"], [data-layout-style=detached]) {
+:is([data-layout='horizontal'], [data-layout-style='detached']) {
     @media (min-width: 1700px) {
-        .layout-rightside{
+        .layout-rightside {
             margin-top: calc(28px - #{$grid-gutter-width});
             margin-right: 0;
             height: calc(100% - calc(#{$grid-gutter-width} * 0.5));
@@ -208,14 +204,14 @@ code {
     }
 }
 
-[data-layout="semibox"] {
+[data-layout='semibox'] {
     .layout-rightside {
         margin-right: 0px;
     }
 }
 
 // text-truncate-two-lines
-.text-truncate-two-lines{
+.text-truncate-two-lines {
     overflow: hidden;
     text-overflow: ellipsis;
     -webkit-line-clamp: 2;
@@ -224,29 +220,29 @@ code {
     white-space: normal;
 }
 
-// Favorite button 
-.favourite-btn{
+// Favorite button
+.favourite-btn {
     border-color: transparent;
-    .ri-star-fill{
+    .ri-star-fill {
         color: var(--#{$prefix}secondary-color);
     }
-    &.active{
+    &.active {
         border-color: transparent;
-        .ri-star-fill{
+        .ri-star-fill {
             color: $warning;
-            
-            &:before{
-                content: "\f186";
+
+            &:before {
+                content: '\f186';
             }
         }
     }
 }
 // card
-.card-logo-light{
+.card-logo-light {
     display: var(--#{$prefix}card-logo-light);
 }
 
-.card-logo-dark{
+.card-logo-dark {
     display: var(--#{$prefix}card-logo-dark);
 }
 
@@ -263,13 +259,13 @@ code {
 }
 
 @keyframes fade-up {
-  0% {
-    transform: translateY(0);
-    opacity: 1;
-  }
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
 
-  75% {
-    transform: translateY(-20px);
-    opacity: 0;
-  }
+    75% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
 }

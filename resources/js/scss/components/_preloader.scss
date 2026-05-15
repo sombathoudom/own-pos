@@ -1,4 +1,4 @@
-// 
+//
 // preloader.scss
 //
 
@@ -12,7 +12,7 @@
     z-index: 9999;
 }
 
-[data-preloader="disable"] #preloader {
+[data-preloader='disable'] #preloader {
     opacity: 0;
     visibility: hidden;
 }

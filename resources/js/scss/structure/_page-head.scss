@@ -1,13 +1,14 @@
-// 
+//
 // _page-head.scss
-// 
+//
 
 .page-title-box {
     padding: 10px $grid-gutter-width;
     background-color: var(--#{$prefix}secondary-bg);
     box-shadow: var(--#{$prefix}page-title-box-shadow);
     border-bottom: 1px solid var(--#{$prefix}page-title-border);
-    margin: -23px (-$grid-gutter-width * 1) $grid-gutter-width (-$grid-gutter-width * 1);
+    margin: -23px (-$grid-gutter-width * 1) $grid-gutter-width
+        (-$grid-gutter-width * 1);
 
     .breadcrumb {
         background-color: transparent;
@@ -16,12 +17,12 @@
 
     h4 {
         font-weight: 700;
-        font-size: 15px!important;
+        font-size: 15px !important;
         text-transform: uppercase;
     }
 }
 
-[data-layout="horizontal"] {
+[data-layout='horizontal'] {
     .page-title-box {
         padding: 1.2rem 0;
         background-color: transparent !important;
@@ -36,8 +37,8 @@
     }
 }
 
-[data-layout="vertical"] {
-    &[data-layout-style="detached"]{
+[data-layout='vertical'] {
+    &[data-layout-style='detached'] {
         .page-title-box {
             padding: 1.2rem 0;
             background-color: transparent !important;
@@ -45,7 +46,7 @@
             border-top: none;
             box-shadow: none;
             margin: 0;
-    
+
             @media (min-width: 1024.1px) {
                 margin: -19px 0 0 0;
             }

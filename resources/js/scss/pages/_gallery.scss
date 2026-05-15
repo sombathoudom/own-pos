@@ -1,4 +1,4 @@
-    //
+//
 // _gallery.scss
 //
 
@@ -28,7 +28,7 @@
     padding: 8px;
 
     &::before {
-        content: "";
+        content: '';
         position: absolute;
         left: 0;
         right: 0;
@@ -55,7 +55,12 @@
             bottom: 0px;
             right: 0px;
             opacity: 0;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0) 10%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, .5) 100%);
+            background: linear-gradient(
+                180deg,
+                rgba(0, 0, 0, 0) 10%,
+                rgba(0, 0, 0, 0) 60%,
+                rgba(0, 0, 0, 0.5) 100%
+            );
             visibility: hidden;
             overflow: hidden;
             transition: all 0.4s ease-in-out 0s;
