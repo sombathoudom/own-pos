@@ -17,6 +17,7 @@ class StoreSaleRequest extends FormRequest
             'customer_name' => ['nullable', 'string', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:50'],
             'customer_address' => ['nullable', 'string', 'max:500'],
+            'source_page' => ['nullable', 'string', 'in:DL,DC,Walk-in,Other'],
             'sale_date' => ['required', 'date'],
             'currency' => ['sometimes', 'string', 'size:3'],
             'exchange_rate' => ['sometimes', 'numeric', 'min:0'],

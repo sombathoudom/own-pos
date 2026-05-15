@@ -3,6 +3,7 @@ import { type FormEvent, type ReactNode, useState } from 'react';
 import { Badge, Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
+import ReportsNav from '@/Components/Inventory/ReportsNav';
 import Pagination from '@/Components/Pagination';
 import Layout from '@/Layouts';
 
@@ -31,6 +32,7 @@ function ReportsStockLoss() {
             <div className="page-content">
                 <Container fluid>
                     <BreadCrumb title="Stock Loss Report" pageTitle="Reports" />
+                    <ReportsNav active="stock-loss" />
                     <Row>
                         <Col xs={12}>
                             <Card>

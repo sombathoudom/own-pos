@@ -244,6 +244,7 @@ export type InventorySale = {
     invoice_no: string;
     customer_name: string | null;
     customer_phone: string | null;
+    source_page: string | null;
     sale_date: string;
     currency: string;
     exchange_rate: string;

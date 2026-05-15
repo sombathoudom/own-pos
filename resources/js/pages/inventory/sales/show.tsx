@@ -418,6 +418,14 @@ function SalesShow() {
                                                     '-'}
                                             </div>
                                         </Col>
+                                        <Col md={6} className="mt-3">
+                                            <div className="small text-muted">
+                                                Source Page
+                                            </div>
+                                            <div>
+                                                {sale.source_page || 'Other'}
+                                            </div>
+                                        </Col>
                                     </Row>
 
                                     <Row className="mb-3">

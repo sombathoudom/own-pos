@@ -52,15 +52,18 @@ type PosProps = {
     variants: Variant[];
     categories: Record<number, string>;
     sizes: string[];
+    sourcePageOptions: string[];
 };
 
 function PosIndex() {
-    const { variants, categories, sizes } = usePage<PosProps>().props;
+    const { variants, categories, sizes, sourcePageOptions } =
+        usePage<PosProps>().props;
 
     const { data, setData, post, processing, errors } = useForm({
         customer_name: '',
         customer_phone: '',
         customer_address: '',
+        source_page: 'Walk-in',
         sale_date: new Date().toISOString().split('T')[0],
         currency: 'USD',
         exchange_rate: '1',
@@ -590,9 +593,15 @@ function PosIndex() {
                                         {/* Customer */}
                                         <div className="mb-3">
                                             <div className="d-flex justify-content-between align-items-center mb-2">
-                                                <span className="fw-semibold">
-                                                    Customer
-                                                </span>
+                                                <div>
+                                                    <span className="fw-semibold">
+                                                        Customer
+                                                    </span>
+                                                    <div className="small text-muted">
+                                                        Source:{' '}
+                                                        {data.source_page}
+                                                    </div>
+                                                </div>
                                                 <Button
                                                     variant="link"
                                                     size="sm"
@@ -633,6 +642,33 @@ function PosIndex() {
                                                     Walk-in customer
                                                 </div>
                                             )}
+
+                                            <div className="mt-3">
+                                                <Form.Label className="small mb-1 text-muted">
+                                                    Source Page
+                                                </Form.Label>
+                                                <Form.Select
+                                                    size="sm"
+                                                    value={data.source_page}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'source_page',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                >
+                                                    {sourcePageOptions.map(
+                                                        (option) => (
+                                                            <option
+                                                                key={option}
+                                                                value={option}
+                                                            >
+                                                                {option}
+                                                            </option>
+                                                        ),
+                                                    )}
+                                                </Form.Select>
+                                            </div>
                                         </div>
 
                                         {/* Cart Items */}
@@ -1335,6 +1371,21 @@ function PosIndex() {
                             }
                             placeholder="Phone number"
                         />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Source Page</Form.Label>
+                        <Form.Select
+                            value={data.source_page}
+                            onChange={(e) =>
+                                setData('source_page', e.target.value)
+                            }
+                        >
+                            {sourcePageOptions.map((option) => (
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
+                            ))}
+                        </Form.Select>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label>Address</Form.Label>

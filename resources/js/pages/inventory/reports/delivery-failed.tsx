@@ -3,6 +3,7 @@ import { type FormEvent, type ReactNode, useState } from 'react';
 import { Badge, Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
+import ReportsNav from '@/Components/Inventory/ReportsNav';
 import Pagination from '@/Components/Pagination';
 import Layout from '@/Layouts';
 
@@ -34,6 +35,7 @@ function ReportsDeliveryFailed() {
                         title="Delivery Failed Report"
                         pageTitle="Reports"
                     />
+                    <ReportsNav active="delivery-failed" />
                     <Row>
                         <Col xs={12}>
                             <Card>

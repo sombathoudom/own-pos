@@ -3,6 +3,7 @@ import { type ReactNode } from 'react';
 import { Card, Col, Container, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
+import ReportsNav from '@/Components/Inventory/ReportsNav';
 import Layout from '@/Layouts';
 
 function ReportsStockValue() {
@@ -20,6 +21,7 @@ function ReportsStockValue() {
                         title="Stock Value Report"
                         pageTitle="Reports"
                     />
+                    <ReportsNav active="stock-value" />
                     <Row>
                         <Col xs={12}>
                             <Card>

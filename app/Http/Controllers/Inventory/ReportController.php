@@ -7,8 +7,10 @@ use App\Models\DailyClosing;
 use App\Models\DeliveryConfirmation;
 use App\Models\Expense;
 use App\Models\OrderDelivery;
+use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\SaleExchange;
+use App\Models\SaleReturn;
 use App\Models\StockLayer;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
@@ -27,7 +29,7 @@ class ReportController extends Controller
             ->where('payment_status', 'paid')
             ->whereNotNull('payment_received_date')
             ->whereDate('payment_received_date', $date)
-            ->with(['items.productVariant.product', 'exchanges', 'returns'])
+            ->with(['items.productVariant.product', 'exchanges', 'returns.items', 'delivery'])
             ->get();
 
         $exchangeReceipts = SaleExchange::query()
@@ -37,10 +39,13 @@ class ReportController extends Controller
 
         $returnReceipts = SaleReturn::query()
             ->whereDate('payment_received_date', $date)
-            ->with('sale')
+            ->with(['sale.delivery', 'items'])
             ->get();
 
         $entries = $this->buildDailyEntries($sales, $exchangeReceipts, $returnReceipts);
+        $expenses = Expense::query()
+            ->whereDate('expense_date', $date)
+            ->get();
 
         $closings = DailyClosing::query()
             ->whereDate('closing_date', $date)
@@ -50,6 +55,10 @@ class ReportController extends Controller
             'date' => $date->toDateString(),
             'entries' => $entries,
             'closings' => $closings,
+            'summary' => $this->buildDailySummary($entries, $expenses),
+            'expense_breakdown' => $this->buildExpenseBreakdown($expenses),
+            'courier_breakdown' => $this->buildCourierBreakdown($entries),
+            'source_breakdown' => $this->buildSourceBreakdown($entries),
         ]);
     }
 
@@ -63,15 +72,17 @@ class ReportController extends Controller
             ->where('payment_status', 'paid')
             ->whereNotNull('payment_received_date')
             ->whereBetween('payment_received_date', [$start->toDateString(), $end->toDateString()])
-            ->with(['items', 'exchanges', 'returns'])
+            ->with(['items.productVariant.product', 'exchanges', 'returns.items', 'delivery'])
             ->get();
 
         $exchangeReceipts = SaleExchange::query()
             ->whereBetween('payment_received_date', [$start->toDateString(), $end->toDateString()])
+            ->with('sale.delivery')
             ->get();
 
         $returnReceipts = SaleReturn::query()
             ->whereBetween('payment_received_date', [$start->toDateString(), $end->toDateString()])
+            ->with(['sale.delivery', 'items'])
             ->get();
 
         $deliveryConfirmations = DeliveryConfirmation::query()
@@ -81,6 +92,13 @@ class ReportController extends Controller
 
         $expenses = Expense::query()
             ->whereBetween('expense_date', [$start, $end])
+            ->get();
+
+        $entries = $this->buildDailyEntries($sales, $exchangeReceipts, $returnReceipts);
+        $purchases = Purchase::query()
+            ->with('supplier')
+            ->whereBetween('purchase_date', [$start->toDateString(), $end->toDateString()])
+            ->orderBy('purchase_date')
             ->get();
 
         $totalRevenue = (string) bcadd(
@@ -103,7 +121,7 @@ class ReportController extends Controller
             (string) $exchangeReceipts->sum('additional_cogs_usd'),
             4,
         );
-        $grossProfit = bcsub($totalRevenue, $totalCogs, 4);
+        $grossProfit = $this->decimalize($entries->sum('profit_usd'));
         $totalExpenses = (string) $expenses->sum('amount_usd');
         $netProfit = bcsub($grossProfit, $totalExpenses, 4);
         $totalQtySold = $deliveryConfirmations->sum(
@@ -156,6 +174,10 @@ class ReportController extends Controller
                 'cancel_rate' => $cancelRate,
             ],
             'top_selling' => $topSelling,
+            'daily_ledger' => $this->buildMonthlyDailyLedger($entries, $expenses),
+            'expense_breakdown' => $this->buildExpenseBreakdown($expenses),
+            'purchase_breakdown' => $this->buildPurchaseBreakdown($purchases),
+            'source_breakdown' => $this->buildSourceBreakdown($entries),
         ]);
     }
 
@@ -189,6 +211,12 @@ class ReportController extends Controller
         return Inertia::render('inventory/reports/profit', [
             'from' => $from->toDateString(),
             'to' => $to->toDateString(),
+            'summary' => [
+                'total_revenue' => (string) $productProfits->sum('revenue'),
+                'total_cogs' => (string) $productProfits->sum('cogs'),
+                'total_profit' => (string) $productProfits->sum('profit'),
+                'total_qty_sold' => $productProfits->sum('qty_sold'),
+            ],
             'productProfits' => $productProfits,
         ]);
     }
@@ -283,6 +311,12 @@ class ReportController extends Controller
         return Inertia::render('inventory/reports/category-profit', [
             'from' => $from->toDateString(),
             'to' => $to->toDateString(),
+            'summary' => [
+                'total_revenue' => (string) $categoryProfits->sum('revenue'),
+                'total_cogs' => (string) $categoryProfits->sum('cogs'),
+                'total_profit' => (string) $categoryProfits->sum('profit'),
+                'total_qty_sold' => $categoryProfits->sum('qty_sold'),
+            ],
             'categoryProfits' => $categoryProfits,
         ]);
     }
@@ -431,6 +465,15 @@ class ReportController extends Controller
             'customer_name' => $sale->customer_name ?? 'Walk-in',
             'entry_type' => 'sale',
             'order_status' => $sale->order_status,
+            'source_page' => $sale->source_page,
+            'qty_sold' => (int) $sale->items->sum('final_qty'),
+            'price_mix' => $this->describePriceMix($sale->items),
+            'product_total_usd' => $this->baseSaleProductRevenue($sale),
+            'product_cogs_usd' => $this->baseSaleCogs($sale),
+            'delivery_cost_usd' => (string) $sale->actual_delivery_cost_usd,
+            'delivery_company' => $sale->delivery?->delivery_company,
+            'note' => $sale->note,
+            'price_pack_usd' => $this->baseSaleRevenue($sale),
             'total_usd' => $this->baseSaleRevenue($sale),
             'profit_usd' => $this->baseSaleProfit($sale),
             'receipt_date' => $sale->payment_received_date?->toDateString() ?? $sale->sale_date?->toDateString(),
@@ -442,6 +485,15 @@ class ReportController extends Controller
             'customer_name' => $exchange->sale?->customer_name ?? 'Walk-in',
             'entry_type' => 'exchange',
             'order_status' => 'completed',
+            'source_page' => $exchange->sale?->source_page,
+            'qty_sold' => (int) $exchange->additional_qty_sold,
+            'price_mix' => $exchange->additional_qty_sold > 0 ? 'Exchange items' : 'Delivery fee only',
+            'product_total_usd' => (string) $exchange->new_items_subtotal_usd,
+            'product_cogs_usd' => (string) $exchange->additional_cogs_usd,
+            'delivery_cost_usd' => (string) $exchange->exchange_delivery_cost_usd,
+            'delivery_company' => $exchange->sale?->delivery?->delivery_company,
+            'note' => $exchange->note,
+            'price_pack_usd' => (string) $exchange->total_additional_amount_usd,
             'total_usd' => (string) $exchange->total_additional_amount_usd,
             'profit_usd' => (string) $exchange->additional_profit_usd,
             'receipt_date' => $exchange->payment_received_date?->toDateString(),
@@ -453,8 +505,17 @@ class ReportController extends Controller
             'customer_name' => $return->sale?->customer_name ?? 'Walk-in',
             'entry_type' => 'return',
             'order_status' => $return->sale?->order_status ?? 'returned',
+            'source_page' => $return->sale?->source_page,
+            'qty_sold' => $return->items->sum('qty') * -1,
+            'price_mix' => 'Returned items',
+            'product_total_usd' => (string) ($return->total_refund_usd * -1),
+            'product_cogs_usd' => (string) ($return->items->sum('cogs_usd') * -1),
+            'delivery_cost_usd' => '0.0000',
+            'delivery_company' => $return->sale?->delivery?->delivery_company,
+            'note' => $return->note,
+            'price_pack_usd' => (string) ($return->total_refund_usd * -1),
             'total_usd' => (string) ($return->total_refund_usd * -1),
-            'profit_usd' => (string) ($return->items->sum('cogs_usd') * -1),
+            'profit_usd' => (string) ($return->items->sum('cogs_usd') - $return->total_refund_usd),
             'receipt_date' => $return->payment_received_date?->toDateString(),
         ]);
 
@@ -473,25 +534,144 @@ class ReportController extends Controller
         return bcsub(bcadd((string) $sale->total_usd, $returnDeductions, 4), $exchangeAdditions, 4);
     }
 
+    private function baseSaleProductRevenue(Sale $sale): string
+    {
+        $deliveryRevenue = (string) $sale->customer_delivery_fee_usd;
+
+        return bcsub($this->baseSaleRevenue($sale), $deliveryRevenue, 4);
+    }
+
     private function baseSaleProfit(Sale $sale): string
     {
-        $exchangeProfit = (string) $sale->exchanges->sum('additional_profit_usd');
-        $returnCogsDeducted = (string) $sale->returns->flatMap(fn ($r) => $r->items)->sum('cogs_usd');
-
-        $itemsProfit = (string) $sale->items->sum('profit_usd');
-        $itemsCogs = (string) $sale->items->sum('cogs_usd');
-
-        $netProfit = bcsub($itemsProfit, $exchangeProfit, 4);
-
-        return (string) $netProfit;
+        return bcsub(
+            bcsub($this->baseSaleRevenue($sale), $this->baseSaleCogs($sale), 4),
+            (string) $sale->actual_delivery_cost_usd,
+            4,
+        );
     }
 
     private function baseSaleCogs(Sale $sale): string
     {
         $exchangeCogs = (string) $sale->exchanges->sum('additional_cogs_usd');
+        $returnedCogs = (string) $sale->returns->flatMap(fn ($return) => $return->items)->sum('cogs_usd');
 
         $itemsCogs = (string) $sale->items->sum('cogs_usd');
 
-        return bcsub($itemsCogs, $exchangeCogs, 4);
+        return bcsub(bcadd($itemsCogs, $returnedCogs, 4), $exchangeCogs, 4);
+    }
+
+    private function buildDailySummary(Collection $entries, Collection $expenses): array
+    {
+        $grossProfit = (string) $entries->sum('profit_usd');
+        $expenseTotal = (string) $expenses->sum('amount_usd');
+
+        return [
+            'orders_count' => $entries->count(),
+            'qty_sold' => $entries->sum('qty_sold'),
+            'product_total_usd' => $this->decimalize($entries->sum('product_total_usd')),
+            'product_cogs_usd' => $this->decimalize($entries->sum('product_cogs_usd')),
+            'delivery_cost_usd' => $this->decimalize($entries->sum('delivery_cost_usd')),
+            'price_pack_usd' => $this->decimalize($entries->sum('price_pack_usd')),
+            'gross_profit_usd' => $this->decimalize($grossProfit),
+            'boost_expense_usd' => $this->decimalize($expenseTotal),
+            'net_profit_usd' => bcsub($grossProfit, $expenseTotal, 4),
+        ];
+    }
+
+    private function buildExpenseBreakdown(Collection $expenses): Collection
+    {
+        return $expenses
+            ->groupBy(fn (Expense $expense) => $expense->category ?: 'Other')
+            ->map(fn (Collection $items, string $category) => [
+                'category' => $category,
+                'count' => $items->count(),
+                'amount_usd' => $this->decimalize($items->sum('amount_usd')),
+            ])
+            ->sortByDesc('amount_usd')
+            ->values();
+    }
+
+    private function buildCourierBreakdown(Collection $entries): Collection
+    {
+        return $entries
+            ->filter(fn (array $entry) => ! empty($entry['delivery_company']))
+            ->groupBy('delivery_company')
+            ->map(fn (Collection $items, string $company) => [
+                'company' => $company,
+                'orders' => $items->count(),
+                'delivery_cost_usd' => $this->decimalize($items->sum('delivery_cost_usd')),
+                'revenue_usd' => $this->decimalize($items->sum('price_pack_usd')),
+                'profit_usd' => $this->decimalize($items->sum('profit_usd')),
+            ])
+            ->sortByDesc('orders')
+            ->values();
+    }
+
+    private function buildSourceBreakdown(Collection $entries): Collection
+    {
+        return $entries
+            ->groupBy(fn (array $entry) => $entry['source_page'] ?: 'Other')
+            ->map(fn (Collection $items, string $sourcePage) => [
+                'source_page' => $sourcePage,
+                'orders' => $items->count(),
+                'qty_sold' => $items->sum('qty_sold'),
+                'revenue_usd' => $this->decimalize($items->sum('price_pack_usd')),
+                'profit_usd' => $this->decimalize($items->sum('profit_usd')),
+            ])
+            ->sortByDesc('orders')
+            ->values();
+    }
+
+    private function buildMonthlyDailyLedger(Collection $entries, Collection $expenses): Collection
+    {
+        $expenseByDate = $expenses
+            ->groupBy(fn (Expense $expense) => $expense->expense_date?->toDateString())
+            ->map(fn (Collection $items) => (string) $items->sum('amount_usd'));
+
+        return $entries
+            ->groupBy('receipt_date')
+            ->map(function (Collection $items, string $date) use ($expenseByDate) {
+                $grossProfit = (string) $items->sum('profit_usd');
+                $expenseTotal = $expenseByDate->get($date, '0');
+
+                return [
+                    'date' => $date,
+                    'orders' => $items->count(),
+                    'qty_sold' => $items->sum('qty_sold'),
+                    'revenue_usd' => $this->decimalize($items->sum('total_usd')),
+                    'gross_profit_usd' => $this->decimalize($grossProfit),
+                    'expense_usd' => $this->decimalize($expenseTotal),
+                    'net_profit_usd' => bcsub($grossProfit, $expenseTotal, 4),
+                ];
+            })
+            ->sortKeys()
+            ->values();
+    }
+
+    private function buildPurchaseBreakdown(Collection $purchases): Collection
+    {
+        return $purchases->map(fn (Purchase $purchase) => [
+            'purchase_no' => $purchase->purchase_no,
+            'purchase_date' => $purchase->purchase_date?->toDateString(),
+            'arrival_date' => $purchase->arrival_date?->toDateString(),
+            'supplier_name' => $purchase->supplier?->name,
+            'status' => $purchase->status,
+            'total_cost_usd' => (string) $purchase->total_cost_usd,
+        ]);
+    }
+
+    private function describePriceMix(Collection $saleItems): string
+    {
+        return $saleItems
+            ->filter(fn ($item) => $item->final_qty > 0)
+            ->groupBy(fn ($item) => number_format((float) $item->unit_price_usd, 2, '.', ''))
+            ->map(fn (Collection $items, string $price) => '$'.$price.' x '.$items->sum('final_qty'))
+            ->values()
+            ->implode(', ');
+    }
+
+    private function decimalize(float|int|string|null $value): string
+    {
+        return number_format((float) ($value ?? 0), 4, '.', '');
     }
 }

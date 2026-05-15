@@ -79,6 +79,7 @@ beforeEach(function () {
 test('authenticated user can create a sale with fifo deduction', function () {
     $response = $this->actingAs($this->user)->post(route('sales.store'), [
         'sale_date' => '2026-05-13',
+        'source_page' => 'DL',
         'currency' => 'USD',
         'exchange_rate' => 1,
         'discount_usd' => 0,
@@ -100,6 +101,7 @@ test('authenticated user can create a sale with fifo deduction', function () {
 
     $this->assertDatabaseHas('sales', [
         'customer_name' => null,
+        'source_page' => 'DL',
         'total_usd' => '32.5000',
         'paid_usd' => '30.0000',
         'payment_status' => 'partial',
@@ -135,6 +137,22 @@ test('authenticated user can create a sale with fifo deduction', function () {
         'product_variant_id' => $this->variant->id,
         'qty_on_hand' => 95,
     ]);
+});
+
+test('sale source page must be a supported value', function () {
+    $response = $this->actingAs($this->user)->post(route('sales.store'), [
+        'sale_date' => '2026-05-13',
+        'source_page' => 'Facebook',
+        'items' => [
+            [
+                'product_variant_id' => $this->variant->id,
+                'qty' => 1,
+                'unit_price_usd' => 6.50,
+            ],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors(['source_page']);
 });
 
 test('sale fails when stock is insufficient', function () {

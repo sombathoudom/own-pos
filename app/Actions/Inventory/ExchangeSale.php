@@ -68,20 +68,8 @@ final class ExchangeSale
                     continue;
                 }
 
-                $alreadyReturned = $sale->returns()
-                    ->with('items')
-                    ->get()
-                    ->flatMap(fn ($r) => $r->items->where('sale_item_id', $saleItem->id))
-                    ->sum('qty');
-
-                $alreadyExchanged = $sale->exchanges()
-                    ->with('items')
-                    ->get()
-                    ->flatMap(fn ($e) => $e->items->where('sale_item_id', $saleItem->id))
-                    ->sum('qty_returned');
-
-                $exchangeableQty = $saleItem->final_qty > 0 ? $saleItem->final_qty : $saleItem->qty;
-                $maxExchange = $exchangeableQty - $alreadyReturned - $alreadyExchanged;
+                $exchangeableQty = max(0, $saleItem->final_qty > 0 ? $saleItem->final_qty : $saleItem->qty);
+                $maxExchange = $exchangeableQty;
                 if ($exchangeQty > $maxExchange) {
                     throw new \RuntimeException(
                         "Cannot exchange {$exchangeQty} of item #{$saleItem->id}. Max exchangeable: {$maxExchange}."

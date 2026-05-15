@@ -1,10 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import {
-    type FormEvent,
-    type ReactNode,
-    useMemo,
-    useState,
-} from 'react';
+import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
 import {
     Alert,
     Badge,
@@ -18,10 +13,7 @@ import {
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
-import {
-    store as salesStore,
-    index as salesIndex,
-} from '@/routes/sales';
+import { store as salesStore, index as salesIndex } from '@/routes/sales';
 
 type Variant = {
     id: number;
@@ -48,6 +40,7 @@ type CartItem = {
 type FormData = {
     customer_name: string;
     customer_phone: string;
+    source_page: string;
     sale_date: string;
     currency: string;
     exchange_rate: string;
@@ -62,14 +55,17 @@ type FormData = {
 type SalesCreateProps = {
     variants: Variant[];
     invoiceNo: string;
+    sourcePageOptions: string[];
 };
 
 function SalesCreate() {
-    const { variants, invoiceNo } = usePage<SalesCreateProps>().props;
+    const { variants, invoiceNo, sourcePageOptions } =
+        usePage<SalesCreateProps>().props;
 
     const { data, setData, post, processing, errors } = useForm<FormData>({
         customer_name: '',
         customer_phone: '',
+        source_page: 'Other',
         sale_date: new Date().toISOString().split('T')[0],
         currency: 'USD',
         exchange_rate: '1',
@@ -88,7 +84,8 @@ function SalesCreate() {
         const term = search.trim().toLowerCase();
         if (!term) return variants.slice(0, 20);
         return variants.filter((v) => {
-            const text = `${v.sku} ${v.product.name} ${v.color ?? ''} ${v.size} ${v.style_name ?? ''}`.toLowerCase();
+            const text =
+                `${v.sku} ${v.product.name} ${v.color ?? ''} ${v.size} ${v.style_name ?? ''}`.toLowerCase();
             return text.includes(term);
         });
     }, [variants, search]);
@@ -116,10 +113,17 @@ function SalesCreate() {
     };
 
     const removeItem = (index: number) => {
-        setData('items', data.items.filter((_, i) => i !== index));
+        setData(
+            'items',
+            data.items.filter((_, i) => i !== index),
+        );
     };
 
-    const updateItem = (index: number, field: keyof CartItem, value: string) => {
+    const updateItem = (
+        index: number,
+        field: keyof CartItem,
+        value: string,
+    ) => {
         const updated = [...data.items];
         updated[index] = { ...updated[index], [field]: value };
         setData('items', updated);
@@ -154,7 +158,12 @@ function SalesCreate() {
     };
 
     const variantLabel = (variant: Variant): string => {
-        const parts = [variant.product.name, variant.color, variant.size, variant.style_name].filter(Boolean);
+        const parts = [
+            variant.product.name,
+            variant.color,
+            variant.size,
+            variant.style_name,
+        ].filter(Boolean);
         return parts.join(' / ');
     };
 
@@ -177,42 +186,120 @@ function SalesCreate() {
                                         <Row>
                                             <Col lg={4}>
                                                 <div className="mb-3">
-                                                    <Form.Label>Customer Name</Form.Label>
+                                                    <Form.Label>
+                                                        Customer Name
+                                                    </Form.Label>
                                                     <Form.Control
-                                                        value={data.customer_name}
-                                                        onChange={(e) => setData('customer_name', e.target.value)}
-                                                        isInvalid={!!errors.customer_name}
+                                                        value={
+                                                            data.customer_name
+                                                        }
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'customer_name',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        isInvalid={
+                                                            !!errors.customer_name
+                                                        }
                                                         placeholder="Optional"
                                                     />
-                                                    <Form.Control.Feedback type="invalid" className="d-block">
+                                                    <Form.Control.Feedback
+                                                        type="invalid"
+                                                        className="d-block"
+                                                    >
                                                         {errors.customer_name}
                                                     </Form.Control.Feedback>
                                                 </div>
                                             </Col>
                                             <Col lg={4}>
                                                 <div className="mb-3">
-                                                    <Form.Label>Customer Phone</Form.Label>
+                                                    <Form.Label>
+                                                        Customer Phone
+                                                    </Form.Label>
                                                     <Form.Control
-                                                        value={data.customer_phone}
-                                                        onChange={(e) => setData('customer_phone', e.target.value)}
-                                                        isInvalid={!!errors.customer_phone}
+                                                        value={
+                                                            data.customer_phone
+                                                        }
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'customer_phone',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        isInvalid={
+                                                            !!errors.customer_phone
+                                                        }
                                                         placeholder="Optional"
                                                     />
-                                                    <Form.Control.Feedback type="invalid" className="d-block">
+                                                    <Form.Control.Feedback
+                                                        type="invalid"
+                                                        className="d-block"
+                                                    >
                                                         {errors.customer_phone}
                                                     </Form.Control.Feedback>
                                                 </div>
                                             </Col>
                                             <Col lg={4}>
                                                 <div className="mb-3">
-                                                    <Form.Label>Sale Date</Form.Label>
+                                                    <Form.Label>
+                                                        Source Page
+                                                    </Form.Label>
+                                                    <Form.Select
+                                                        value={data.source_page}
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'source_page',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        isInvalid={
+                                                            !!errors.source_page
+                                                        }
+                                                    >
+                                                        {sourcePageOptions.map(
+                                                            (option) => (
+                                                                <option
+                                                                    key={option}
+                                                                    value={
+                                                                        option
+                                                                    }
+                                                                >
+                                                                    {option}
+                                                                </option>
+                                                            ),
+                                                        )}
+                                                    </Form.Select>
+                                                    <Form.Control.Feedback
+                                                        type="invalid"
+                                                        className="d-block"
+                                                    >
+                                                        {errors.source_page}
+                                                    </Form.Control.Feedback>
+                                                </div>
+                                            </Col>
+                                            <Col lg={4}>
+                                                <div className="mb-3">
+                                                    <Form.Label>
+                                                        Sale Date
+                                                    </Form.Label>
                                                     <Form.Control
                                                         type="date"
                                                         value={data.sale_date}
-                                                        onChange={(e) => setData('sale_date', e.target.value)}
-                                                        isInvalid={!!errors.sale_date}
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'sale_date',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        isInvalid={
+                                                            !!errors.sale_date
+                                                        }
                                                     />
-                                                    <Form.Control.Feedback type="invalid" className="d-block">
+                                                    <Form.Control.Feedback
+                                                        type="invalid"
+                                                        className="d-block"
+                                                    >
                                                         {errors.sale_date}
                                                     </Form.Control.Feedback>
                                                 </div>
@@ -221,27 +308,48 @@ function SalesCreate() {
                                         <Row>
                                             <Col lg={4}>
                                                 <div className="mb-3">
-                                                    <Form.Label>Exchange Rate</Form.Label>
+                                                    <Form.Label>
+                                                        Exchange Rate
+                                                    </Form.Label>
                                                     <Form.Control
                                                         type="number"
                                                         step="0.0001"
                                                         min="0"
-                                                        value={data.exchange_rate}
-                                                        onChange={(e) => setData('exchange_rate', e.target.value)}
+                                                        value={
+                                                            data.exchange_rate
+                                                        }
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'exchange_rate',
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                     />
                                                 </div>
                                             </Col>
                                             <Col lg={8}>
                                                 <div className="mb-3">
-                                                    <Form.Label>Note</Form.Label>
+                                                    <Form.Label>
+                                                        Note
+                                                    </Form.Label>
                                                     <Form.Control
                                                         as="textarea"
                                                         rows={1}
                                                         value={data.note}
-                                                        onChange={(e) => setData('note', e.target.value)}
-                                                        isInvalid={!!errors.note}
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'note',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        isInvalid={
+                                                            !!errors.note
+                                                        }
                                                     />
-                                                    <Form.Control.Feedback type="invalid" className="d-block">
+                                                    <Form.Control.Feedback
+                                                        type="invalid"
+                                                        className="d-block"
+                                                    >
                                                         {errors.note}
                                                     </Form.Control.Feedback>
                                                 </div>
@@ -256,18 +364,31 @@ function SalesCreate() {
                                             <h4 className="card-title mb-0">
                                                 Items
                                             </h4>
-                                            <span className="text-muted small">
+                                            <span className="small text-muted">
                                                 {data.items.length} item
-                                                {data.items.length !== 1 ? 's' : ''}
+                                                {data.items.length !== 1
+                                                    ? 's'
+                                                    : ''}
                                             </span>
                                         </div>
 
                                         {(() => {
-                                            const itemsErr = (errors as Record<string, unknown>).items;
+                                            const itemsErr = (
+                                                errors as Record<
+                                                    string,
+                                                    unknown
+                                                >
+                                            ).items;
                                             if (!itemsErr) return null;
                                             return (
-                                                <Alert variant="danger" className="mb-3">
-                                                    {typeof itemsErr === 'string' ? itemsErr : 'Please check your items.'}
+                                                <Alert
+                                                    variant="danger"
+                                                    className="mb-3"
+                                                >
+                                                    {typeof itemsErr ===
+                                                    'string'
+                                                        ? itemsErr
+                                                        : 'Please check your items.'}
                                                 </Alert>
                                             );
                                         })()}
@@ -282,115 +403,250 @@ function SalesCreate() {
                                                     setSearch(e.target.value);
                                                     setShowPicker(true);
                                                 }}
-                                                onFocus={() => setShowPicker(true)}
+                                                onFocus={() =>
+                                                    setShowPicker(true)
+                                                }
                                                 autoComplete="off"
                                             />
-                                            {showPicker && filteredVariants.length > 0 && (
-                                                <div
-                                                    className="position-absolute w-100 bg-white border rounded shadow-sm"
-                                                    style={{ zIndex: 1000, maxHeight: 320, overflowY: 'auto' }}
-                                                >
-                                                    {filteredVariants.map((variant) => {
-                                                        const inCart = selectedVariantIds.has(variant.id);
-                                                        const outOfStock = variant.stock_on_hand <= 0;
-                                                        return (
-                                                            <button
-                                                                key={variant.id}
-                                                                type="button"
-                                                                className="d-flex align-items-center gap-2 w-100 text-start border-0 bg-white px-3 py-2 hover-bg-light"
-                                                                style={{ cursor: outOfStock || inCart ? 'not-allowed' : 'pointer', opacity: outOfStock || inCart ? 0.5 : 1 }}
-                                                                onMouseDown={(e) => {
-                                                                    e.preventDefault();
-                                                                    if (!inCart && !outOfStock) addVariant(variant);
-                                                                }}
-                                                                disabled={inCart || outOfStock}
-                                                            >
-                                                                <div className="flex-grow-1 min-w-0">
-                                                                    <div className="fw-medium text-truncate">
-                                                                        {variantLabel(variant)}
-                                                                    </div>
-                                                                    <div className="small text-muted">
-                                                                        {variant.sku} &middot; Stock:{' '}
-                                                                        <span className={variant.stock_on_hand <= 5 ? 'text-danger fw-semibold' : ''}>
-                                                                            {variant.stock_on_hand}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                                {inCart && <Badge bg="success">In Cart</Badge>}
-                                                                {outOfStock && <Badge bg="danger">Out</Badge>}
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                            {showPicker && search && filteredVariants.length === 0 && (
-                                                <div className="position-absolute w-100 bg-white border rounded shadow-sm px-3 py-2 text-muted small" style={{ zIndex: 1000 }}>
-                                                    No variants found.
-                                                </div>
-                                            )}
+                                            {showPicker &&
+                                                filteredVariants.length > 0 && (
+                                                    <div
+                                                        className="position-absolute w-100 rounded border bg-white shadow-sm"
+                                                        style={{
+                                                            zIndex: 1000,
+                                                            maxHeight: 320,
+                                                            overflowY: 'auto',
+                                                        }}
+                                                    >
+                                                        {filteredVariants.map(
+                                                            (variant) => {
+                                                                const inCart =
+                                                                    selectedVariantIds.has(
+                                                                        variant.id,
+                                                                    );
+                                                                const outOfStock =
+                                                                    variant.stock_on_hand <=
+                                                                    0;
+                                                                return (
+                                                                    <button
+                                                                        key={
+                                                                            variant.id
+                                                                        }
+                                                                        type="button"
+                                                                        className="d-flex align-items-center hover-bg-light w-100 gap-2 border-0 bg-white px-3 py-2 text-start"
+                                                                        style={{
+                                                                            cursor:
+                                                                                outOfStock ||
+                                                                                inCart
+                                                                                    ? 'not-allowed'
+                                                                                    : 'pointer',
+                                                                            opacity:
+                                                                                outOfStock ||
+                                                                                inCart
+                                                                                    ? 0.5
+                                                                                    : 1,
+                                                                        }}
+                                                                        onMouseDown={(
+                                                                            e,
+                                                                        ) => {
+                                                                            e.preventDefault();
+                                                                            if (
+                                                                                !inCart &&
+                                                                                !outOfStock
+                                                                            )
+                                                                                addVariant(
+                                                                                    variant,
+                                                                                );
+                                                                        }}
+                                                                        disabled={
+                                                                            inCart ||
+                                                                            outOfStock
+                                                                        }
+                                                                    >
+                                                                        <div className="min-w-0 flex-grow-1">
+                                                                            <div className="fw-medium text-truncate">
+                                                                                {variantLabel(
+                                                                                    variant,
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="small text-muted">
+                                                                                {
+                                                                                    variant.sku
+                                                                                }{' '}
+                                                                                &middot;
+                                                                                Stock:{' '}
+                                                                                <span
+                                                                                    className={
+                                                                                        variant.stock_on_hand <=
+                                                                                        5
+                                                                                            ? 'text-danger fw-semibold'
+                                                                                            : ''
+                                                                                    }
+                                                                                >
+                                                                                    {
+                                                                                        variant.stock_on_hand
+                                                                                    }
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                        {inCart && (
+                                                                            <Badge bg="success">
+                                                                                In
+                                                                                Cart
+                                                                            </Badge>
+                                                                        )}
+                                                                        {outOfStock && (
+                                                                            <Badge bg="danger">
+                                                                                Out
+                                                                            </Badge>
+                                                                        )}
+                                                                    </button>
+                                                                );
+                                                            },
+                                                        )}
+                                                    </div>
+                                                )}
+                                            {showPicker &&
+                                                search &&
+                                                filteredVariants.length ===
+                                                    0 && (
+                                                    <div
+                                                        className="position-absolute small w-100 rounded border bg-white px-3 py-2 text-muted shadow-sm"
+                                                        style={{ zIndex: 1000 }}
+                                                    >
+                                                        No variants found.
+                                                    </div>
+                                                )}
                                         </div>
 
                                         {/* Cart Items */}
                                         <div className="vstack gap-2">
                                             {data.items.map((item, index) => {
-                                                const variant = getVariant(item.product_variant_id);
+                                                const variant = getVariant(
+                                                    item.product_variant_id,
+                                                );
                                                 if (!variant) return null;
 
-                                                const qtyNum = Number(item.qty) || 0;
-                                                const overStock = qtyNum > variant.stock_on_hand;
+                                                const qtyNum =
+                                                    Number(item.qty) || 0;
+                                                const overStock =
+                                                    qtyNum >
+                                                    variant.stock_on_hand;
 
                                                 return (
-                                                    <div key={item.product_variant_id} className="d-flex align-items-center gap-2 p-2 border rounded">
-                                                        <div className="flex-grow-1 min-w-0">
+                                                    <div
+                                                        key={
+                                                            item.product_variant_id
+                                                        }
+                                                        className="d-flex align-items-center gap-2 rounded border p-2"
+                                                    >
+                                                        <div className="min-w-0 flex-grow-1">
                                                             <div className="fw-medium text-truncate">
-                                                                {variantLabel(variant)}
+                                                                {variantLabel(
+                                                                    variant,
+                                                                )}
                                                             </div>
                                                             <div className="small text-muted">
-                                                                {variant.sku} &middot; Stock: {variant.stock_on_hand}
+                                                                {variant.sku}{' '}
+                                                                &middot; Stock:{' '}
+                                                                {
+                                                                    variant.stock_on_hand
+                                                                }
                                                             </div>
                                                         </div>
                                                         <Form.Control
                                                             size="sm"
                                                             type="number"
                                                             min="1"
-                                                            max={variant.stock_on_hand}
+                                                            max={
+                                                                variant.stock_on_hand
+                                                            }
                                                             value={item.qty}
-                                                            onChange={(e) => updateItem(index, 'qty', e.target.value)}
-                                                            isInvalid={overStock}
-                                                            style={{ width: 70 }}
+                                                            onChange={(e) =>
+                                                                updateItem(
+                                                                    index,
+                                                                    'qty',
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            isInvalid={
+                                                                overStock
+                                                            }
+                                                            style={{
+                                                                width: 70,
+                                                            }}
                                                         />
-                                                        <div style={{ width: 100 }}>
+                                                        <div
+                                                            style={{
+                                                                width: 100,
+                                                            }}
+                                                        >
                                                             <Form.Control
                                                                 size="sm"
                                                                 type="number"
                                                                 step="0.01"
                                                                 min="0"
-                                                                value={item.unit_price_usd}
-                                                                onChange={(e) => updateItem(index, 'unit_price_usd', e.target.value)}
+                                                                value={
+                                                                    item.unit_price_usd
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateItem(
+                                                                        index,
+                                                                        'unit_price_usd',
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 placeholder="Price"
                                                             />
                                                         </div>
-                                                        <div style={{ width: 80 }}>
+                                                        <div
+                                                            style={{
+                                                                width: 80,
+                                                            }}
+                                                        >
                                                             <Form.Control
                                                                 size="sm"
                                                                 type="number"
                                                                 step="0.01"
                                                                 min="0"
-                                                                value={item.discount_usd}
-                                                                onChange={(e) => updateItem(index, 'discount_usd', e.target.value)}
+                                                                value={
+                                                                    item.discount_usd
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateItem(
+                                                                        index,
+                                                                        'discount_usd',
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 placeholder="Disc"
                                                             />
                                                         </div>
-                                                        <div className="text-end" style={{ minWidth: 70 }}>
+                                                        <div
+                                                            className="text-end"
+                                                            style={{
+                                                                minWidth: 70,
+                                                            }}
+                                                        >
                                                             <div className="fw-semibold">
-                                                                ${itemTotal(item).toFixed(2)}
+                                                                $
+                                                                {itemTotal(
+                                                                    item,
+                                                                ).toFixed(2)}
                                                             </div>
                                                         </div>
                                                         <Button
                                                             type="button"
                                                             variant="outline-danger"
                                                             size="sm"
-                                                            onClick={() => removeItem(index)}
+                                                            onClick={() =>
+                                                                removeItem(
+                                                                    index,
+                                                                )
+                                                            }
                                                         >
                                                             &times;
                                                         </Button>
@@ -399,9 +655,12 @@ function SalesCreate() {
                                             })}
 
                                             {data.items.length === 0 && (
-                                                <div className="text-center text-muted py-5 border rounded bg-light-subtle">
+                                                <div className="bg-light-subtle rounded border py-5 text-center text-muted">
                                                     <i className="ri-shopping-cart-line fs-1 d-block mb-2"></i>
-                                                    <p className="mb-0">Search and select variants to add items.</p>
+                                                    <p className="mb-0">
+                                                        Search and select
+                                                        variants to add items.
+                                                    </p>
                                                 </div>
                                             )}
                                         </div>
@@ -416,52 +675,85 @@ function SalesCreate() {
                                             Order Summary
                                         </h4>
 
-                                        <div className="vstack gap-3 mb-3">
+                                        <div className="vstack mb-3 gap-3">
                                             <div className="d-flex justify-content-between align-items-center">
-                                                <span className="text-muted">Total Items</span>
-                                                <span className="fw-bold fs-5">{totalQty}</span>
+                                                <span className="text-muted">
+                                                    Total Items
+                                                </span>
+                                                <span className="fw-bold fs-5">
+                                                    {totalQty}
+                                                </span>
                                             </div>
 
                                             <div className="d-flex justify-content-between">
-                                                <span className="text-muted">Subtotal</span>
-                                                <span className="fw-semibold">${subtotal.toFixed(2)}</span>
+                                                <span className="text-muted">
+                                                    Subtotal
+                                                </span>
+                                                <span className="fw-semibold">
+                                                    ${subtotal.toFixed(2)}
+                                                </span>
                                             </div>
 
                                             <div className="d-flex justify-content-between align-items-center">
-                                                <span className="text-muted">Discount</span>
+                                                <span className="text-muted">
+                                                    Discount
+                                                </span>
                                                 <Form.Control
                                                     size="sm"
                                                     type="number"
                                                     step="0.01"
                                                     min="0"
                                                     value={data.discount_usd}
-                                                    onChange={(e) => setData('discount_usd', e.target.value)}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'discount_usd',
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     style={{ width: 100 }}
                                                 />
                                             </div>
 
                                             <div className="d-flex justify-content-between align-items-center">
-                                                <span className="text-muted">Delivery Fee</span>
+                                                <span className="text-muted">
+                                                    Delivery Fee
+                                                </span>
                                                 <Form.Control
                                                     size="sm"
                                                     type="number"
                                                     step="0.01"
                                                     min="0"
-                                                    value={data.customer_delivery_fee_usd}
-                                                    onChange={(e) => setData('customer_delivery_fee_usd', e.target.value)}
+                                                    value={
+                                                        data.customer_delivery_fee_usd
+                                                    }
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'customer_delivery_fee_usd',
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     style={{ width: 100 }}
                                                 />
                                             </div>
 
                                             <div className="d-flex justify-content-between align-items-center">
-                                                <span className="text-muted">Actual Delivery Cost</span>
+                                                <span className="text-muted">
+                                                    Actual Delivery Cost
+                                                </span>
                                                 <Form.Control
                                                     size="sm"
                                                     type="number"
                                                     step="0.01"
                                                     min="0"
-                                                    value={data.actual_delivery_cost_usd}
-                                                    onChange={(e) => setData('actual_delivery_cost_usd', e.target.value)}
+                                                    value={
+                                                        data.actual_delivery_cost_usd
+                                                    }
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'actual_delivery_cost_usd',
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     style={{ width: 100 }}
                                                 />
                                             </div>
@@ -469,34 +761,53 @@ function SalesCreate() {
                                             <hr className="my-1" />
 
                                             <div className="d-flex justify-content-between">
-                                                <span className="fw-semibold">Total</span>
-                                                <span className="fw-bold fs-5">${total.toFixed(2)}</span>
+                                                <span className="fw-semibold">
+                                                    Total
+                                                </span>
+                                                <span className="fw-bold fs-5">
+                                                    ${total.toFixed(2)}
+                                                </span>
                                             </div>
 
                                             <div className="d-flex justify-content-between align-items-center">
-                                                <span className="text-muted">Paid</span>
+                                                <span className="text-muted">
+                                                    Paid
+                                                </span>
                                                 <Form.Control
                                                     size="sm"
                                                     type="number"
                                                     step="0.01"
                                                     min="0"
                                                     value={data.paid_usd}
-                                                    onChange={(e) => setData('paid_usd', e.target.value)}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'paid_usd',
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     style={{ width: 100 }}
                                                 />
                                             </div>
 
                                             {due > 0 && (
                                                 <div className="d-flex justify-content-between">
-                                                    <span className="text-danger">Due</span>
-                                                    <span className="fw-bold text-danger">${due.toFixed(2)}</span>
+                                                    <span className="text-danger">
+                                                        Due
+                                                    </span>
+                                                    <span className="fw-bold text-danger">
+                                                        ${due.toFixed(2)}
+                                                    </span>
                                                 </div>
                                             )}
 
                                             {due === 0 && paid > 0 && (
                                                 <div className="d-flex justify-content-between">
-                                                    <span className="text-success">Paid in Full</span>
-                                                    <span className="fw-bold text-success">${paid.toFixed(2)}</span>
+                                                    <span className="text-success">
+                                                        Paid in Full
+                                                    </span>
+                                                    <span className="fw-bold text-success">
+                                                        ${paid.toFixed(2)}
+                                                    </span>
                                                 </div>
                                             )}
                                         </div>
@@ -505,11 +816,19 @@ function SalesCreate() {
                                             <Button
                                                 type="submit"
                                                 variant="success"
-                                                disabled={processing || data.items.length === 0}
+                                                disabled={
+                                                    processing ||
+                                                    data.items.length === 0
+                                                }
                                             >
-                                                {processing ? 'Saving...' : 'Save Sale'}
+                                                {processing
+                                                    ? 'Saving...'
+                                                    : 'Save Sale'}
                                             </Button>
-                                            <Link href={salesIndex.url()} className="btn btn-outline-secondary">
+                                            <Link
+                                                href={salesIndex.url()}
+                                                className="btn btn-outline-secondary"
+                                            >
                                                 Cancel
                                             </Link>
                                         </div>

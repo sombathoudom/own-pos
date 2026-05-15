@@ -195,6 +195,7 @@ function SalesIndex() {
                                             <tr>
                                                 <th>Invoice #</th>
                                                 <th>Customer</th>
+                                                <th>Source</th>
                                                 <th>Date</th>
                                                 <th>Items</th>
                                                 <th>Total</th>
@@ -221,6 +222,15 @@ function SalesIndex() {
                                                                 }
                                                             </div>
                                                         )}
+                                                    </td>
+                                                    <td>
+                                                        <Badge
+                                                            bg="light"
+                                                            text="dark"
+                                                        >
+                                                            {sale.source_page ||
+                                                                'Other'}
+                                                        </Badge>
                                                     </td>
                                                     <td>{sale.sale_date}</td>
                                                     <td>{sale.items.length}</td>
@@ -291,7 +301,7 @@ function SalesIndex() {
                                             {sales.data.length === 0 && (
                                                 <tr>
                                                     <td
-                                                        colSpan={8}
+                                                        colSpan={9}
                                                         className="py-4 text-center text-muted"
                                                     >
                                                         No sales found.

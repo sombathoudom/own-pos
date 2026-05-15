@@ -195,7 +195,8 @@ test('full return leaves only delivery fee in total and keeps payment correct', 
 
     expect($sale->order_status)->toBe('returned');
     expect(bccomp($sale->total_usd, '0', 4))->toBeGreaterThan(0);
-    expect(bccomp($sale->paid_usd, '0', 4))->toBe(0);
+    expect($sale->paid_usd)->toBe($sale->total_usd);
+    expect($sale->payment_status)->toBe('paid');
 });
 
 test('return after exchange reduces totals correctly', function () {

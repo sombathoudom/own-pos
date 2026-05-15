@@ -35,7 +35,55 @@ class SaleController extends Controller
             ->withQueryString();
 
         return Inertia::render('inventory/sales/index', [
-            'sales' => $sales,
+            'sales' => $sales->through(fn (Sale $sale) => [
+                'id' => $sale->id,
+                'invoice_no' => $sale->invoice_no,
+                'customer_name' => $sale->customer_name,
+                'customer_phone' => $sale->customer_phone,
+                'source_page' => $sale->source_page,
+                'sale_date' => $sale->sale_date?->toDateString(),
+                'currency' => $sale->currency,
+                'exchange_rate' => $sale->exchange_rate,
+                'original_subtotal_usd' => $sale->original_subtotal_usd,
+                'subtotal_usd' => $sale->subtotal_usd,
+                'discount_usd' => $sale->discount_usd,
+                'original_delivery_fee_usd' => $sale->original_delivery_fee_usd,
+                'customer_delivery_fee_usd' => $sale->customer_delivery_fee_usd,
+                'actual_delivery_cost_usd' => $sale->actual_delivery_cost_usd,
+                'delivery_profit_usd' => $sale->delivery_profit_usd,
+                'original_total_usd' => $sale->original_total_usd,
+                'total_usd' => $sale->total_usd,
+                'paid_usd' => $sale->paid_usd,
+                'payment_received_date' => $sale->payment_received_date?->toDateString(),
+                'delivery_completed_date' => $sale->delivery_completed_date?->toDateString(),
+                'payment_status' => $sale->payment_status,
+                'order_status' => $sale->order_status,
+                'note' => $sale->note,
+                'items' => $sale->items->map(fn ($item) => [
+                    'id' => $item->id,
+                    'status' => $item->status,
+                    'qty' => $item->qty,
+                    'accepted_qty' => $item->accepted_qty,
+                    'rejected_qty' => $item->rejected_qty,
+                    'final_qty' => $item->final_qty,
+                    'unit_price_usd' => $item->unit_price_usd,
+                    'discount_usd' => $item->discount_usd,
+                    'total_usd' => $item->total_usd,
+                    'cogs_usd' => $item->cogs_usd,
+                    'profit_usd' => $item->profit_usd,
+                    'product_variant' => [
+                        'id' => $item->productVariant?->id,
+                        'sku' => $item->productVariant?->sku,
+                        'color' => $item->productVariant?->color,
+                        'size' => $item->productVariant?->size,
+                        'product_name' => $item->productVariant?->product?->name,
+                    ],
+                    'cost_layers' => [],
+                ])->values(),
+                'returns' => [],
+                'exchanges' => [],
+                'delivery_confirmations' => [],
+            ]),
             'filters' => [
                 'search' => $search,
             ],
@@ -66,6 +114,7 @@ class SaleController extends Controller
                 ],
             ]),
             'invoiceNo' => 'INV-'.now()->format('Ymd').'-'.Str::upper(Str::random(4)),
+            'sourcePageOptions' => ['DL', 'DC', 'Walk-in', 'Other'],
         ]);
     }
 
@@ -100,6 +149,7 @@ class SaleController extends Controller
             ]),
             'categories' => $categories,
             'sizes' => $sizes,
+            'sourcePageOptions' => ['DL', 'DC', 'Walk-in', 'Other'],
         ]);
     }
 
@@ -116,6 +166,7 @@ class SaleController extends Controller
                     'customer_name' => $validated['customer_name'] ?? null,
                     'customer_phone' => $validated['customer_phone'] ?? null,
                     'customer_address' => $validated['customer_address'] ?? null,
+                    'source_page' => $validated['source_page'] ?? null,
                     'sale_date' => $validated['sale_date'],
                     'currency' => $validated['currency'] ?? 'USD',
                     'exchange_rate' => $validated['exchange_rate'] ?? 1,
@@ -381,6 +432,7 @@ class SaleController extends Controller
                 'invoice_no' => $sale->invoice_no,
                 'customer_name' => $sale->customer_name,
                 'customer_phone' => $sale->customer_phone,
+                'source_page' => $sale->source_page,
                 'sale_date' => $sale->sale_date?->toDateString(),
                 'currency' => $sale->currency,
                 'exchange_rate' => $sale->exchange_rate,

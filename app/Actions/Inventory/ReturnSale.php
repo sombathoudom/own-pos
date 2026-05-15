@@ -48,20 +48,8 @@ final class ReturnSale
                     continue;
                 }
 
-                $alreadyReturned = $sale->returns()
-                    ->with('items')
-                    ->get()
-                    ->flatMap(fn ($r) => $r->items->where('sale_item_id', $saleItem->id))
-                    ->sum('qty');
-
-                $alreadyExchanged = $sale->exchanges()
-                    ->with('items')
-                    ->get()
-                    ->flatMap(fn ($e) => $e->items->where('sale_item_id', $saleItem->id))
-                    ->sum('qty_returned');
-
-                $returnableQty = $saleItem->final_qty > 0 ? $saleItem->final_qty : $saleItem->qty;
-                $maxReturn = max(0, $returnableQty - $alreadyReturned - $alreadyExchanged);
+                $returnableQty = max(0, $saleItem->final_qty > 0 ? $saleItem->final_qty : $saleItem->qty);
+                $maxReturn = $returnableQty;
                 if ($returnQty > $maxReturn) {
                     throw new \RuntimeException(
                         "Cannot return {$returnQty} of item #{$saleItem->id}. Max returnable: {$maxReturn}."
