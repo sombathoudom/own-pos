@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\ProductVariant;
 use App\Models\Purchase;
 use App\Models\Sale;
@@ -16,6 +17,7 @@ class StockController extends Controller
     public function index(Request $request): Response
     {
         $search = $request->string('search')->toString();
+        $categoryId = $request->integer('category_id');
 
         $variants = ProductVariant::query()
             ->with('product.category', 'stockBalance')
@@ -26,6 +28,9 @@ class StockController extends Controller
                         ->orWhere('size', 'like', "%{$search}%")
                         ->orWhereHas('product', fn ($pq) => $pq->where('name', 'like', "%{$search}%"));
                 });
+            })
+            ->when($categoryId, function ($q) use ($categoryId) {
+                $q->whereHas('product', fn ($pq) => $pq->where('category_id', $categoryId));
             })
             ->orderBy('id')
             ->paginate(20)
@@ -40,14 +45,23 @@ class StockController extends Controller
                     'id' => $variant->product?->id,
                     'name' => $variant->product?->name,
                     'category' => $variant->product?->category,
+                    'image_url' => $variant->product?->imageUrl(),
                 ],
                 'stockBalance' => $variant->stockBalance,
             ]);
 
+        // Get all categories for filter
+        $categories = Category::query()
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->toArray();
+
         return Inertia::render('inventory/stock/index', [
             'variants' => $variants,
+            'categories' => $categories,
             'filters' => [
                 'search' => $search,
+                'category_id' => $categoryId ? (string) $categoryId : '',
             ],
         ]);
     }

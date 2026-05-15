@@ -26,19 +26,37 @@ import {
 import type { StockIndexPageProps } from '@/types';
 
 function StockIndex() {
-    const { variants, filters } = usePage<StockIndexPageProps>().props;
+    const { variants, filters, categories } =
+        usePage<StockIndexPageProps>().props;
     const [search, setSearch] = useState(filters.search ?? '');
+    const [categoryId, setCategoryId] = useState(filters.category_id ?? '');
 
     useEffect(() => {
         setSearch(filters.search ?? '');
-    }, [filters.search]);
+        setCategoryId(filters.category_id ?? '');
+    }, [filters.search, filters.category_id]);
 
     const handleSearch = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         router.get(
             stockIndex.url(),
-            { search: search || undefined },
+            {
+                search: search || undefined,
+                category_id: categoryId || undefined,
+            },
+            { preserveScroll: true, preserveState: true },
+        );
+    };
+
+    const handleCategoryChange = (newCategoryId: string) => {
+        setCategoryId(newCategoryId);
+        router.get(
+            stockIndex.url(),
+            {
+                search: search || undefined,
+                category_id: newCategoryId || undefined,
+            },
             { preserveScroll: true, preserveState: true },
         );
     };
@@ -158,45 +176,156 @@ function StockIndex() {
                             </Link>
                         </Card.Header>
                         <Card.Body>
-                            <Form
-                                onSubmit={handleSearch}
-                                className="d-flex mb-3 gap-2"
-                                style={{ maxWidth: 500 }}
-                            >
-                                <div className="position-relative flex-grow-1">
-                                    <i className="ri-search-line position-absolute translate-middle-y start-0 top-50 ms-3 text-muted" />
-                                    <Form.Control
-                                        placeholder="Search SKU, product name, color, size..."
-                                        value={search}
-                                        onChange={(event) =>
-                                            setSearch(event.target.value)
-                                        }
-                                        className="ps-5"
-                                    />
-                                </div>
-                                <Button type="submit" variant="primary">
-                                    Search
-                                </Button>
-                                {search && (
-                                    <Button
-                                        type="button"
-                                        variant="light"
-                                        onClick={() => {
-                                            setSearch('');
-                                            router.get(
-                                                stockIndex.url(),
-                                                {},
-                                                {
-                                                    preserveScroll: true,
-                                                    preserveState: true,
-                                                },
-                                            );
-                                        }}
+                            {/* Search and Filter Section */}
+                            <div className="mb-4">
+                                <Form
+                                    onSubmit={handleSearch}
+                                    className="d-flex mb-3 flex-wrap gap-2"
+                                >
+                                    <div
+                                        className="position-relative flex-grow-1"
+                                        style={{ minWidth: 300 }}
                                     >
-                                        Clear
+                                        <i className="ri-search-line position-absolute translate-middle-y start-0 top-50 ms-3 text-muted" />
+                                        <Form.Control
+                                            placeholder="Search SKU, product name, color, size..."
+                                            value={search}
+                                            onChange={(event) =>
+                                                setSearch(event.target.value)
+                                            }
+                                            className="ps-5"
+                                            size="lg"
+                                        />
+                                    </div>
+                                    <Form.Select
+                                        value={categoryId}
+                                        onChange={(e) =>
+                                            handleCategoryChange(e.target.value)
+                                        }
+                                        style={{ width: 200 }}
+                                        size="lg"
+                                    >
+                                        <option value="">All Categories</option>
+                                        {Object.entries(
+                                            categories as Record<
+                                                number,
+                                                string
+                                            >,
+                                        ).map(([id, name]) => (
+                                            <option key={id} value={id}>
+                                                {name as string}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                    <Button
+                                        type="submit"
+                                        variant="primary"
+                                        size="lg"
+                                    >
+                                        <i className="ri-search-line me-1" />
+                                        Search
                                     </Button>
+                                    {(search || categoryId) && (
+                                        <Button
+                                            type="button"
+                                            variant="light"
+                                            size="lg"
+                                            onClick={() => {
+                                                setSearch('');
+                                                setCategoryId('');
+                                                router.get(
+                                                    stockIndex.url(),
+                                                    {},
+                                                    {
+                                                        preserveScroll: true,
+                                                        preserveState: true,
+                                                    },
+                                                );
+                                            }}
+                                        >
+                                            <i className="ri-close-line me-1" />
+                                            Clear
+                                        </Button>
+                                    )}
+                                </Form>
+
+                                {/* Active Filters Display */}
+                                {(search || categoryId) && (
+                                    <div className="d-flex align-items-center flex-wrap gap-2">
+                                        <span className="small text-muted">
+                                            Active filters:
+                                        </span>
+                                        {search && (
+                                            <Badge
+                                                bg="primary"
+                                                className="d-flex align-items-center gap-1"
+                                            >
+                                                Search: {search}
+                                                <button
+                                                    type="button"
+                                                    className="btn-close btn-close-white"
+                                                    style={{
+                                                        fontSize: '0.6rem',
+                                                    }}
+                                                    onClick={() => {
+                                                        setSearch('');
+                                                        router.get(
+                                                            stockIndex.url(),
+                                                            {
+                                                                category_id:
+                                                                    categoryId ||
+                                                                    undefined,
+                                                            },
+                                                            {
+                                                                preserveScroll: true,
+                                                                preserveState: true,
+                                                            },
+                                                        );
+                                                    }}
+                                                />
+                                            </Badge>
+                                        )}
+                                        {categoryId && (
+                                            <Badge
+                                                bg="info"
+                                                className="d-flex align-items-center gap-1"
+                                            >
+                                                Category:{' '}
+                                                {
+                                                    (
+                                                        categories as Record<
+                                                            string,
+                                                            string
+                                                        >
+                                                    )[categoryId]
+                                                }
+                                                <button
+                                                    type="button"
+                                                    className="btn-close btn-close-white"
+                                                    style={{
+                                                        fontSize: '0.6rem',
+                                                    }}
+                                                    onClick={() => {
+                                                        setCategoryId('');
+                                                        router.get(
+                                                            stockIndex.url(),
+                                                            {
+                                                                search:
+                                                                    search ||
+                                                                    undefined,
+                                                            },
+                                                            {
+                                                                preserveScroll: true,
+                                                                preserveState: true,
+                                                            },
+                                                        );
+                                                    }}
+                                                />
+                                            </Badge>
+                                        )}
+                                    </div>
                                 )}
-                            </Form>
+                            </div>
 
                             <div className="table-responsive">
                                 <Table
@@ -205,8 +334,12 @@ function StockIndex() {
                                 >
                                     <thead className="table-light">
                                         <tr>
+                                            <th style={{ width: 100 }}>
+                                                Image
+                                            </th>
                                             <th>SKU</th>
                                             <th>Product</th>
+                                            <th>Category</th>
                                             <th>Variant</th>
                                             <th className="text-end">
                                                 Qty On Hand
@@ -221,13 +354,78 @@ function StockIndex() {
                                         {variants.data.map((variant) => (
                                             <tr key={variant.id}>
                                                 <td>
-                                                    <span className="fw-medium">
-                                                        {variant.sku}
-                                                    </span>
+                                                    <div
+                                                        className="bg-light d-flex align-items-center justify-content-center rounded-3 overflow-hidden border"
+                                                        style={{
+                                                            width: 80,
+                                                            height: 80,
+                                                        }}
+                                                    >
+                                                        {variant.product
+                                                            ?.image_url ? (
+                                                            <img
+                                                                src={
+                                                                    variant
+                                                                        .product
+                                                                        .image_url
+                                                                }
+                                                                alt={
+                                                                    variant
+                                                                        .product
+                                                                        ?.name
+                                                                }
+                                                                className="h-100 w-100"
+                                                                style={{
+                                                                    objectFit:
+                                                                        'cover',
+                                                                }}
+                                                                loading="lazy"
+                                                            />
+                                                        ) : (
+                                                            <i
+                                                                className="ri-image-line text-muted"
+                                                                style={{
+                                                                    fontSize:
+                                                                        '2rem',
+                                                                    opacity: 0.3,
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td>
-                                                    {variant.product?.name ||
-                                                        '—'}
+                                                    <Badge
+                                                        bg="secondary"
+                                                        className="font-monospace fw-normal"
+                                                    >
+                                                        {variant.sku}
+                                                    </Badge>
+                                                </td>
+                                                <td>
+                                                    <div className="fw-semibold">
+                                                        {variant.product
+                                                            ?.name || '—'}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    {variant.product
+                                                        ?.category ? (
+                                                        <Badge
+                                                            bg="light"
+                                                            text="dark"
+                                                            className="fw-normal"
+                                                        >
+                                                            {
+                                                                variant.product
+                                                                    .category
+                                                                    .name
+                                                            }
+                                                        </Badge>
+                                                    ) : (
+                                                        <span className="text-muted">
+                                                            —
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td>
                                                     <div className="d-flex gap-1">
@@ -252,11 +450,31 @@ function StockIndex() {
                                                             '—'}
                                                     </div>
                                                 </td>
-                                                <td className="fw-medium text-end">
-                                                    {variant.stockBalance
-                                                        ?.qty_on_hand ?? 0}
-                                                </td>
                                                 <td className="text-end">
+                                                    <span
+                                                        className="fw-bold"
+                                                        style={{
+                                                            fontSize: '1.1rem',
+                                                            color:
+                                                                (variant
+                                                                    .stockBalance
+                                                                    ?.qty_on_hand ??
+                                                                    0) === 0
+                                                                    ? '#dc3545'
+                                                                    : (variant
+                                                                            .stockBalance
+                                                                            ?.qty_on_hand ??
+                                                                            0) <=
+                                                                        5
+                                                                      ? '#ffc107'
+                                                                      : '#198754',
+                                                        }}
+                                                    >
+                                                        {variant.stockBalance
+                                                            ?.qty_on_hand ?? 0}
+                                                    </span>
+                                                </td>
+                                                <td className="fw-medium text-end">
                                                     $
                                                     {Number(
                                                         variant.sale_price_usd,
@@ -273,11 +491,19 @@ function StockIndex() {
                                         {variants.data.length === 0 && (
                                             <tr>
                                                 <td
-                                                    colSpan={6}
-                                                    className="py-4 text-center text-muted"
+                                                    colSpan={8}
+                                                    className="py-5 text-center text-muted"
                                                 >
-                                                    <i className="ri-inbox-line fs-2 d-block mb-2" />
-                                                    No stock entries found.
+                                                    <i className="ri-inbox-line fs-1 d-block mb-2" />
+                                                    <div className="fs-5">
+                                                        No stock entries found.
+                                                    </div>
+                                                    {(search || categoryId) && (
+                                                        <div className="small mt-2">
+                                                            Try adjusting your
+                                                            filters
+                                                        </div>
+                                                    )}
                                                 </td>
                                             </tr>
                                         )}

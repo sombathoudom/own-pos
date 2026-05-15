@@ -4,6 +4,7 @@ export type InventoryFilters = {
     search?: string;
     product_variant_id?: string;
     type?: string;
+    category_id?: string;
 };
 
 export type InventoryCategory = {
@@ -117,6 +118,7 @@ export type StockIndexPageProps = InventoryIndexPageProps<{
     variants: LaravelPaginator<
         InventoryProductVariant & { product: InventoryProduct }
     >;
+    categories: Record<number, string>;
 }>;
 
 export type InventorySaleItemCostLayer = {

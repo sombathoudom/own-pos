@@ -401,9 +401,9 @@ function PosIndex() {
                                                             >
                                                                 {/* Product Image */}
                                                                 <div
-                                                                    className="position-relative"
+                                                                    className="position-relative rounded-top"
                                                                     style={{
-                                                                        height: 140,
+                                                                        height: 160,
                                                                         backgroundColor:
                                                                             '#f8f9fa',
                                                                         overflow:
