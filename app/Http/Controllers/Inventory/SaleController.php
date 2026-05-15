@@ -136,7 +136,7 @@ class SaleController extends Controller
         $variants = ProductVariant::query()
             ->with(['product:id,name,category_id,image_path', 'product.category:id,name', 'stockBalance'])
             ->where('status', 'active')
-            ->orderBy('sku')
+            ->productWithSizes()
             ->get(['id', 'product_id', 'sku', 'style_name', 'color', 'size', 'sale_price_usd']);
 
         $categories = Category::where('status', 'active')->orderBy('name')->pluck('name', 'id');

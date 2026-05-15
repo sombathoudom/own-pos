@@ -57,4 +57,31 @@ class ProductVariant extends Model
 
         return implode(' - ', $parts) ?: $this->sku;
     }
+
+    public function scopeProductWithSizes($query)
+    {
+        return $query
+            ->orderBy('product_id')
+            ->sizeOrdered()
+            ->orderBy('sku');
+    }
+
+    public function scopeSizeOrdered($query)
+    {
+        return $query->orderByRaw("
+            CASE 
+                WHEN UPPER(TRIM(size)) IN ('FREESIZE', 'FREE SIZE', 'ONE SIZE', 'OS', 'F') THEN 50
+                WHEN size = 'XS'  THEN 1
+                WHEN size = 'S'   THEN 2
+                WHEN size = 'M'   THEN 3
+                WHEN size = 'L'   THEN 4
+                WHEN size = 'XL'  THEN 5
+                WHEN size IN ('XXL', '2XL') THEN 6
+                WHEN size IN ('3XL', 'XXXL') THEN 7
+                WHEN size = '4XL' THEN 8
+                WHEN size = '5XL' THEN 9
+                ELSE 999
+            END
+        ");
+    }
 }

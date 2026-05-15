@@ -1,12 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import {
-    type FormEvent,
-    type ReactNode,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Alert,
     Badge,
@@ -234,7 +227,7 @@ function PosIndex() {
         });
     };
 
-    const submit = (e: FormEvent<HTMLFormElement>) => {
+    const submit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setShowPreviewModal(true);
     };
