@@ -119,7 +119,20 @@ class SaleController extends Controller
     }
 
     public function pos(): Response
-    {
+    {   
+        $sizeOrder = [
+            'XS'  => 1,
+            'S'   => 2,
+            'M'   => 3,
+            'L'   => 4,
+            'XL'  => 5,
+            '2XL' => 6,
+            '3XL' => 7,
+            '4XL' => 8,
+            '5XL' => 9,
+        ];
+
+
         $variants = ProductVariant::query()
             ->with(['product:id,name,category_id,image_path', 'product.category:id,name', 'stockBalance'])
             ->where('status', 'active')
@@ -128,8 +141,8 @@ class SaleController extends Controller
 
         $categories = Category::where('status', 'active')->orderBy('name')->pluck('name', 'id');
 
-        $sizes = $variants->pluck('size')->unique()->sort()->values();
-
+        $sizes = $variants->pluck('size')->unique()->sortBy(fn ($size) => $sizeOrder[$size] ?? 999)->values();
+        //  
         return Inertia::render('inventory/pos/index', [
             'variants' => $variants->map(fn ($v) => [
                 'id' => $v->id,

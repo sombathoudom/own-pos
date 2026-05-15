@@ -79,6 +79,7 @@ function PosIndex() {
     const [activeCategory, setActiveCategory] = useState<number | 'all'>('all');
     const [activeSize, setActiveSize] = useState<string | 'all'>('all');
     const [showCustomerModal, setShowCustomerModal] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
     const [showCartMobile, setShowCartMobile] = useState(false);
     const [displayLimit, setDisplayLimit] = useState(30);
     const searchRef = useRef<HTMLInputElement>(null);
@@ -224,16 +225,23 @@ function PosIndex() {
         post(salesStore.url(), {
             onSuccess: () => {
                 setShowCartMobile(false);
+                setShowPreviewModal(false);
             },
             onError: (errs) => {
                 console.error('Sale submission failed:', errs);
+                setShowPreviewModal(false);
             },
         });
     };
 
     const submit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        submitForm();
+        setShowPreviewModal(true);
+    };
+
+    const handleCompleteSale = () => {
+        if (data.items.length === 0) return;
+        setShowPreviewModal(true);
     };
 
     const firstError = Object.values(errors).find(
@@ -324,7 +332,7 @@ function PosIndex() {
                                         </div>
 
                                         {/* Size Filters */}
-                                        <div className="d-flex mb-3 flex-wrap gap-2">
+                                        <div className="d-flex align-items-center mb-3 flex-wrap gap-2">
                                             <Button
                                                 variant={
                                                     activeSize === 'all'
@@ -1110,7 +1118,7 @@ function PosIndex() {
                                                     processing ||
                                                     data.items.length === 0
                                                 }
-                                                onClick={submitForm}
+                                                onClick={handleCompleteSale}
                                             >
                                                 {processing
                                                     ? 'Processing...'
@@ -1421,7 +1429,7 @@ function PosIndex() {
                             size="lg"
                             className="w-100"
                             disabled={processing || data.items.length === 0}
-                            onClick={submitForm}
+                            onClick={handleCompleteSale}
                         >
                             {processing ? 'Processing...' : 'Complete Sale'}
                         </Button>
@@ -1499,6 +1507,277 @@ function PosIndex() {
                         onClick={() => setShowCustomerModal(false)}
                     >
                         Save
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Sale Preview Modal */}
+            <Modal
+                show={showPreviewModal}
+                onHide={() => setShowPreviewModal(false)}
+                size="lg"
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <i className="ri-file-list-3-line me-2"></i>
+                        Review Sale
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {/* Customer Info */}
+                    <div className="mb-4">
+                        <h6 className="mb-2 text-muted">
+                            Customer Information
+                        </h6>
+                        <div className="bg-light rounded p-3">
+                            {data.customer_name ? (
+                                <>
+                                    <div className="fw-semibold">
+                                        {data.customer_name}
+                                    </div>
+                                    {data.customer_phone && (
+                                        <div className="small text-muted">
+                                            <i className="ri-phone-line me-1"></i>
+                                            {data.customer_phone}
+                                        </div>
+                                    )}
+                                    {data.customer_address && (
+                                        <div className="small text-muted">
+                                            <i className="ri-map-pin-line me-1"></i>
+                                            {data.customer_address}
+                                        </div>
+                                    )}
+                                    <div className="small mt-1 text-muted">
+                                        <i className="ri-store-line me-1"></i>
+                                        Source: {data.source_page}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-muted">
+                                    <i className="ri-user-line me-1"></i>
+                                    Walk-in Customer • {data.source_page}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Items */}
+                    <div className="mb-4">
+                        <h6 className="mb-2 text-muted">
+                            Items ({data.items.length})
+                        </h6>
+                        <div className="rounded border">
+                            {data.items.map((item, index) => {
+                                const variant = getVariant(
+                                    item.product_variant_id,
+                                );
+                                if (!variant) return null;
+
+                                const itemSubtotal =
+                                    item.qty * Number(item.unit_price_usd);
+                                const itemDiscount = Number(item.discount_usd);
+                                const itemTotal = itemSubtotal - itemDiscount;
+
+                                return (
+                                    <div
+                                        key={item.product_variant_id}
+                                        className={`p-3 ${index > 0 ? 'border-top' : ''}`}
+                                    >
+                                        <div className="d-flex align-items-start gap-3">
+                                            {/* Product Image */}
+                                            <div
+                                                className="rounded-3 bg-light d-flex align-items-center justify-content-center flex-shrink-0 overflow-hidden border"
+                                                style={{
+                                                    width: 80,
+                                                    height: 80,
+                                                }}
+                                            >
+                                                {variant.product.image_url ? (
+                                                    <img
+                                                        src={
+                                                            variant.product
+                                                                .image_url
+                                                        }
+                                                        alt={
+                                                            variant.product.name
+                                                        }
+                                                        className="h-100 w-100"
+                                                        style={{
+                                                            objectFit: 'cover',
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <i
+                                                        className="ri-image-line text-muted"
+                                                        style={{
+                                                            fontSize: '2rem',
+                                                            opacity: 0.3,
+                                                        }}
+                                                    />
+                                                )}
+                                            </div>
+
+                                            {/* Product Details */}
+                                            <div className="flex-grow-1">
+                                                <div className="fw-semibold fs-6">
+                                                    {variant.product.name}
+                                                </div>
+                                                <div className="d-flex align-items-center mb-2 gap-2">
+                                                    <Badge
+                                                        bg="secondary"
+                                                        className="font-monospace"
+                                                    >
+                                                        {variant.sku}
+                                                    </Badge>
+                                                    <span className="small text-muted">
+                                                        {variant.color} /{' '}
+                                                        {variant.size}
+                                                    </span>
+                                                </div>
+                                                <div className="small">
+                                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                                        <span className="text-muted">
+                                                            Quantity
+                                                        </span>
+                                                        <Badge
+                                                            bg="primary"
+                                                            className="fs-6 px-3 py-2"
+                                                        >
+                                                            {item.qty}
+                                                        </Badge>
+                                                    </div>
+                                                    <div className="d-flex justify-content-between mb-1">
+                                                        <span className="text-muted">
+                                                            Unit Price
+                                                        </span>
+                                                        <span>
+                                                            $
+                                                            {Number(
+                                                                item.unit_price_usd,
+                                                            ).toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                    {itemDiscount > 0 && (
+                                                        <div className="d-flex justify-content-between text-danger">
+                                                            <span>
+                                                                Discount
+                                                            </span>
+                                                            <span>
+                                                                -$
+                                                                {itemDiscount.toFixed(
+                                                                    2,
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Item Total */}
+                                            <div className="flex-shrink-0 text-end">
+                                                <div className="fw-bold fs-4 text-success">
+                                                    ${itemTotal.toFixed(2)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Totals */}
+                    <div className="bg-light rounded p-3">
+                        <div className="d-flex justify-content-between mb-2">
+                            <span className="text-muted">Subtotal</span>
+                            <span className="fw-semibold">
+                                ${cartTotal.toFixed(2)}
+                            </span>
+                        </div>
+                        {discount > 0 && (
+                            <div className="d-flex justify-content-between text-danger mb-2">
+                                <span>Discount</span>
+                                <span>-${discount.toFixed(2)}</span>
+                            </div>
+                        )}
+                        {deliveryFee > 0 && (
+                            <div className="d-flex justify-content-between mb-2">
+                                <span className="text-muted">Delivery Fee</span>
+                                <span>${deliveryFee.toFixed(2)}</span>
+                            </div>
+                        )}
+                        <hr className="my-2" />
+                        <div className="d-flex justify-content-between mb-3">
+                            <span className="fw-bold fs-5">Total</span>
+                            <span className="fw-bold fs-4 text-primary">
+                                ${total.toFixed(2)}
+                            </span>
+                        </div>
+                        <div className="d-flex justify-content-between mb-2">
+                            <span className="text-muted">Paid</span>
+                            <span className="fw-semibold text-success">
+                                ${paid.toFixed(2)}
+                            </span>
+                        </div>
+                        {due > 0 && (
+                            <div className="d-flex justify-content-between">
+                                <span className="text-danger fw-semibold">
+                                    Amount Due
+                                </span>
+                                <span className="fw-bold text-danger fs-5">
+                                    ${due.toFixed(2)}
+                                </span>
+                            </div>
+                        )}
+                        {change > 0 && (
+                            <div className="d-flex justify-content-between">
+                                <span className="text-success fw-semibold">
+                                    Change
+                                </span>
+                                <span className="fw-bold text-success fs-5">
+                                    ${change.toFixed(2)}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    {firstError && (
+                        <Alert variant="danger" className="mt-3 mb-0">
+                            {firstError}
+                        </Alert>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        variant="light"
+                        onClick={() => setShowPreviewModal(false)}
+                        disabled={processing}
+                    >
+                        <i className="ri-arrow-left-line me-1"></i>
+                        Back to Edit
+                    </Button>
+                    <Button
+                        variant="success"
+                        size="lg"
+                        onClick={submitForm}
+                        disabled={processing || data.items.length === 0}
+                    >
+                        {processing ? (
+                            <>
+                                <span
+                                    className="spinner-border spinner-border-sm me-2"
+                                    role="status"
+                                    aria-hidden="true"
+                                ></span>
+                                Processing...
+                            </>
+                        ) : (
+                            <>
+                                <i className="ri-check-line me-1"></i>
+                                Confirm & Complete Sale
+                            </>
+                        )}
                     </Button>
                 </Modal.Footer>
             </Modal>
