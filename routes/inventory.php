@@ -24,7 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::resource('purchases', PurchaseController::class)->except(['destroy']);
     Route::post('purchases/{purchase}/arrive', [PurchaseController::class, 'arrive'])->name('purchases.arrive');
-    Route::resource('sales', SaleController::class)->except(['edit', 'update', 'destroy']);
+    Route::resource('sales', SaleController::class)->except(['destroy']);
     Route::get('pos', [SaleController::class, 'pos'])->name('pos');
     Route::post('sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
     Route::post('sales/{sale}/return', [SaleController::class, 'return'])->name('sales.return');

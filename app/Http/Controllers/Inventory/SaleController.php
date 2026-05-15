@@ -7,8 +7,10 @@ use App\Actions\Inventory\ConfirmSaleDelivery;
 use App\Actions\Inventory\CreateSale;
 use App\Actions\Inventory\ExchangeSale;
 use App\Actions\Inventory\ReturnSale;
+use App\Actions\Inventory\UpdateSale;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreSaleRequest;
+use App\Http\Requests\Inventory\UpdateSaleRequest;
 use App\Models\Category;
 use App\Models\ProductVariant;
 use App\Models\Sale;
@@ -93,7 +95,7 @@ class SaleController extends Controller
     public function create(): Response
     {
         $variants = ProductVariant::query()
-            ->with(['product:id,name,category_id', 'product.category:id,name', 'stockBalance'])
+            ->with(['product:id,name,category_id,image_path', 'product.category:id,name', 'stockBalance'])
             ->where('status', 'active')
             ->orderBy('sku')
             ->get(['id', 'product_id', 'sku', 'style_name', 'color', 'size', 'sale_price_usd']);
@@ -111,6 +113,7 @@ class SaleController extends Controller
                     'id' => $v->product?->id,
                     'name' => $v->product?->name,
                     'category' => $v->product?->category?->name,
+                    'image_url' => $v->product?->imageUrl(),
                 ],
             ]),
             'invoiceNo' => 'INV-'.now()->format('Ymd').'-'.Str::upper(Str::random(4)),
@@ -119,19 +122,18 @@ class SaleController extends Controller
     }
 
     public function pos(): Response
-    {   
+    {
         $sizeOrder = [
-            'XS'  => 1,
-            'S'   => 2,
-            'M'   => 3,
-            'L'   => 4,
-            'XL'  => 5,
+            'XS' => 1,
+            'S' => 2,
+            'M' => 3,
+            'L' => 4,
+            'XL' => 5,
             '2XL' => 6,
             '3XL' => 7,
             '4XL' => 8,
             '5XL' => 9,
         ];
-
 
         $variants = ProductVariant::query()
             ->with(['product:id,name,category_id,image_path', 'product.category:id,name', 'stockBalance'])
@@ -145,7 +147,8 @@ class SaleController extends Controller
         $categories = Category::where('status', 'active')->orderBy('name')->pluck('name', 'id');
 
         $sizes = $variants->pluck('size')->unique()->sortBy(fn ($size) => $sizeOrder[$size] ?? 999)->values();
-        //  
+
+        //
         return Inertia::render('inventory/pos/index', [
             'variants' => $variants->map(fn ($v) => [
                 'id' => $v->id,
@@ -578,5 +581,97 @@ class SaleController extends Controller
                 ]),
             ],
         ]);
+    }
+
+    public function edit(Sale $sale): Response
+    {
+        $sale->load('items.productVariant.product');
+
+        $variants = ProductVariant::query()
+            ->with(['product:id,name,category_id,image_path', 'product.category:id,name', 'stockBalance'])
+            ->where('status', 'active')
+            ->orderBy('sku')
+            ->get(['id', 'product_id', 'sku', 'style_name', 'color', 'size', 'sale_price_usd']);
+
+        return Inertia::render('inventory/sales/edit', [
+            'sale' => [
+                'id' => $sale->id,
+                'invoice_no' => $sale->invoice_no,
+                'customer_name' => $sale->customer_name,
+                'customer_phone' => $sale->customer_phone,
+                'customer_address' => $sale->customer_address,
+                'source_page' => $sale->source_page,
+                'sale_date' => $sale->sale_date?->toDateString(),
+                'currency' => $sale->currency,
+                'exchange_rate' => $sale->exchange_rate,
+                'discount_usd' => $sale->discount_usd,
+                'customer_delivery_fee_usd' => $sale->customer_delivery_fee_usd,
+                'actual_delivery_cost_usd' => $sale->actual_delivery_cost_usd,
+                'paid_usd' => $sale->paid_usd,
+                'note' => $sale->note,
+                'items' => $sale->items->map(fn ($item) => [
+                    'id' => $item->id,
+                    'product_variant_id' => $item->product_variant_id,
+                    'qty' => $item->qty,
+                    'unit_price_usd' => $item->unit_price_usd,
+                    'discount_usd' => $item->discount_usd,
+                    'product_variant' => [
+                        'id' => $item->productVariant?->id,
+                        'sku' => $item->productVariant?->sku,
+                        'color' => $item->productVariant?->color,
+                        'size' => $item->productVariant?->size,
+                        'product_name' => $item->productVariant?->product?->name,
+                    ],
+                ])->values()->all(),
+            ],
+            'variants' => $variants->map(fn ($v) => [
+                'id' => $v->id,
+                'sku' => $v->sku,
+                'style_name' => $v->style_name,
+                'color' => $v->color,
+                'size' => $v->size,
+                'sale_price_usd' => $v->sale_price_usd,
+                'stock_on_hand' => $v->stockBalance?->qty_on_hand ?? 0,
+                'product' => [
+                    'id' => $v->product?->id,
+                    'name' => $v->product?->name,
+                    'category' => $v->product?->category?->name,
+                    'image_url' => $v->product?->imageUrl(),
+                ],
+            ]),
+            'sourcePageOptions' => ['DL', 'DC', 'Walk-in', 'Other'],
+        ]);
+    }
+
+    public function update(UpdateSaleRequest $request, Sale $sale, UpdateSale $updateSale): RedirectResponse
+    {
+        if ($sale->isCancelled()) {
+            return back()->withErrors(['general' => 'Cancelled sales cannot be edited.']);
+        }
+
+        if ($sale->isDeliveryCompleted()) {
+            return back()->withErrors(['general' => 'Completed sales cannot be edited. Use return or exchange instead.']);
+        }
+
+        if ($sale->returns()->exists() || $sale->exchanges()->exists() || $sale->deliveryConfirmations()->exists()) {
+            return back()->withErrors(['general' => 'Sales with returns, exchanges, or delivery confirmations cannot be edited.']);
+        }
+
+        $validated = $request->validated();
+
+        try {
+            DailyClosingLock::ensureNotLocked($sale->sale_date, 'This day has been closed. Sales cannot be edited.');
+
+            $updateSale->handle(
+                sale: $sale,
+                saleData: $validated,
+                items: $validated['items'],
+                updatedBy: $request->user()?->id,
+            );
+        } catch (Throwable $e) {
+            return back()->withErrors(['items' => $e->getMessage()]);
+        }
+
+        return to_route('sales.show', $sale)->with('toast', ['type' => 'success', 'message' => 'Sale updated successfully.']);
     }
 }

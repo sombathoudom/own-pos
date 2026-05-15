@@ -369,6 +369,25 @@ function SalesShow() {
                                             >
                                                 {sale.order_status}
                                             </Badge>
+                                            {sale.order_status !==
+                                                'cancelled' &&
+                                                sale.order_status !==
+                                                    'returned' &&
+                                                sale.returns.length === 0 &&
+                                                sale.exchanges.length === 0 &&
+                                                sale.delivery_confirmations
+                                                    .length === 0 &&
+                                                sale.delivery_completed_date ===
+                                                    null && (
+                                                    <Button
+                                                        variant="outline-primary"
+                                                        size="sm"
+                                                        href={`/sales/${sale.id}/edit`}
+                                                    >
+                                                        <i className="ri-pencil-line me-1"></i>
+                                                        Edit
+                                                    </Button>
+                                                )}
                                             {(sale.payment_status ===
                                                 'unpaid' ||
                                                 sale.payment_status ===

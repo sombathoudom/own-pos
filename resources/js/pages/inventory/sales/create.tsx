@@ -28,6 +28,7 @@ type Variant = {
         id: number;
         name: string;
         category: string | null;
+        image_url: string | null;
     };
 };
 
@@ -494,6 +495,35 @@ function SalesCreate() {
                                                                             outOfStock
                                                                         }
                                                                     >
+                                                                        <div
+                                                                            className="bg-light flex-shrink-0 overflow-hidden rounded border"
+                                                                            style={{
+                                                                                width: 56,
+                                                                                height: 56,
+                                                                            }}
+                                                                        >
+                                                                            {variant
+                                                                                .product
+                                                                                .image_url ? (
+                                                                                <img
+                                                                                    src={
+                                                                                        variant
+                                                                                            .product
+                                                                                            .image_url
+                                                                                    }
+                                                                                    alt={
+                                                                                        variant
+                                                                                            .product
+                                                                                            .name
+                                                                                    }
+                                                                                    className="object-fit-cover h-100 w-100"
+                                                                                />
+                                                                            ) : (
+                                                                                <div className="d-flex align-items-center justify-content-center h-100 w-100 text-muted">
+                                                                                    <i className="ri-image-line fs-5"></i>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
                                                                         <div className="min-w-0 flex-grow-1">
                                                                             <div className="fw-semibold text-truncate mb-1">
                                                                                 {variantLabel(

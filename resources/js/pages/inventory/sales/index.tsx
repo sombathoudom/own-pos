@@ -17,6 +17,7 @@ import Pagination from '@/Components/Pagination';
 import Layout from '@/Layouts';
 import { store as storeConfirmDelivery } from '@/routes/sales/confirm-delivery';
 import {
+    edit as salesEdit,
     create as salesCreate,
     show as salesShow,
     index as salesIndex,
@@ -285,6 +286,16 @@ function SalesIndex() {
                                                                         : 'Delivered All'}
                                                                 </Button>
                                                             )}
+                                                            <Link
+                                                                className="btn btn-sm btn-outline-secondary"
+                                                                href={salesEdit.url(
+                                                                    {
+                                                                        sale: sale.id,
+                                                                    },
+                                                                )}
+                                                            >
+                                                                Edit
+                                                            </Link>
                                                             <Link
                                                                 className="btn btn-sm btn-outline-secondary"
                                                                 href={salesShow.url(
