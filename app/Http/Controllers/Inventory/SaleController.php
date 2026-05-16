@@ -30,7 +30,7 @@ class SaleController extends Controller
         $search = $request->string('search')->toString();
 
         $sales = Sale::query()
-            ->with('items.productVariant.product')
+            ->with(['items.productVariant.product', 'deliveryCompany'])
             ->when($search !== '', fn ($query) => $query->where('invoice_no', 'like', "%{$search}%")
                 ->orWhere('customer_name', 'like', "%{$search}%"))
             ->orderByDesc('sale_date')
@@ -44,6 +44,10 @@ class SaleController extends Controller
                 'customer_name' => $sale->customer_name,
                 'customer_phone' => $sale->customer_phone,
                 'source_page' => $sale->source_page,
+                'delivery_company' => $sale->deliveryCompany ? [
+                    'id' => $sale->deliveryCompany->id,
+                    'name' => $sale->deliveryCompany->name,
+                ] : null,
                 'sale_date' => $sale->sale_date?->toDateString(),
                 'currency' => $sale->currency,
                 'exchange_rate' => $sale->exchange_rate,
@@ -427,7 +431,7 @@ class SaleController extends Controller
 
     public function show(Sale $sale): Response
     {
-        $sale->load('items.productVariant.product', 'items.costLayers.stockLayer', 'createdBy', 'returns.items', 'exchanges.items.saleItem.productVariant', 'exchanges.items.newVariant.product', 'exchanges.items.newSaleItem.productVariant', 'deliveryConfirmations.items.originalVariant.product', 'deliveryConfirmations.items.finalVariant.product');
+        $sale->load('items.productVariant.product', 'items.costLayers.stockLayer', 'createdBy', 'deliveryCompany', 'returns.items', 'exchanges.items.saleItem.productVariant', 'exchanges.items.newVariant.product', 'exchanges.items.newSaleItem.productVariant', 'deliveryConfirmations.items.originalVariant.product', 'deliveryConfirmations.items.finalVariant.product');
 
         $variants = ProductVariant::query()
             ->with(['product:id,name,category_id', 'product.category:id,name', 'stockBalance'])
@@ -456,6 +460,10 @@ class SaleController extends Controller
                 'customer_name' => $sale->customer_name,
                 'customer_phone' => $sale->customer_phone,
                 'source_page' => $sale->source_page,
+                'delivery_company' => $sale->deliveryCompany ? [
+                    'id' => $sale->deliveryCompany->id,
+                    'name' => $sale->deliveryCompany->name,
+                ] : null,
                 'sale_date' => $sale->sale_date?->toDateString(),
                 'currency' => $sale->currency,
                 'exchange_rate' => $sale->exchange_rate,

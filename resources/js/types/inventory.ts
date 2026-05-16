@@ -247,6 +247,10 @@ export type InventorySale = {
     customer_name: string | null;
     customer_phone: string | null;
     source_page: string | null;
+    delivery_company: {
+        id: number;
+        name: string;
+    } | null;
     sale_date: string;
     currency: string;
     exchange_rate: string;

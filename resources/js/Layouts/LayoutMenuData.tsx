@@ -112,6 +112,12 @@ const navdata = () => {
                             parentId: 'reports',
                         },
                         {
+                            id: 'reports-delivery',
+                            label: 'Delivery Report',
+                            link: '/reports/delivery',
+                            parentId: 'reports',
+                        },
+                        {
                             id: 'reports-monthly',
                             label: 'Monthly Sales',
                             link: '/reports/monthly',

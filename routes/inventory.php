@@ -45,6 +45,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('daily-closings', DailyClosingController::class)->except(['edit', 'update', 'destroy']);
     Route::get('reports/daily', [ReportController::class, 'daily'])->name('reports.daily');
     Route::get('reports/daily/export', [ReportController::class, 'exportDailyCsv'])->name('reports.daily.export');
+    Route::get('reports/delivery', [ReportController::class, 'delivery'])->name('reports.delivery');
     Route::get('reports/monthly', [ReportController::class, 'monthly'])->name('reports.monthly');
     Route::get('reports/monthly/export', [ReportController::class, 'exportMonthlyCsv'])->name('reports.monthly.export');
     Route::get('reports/profit', [ReportController::class, 'profit'])->name('reports.profit');

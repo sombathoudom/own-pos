@@ -4,6 +4,7 @@ import { Nav } from 'react-bootstrap';
 import {
     categoryProfit,
     daily,
+    delivery,
     deliveryFailed,
     monthly,
     profit,
@@ -14,6 +15,7 @@ import {
 type ReportsNavProps = {
     active:
         | 'daily'
+        | 'delivery'
         | 'monthly'
         | 'profit'
         | 'category-profit'
@@ -24,6 +26,7 @@ type ReportsNavProps = {
 
 const items = [
     { key: 'daily', label: 'Daily Sales', href: daily.url() },
+    { key: 'delivery', label: 'Delivery Report', href: delivery.url() },
     { key: 'monthly', label: 'Monthly Sales', href: monthly.url() },
     { key: 'profit', label: 'Profit & Loss', href: profit.url() },
     {

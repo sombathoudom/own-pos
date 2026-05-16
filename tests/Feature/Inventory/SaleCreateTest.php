@@ -1,14 +1,17 @@
 <?php
 
 use App\Models\Category;
+use App\Models\DeliveryCompany;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
+use App\Models\Sale;
 use App\Models\StockBalance;
 use App\Models\StockLayer;
 use App\Models\StockMovement;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -168,4 +171,42 @@ test('sale fails when stock is insufficient', function () {
     ]);
 
     $response->assertSessionHasErrors(['items']);
+});
+
+test('sale show includes delivery company name', function () {
+    $deliveryCompany = DeliveryCompany::create([
+        'name' => 'J&T Express',
+        'delivery_cost_usd' => 1.50,
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($this->user)->post(route('sales.store'), [
+        'sale_date' => '2026-05-13',
+        'source_page' => 'DL',
+        'delivery_company_id' => $deliveryCompany->id,
+        'currency' => 'USD',
+        'exchange_rate' => 1,
+        'discount_usd' => 0,
+        'customer_delivery_fee_usd' => 2,
+        'actual_delivery_cost_usd' => 1.5,
+        'paid_usd' => 14,
+        'items' => [
+            [
+                'product_variant_id' => $this->variant->id,
+                'qty' => 2,
+                'unit_price_usd' => 6,
+                'discount_usd' => 0,
+            ],
+        ],
+    ])->assertRedirect();
+
+    $sale = Sale::firstOrFail();
+
+    $this->actingAs($this->user)
+        ->get(route('sales.show', $sale))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('inventory/sales/show')
+            ->where('sale.delivery_company.name', 'J&T Express')
+        );
 });

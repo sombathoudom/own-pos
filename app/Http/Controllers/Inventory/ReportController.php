@@ -29,17 +29,17 @@ class ReportController extends Controller
             ->where('payment_status', 'paid')
             ->whereNotNull('payment_received_date')
             ->whereDate('payment_received_date', $date)
-            ->with(['items.productVariant.product', 'exchanges', 'returns.items', 'delivery'])
+            ->with(['items.productVariant.product', 'exchanges', 'returns.items', 'delivery', 'deliveryCompany'])
             ->get();
 
         $exchangeReceipts = SaleExchange::query()
             ->whereDate('payment_received_date', $date)
-            ->with('sale')
+            ->with(['sale.delivery', 'sale.deliveryCompany'])
             ->get();
 
         $returnReceipts = SaleReturn::query()
             ->whereDate('payment_received_date', $date)
-            ->with(['sale.delivery', 'items'])
+            ->with(['sale.delivery', 'sale.deliveryCompany', 'items'])
             ->get();
 
         $entries = $this->buildDailyEntries($sales, $exchangeReceipts, $returnReceipts);
@@ -72,7 +72,7 @@ class ReportController extends Controller
             ->where('payment_status', 'paid')
             ->whereNotNull('payment_received_date')
             ->whereBetween('payment_received_date', [$start->toDateString(), $end->toDateString()])
-            ->with(['items.productVariant.product', 'exchanges', 'returns.items', 'delivery'])
+            ->with(['items.productVariant.product', 'exchanges', 'returns.items', 'delivery', 'deliveryCompany'])
             ->get();
 
         $exchangeReceipts = SaleExchange::query()
@@ -178,6 +178,69 @@ class ReportController extends Controller
             'expense_breakdown' => $this->buildExpenseBreakdown($expenses),
             'purchase_breakdown' => $this->buildPurchaseBreakdown($purchases),
             'source_breakdown' => $this->buildSourceBreakdown($entries),
+        ]);
+    }
+
+    public function delivery(Request $request): Response
+    {
+        $date = $request->date('date') ?? now();
+
+        $sales = Sale::query()
+            ->whereDate('sale_date', $date)
+            ->where('order_status', '!=', 'cancelled')
+            ->with(['items', 'deliveryCompany', 'delivery'])
+            ->get();
+
+        $deliveryRows = $sales
+            ->map(function (Sale $sale) {
+                $company = $this->deliveryCompanyName($sale);
+
+                if (! $company) {
+                    return null;
+                }
+
+                return [
+                    'company' => $company,
+                    'invoice_no' => $sale->invoice_no,
+                    'customer_name' => $sale->customer_name ?? 'Walk-in',
+                    'source_page' => $sale->source_page,
+                    'packs' => (int) $sale->items->sum('qty'),
+                    'total_usd' => $this->decimalize($sale->total_usd),
+                    'delivery_fee_usd' => $this->decimalize($sale->customer_delivery_fee_usd),
+                    'delivery_cost_usd' => $this->decimalize($sale->actual_delivery_cost_usd),
+                    'delivery_profit_usd' => $this->decimalize($sale->delivery_profit_usd),
+                ];
+            })
+            ->filter()
+            ->values();
+
+        $deliveryBreakdown = $deliveryRows
+            ->groupBy('company')
+            ->map(fn (Collection $items, string $company) => [
+                'company' => $company,
+                'orders' => $items->count(),
+                'packs' => $items->sum('packs'),
+                'total_usd' => $this->decimalize($items->sum('total_usd')),
+                'delivery_fee_usd' => $this->decimalize($items->sum('delivery_fee_usd')),
+                'delivery_cost_usd' => $this->decimalize($items->sum('delivery_cost_usd')),
+                'delivery_profit_usd' => $this->decimalize($items->sum('delivery_profit_usd')),
+            ])
+            ->sortByDesc('orders')
+            ->values();
+
+        return Inertia::render('inventory/reports/delivery', [
+            'date' => $date->toDateString(),
+            'summary' => [
+                'delivery_count' => $deliveryBreakdown->count(),
+                'orders' => $deliveryBreakdown->sum('orders'),
+                'packs' => $deliveryBreakdown->sum('packs'),
+                'total_usd' => $this->decimalize($deliveryBreakdown->sum('total_usd')),
+                'delivery_fee_usd' => $this->decimalize($deliveryBreakdown->sum('delivery_fee_usd')),
+                'delivery_cost_usd' => $this->decimalize($deliveryBreakdown->sum('delivery_cost_usd')),
+                'delivery_profit_usd' => $this->decimalize($deliveryBreakdown->sum('delivery_profit_usd')),
+            ],
+            'deliveries' => $deliveryBreakdown,
+            'entries' => $deliveryRows,
         ]);
     }
 
@@ -352,17 +415,17 @@ class ReportController extends Controller
             ->where('payment_status', 'paid')
             ->whereNotNull('payment_received_date')
             ->whereDate('payment_received_date', $date)
-            ->with(['items.productVariant.product', 'exchanges', 'returns'])
+            ->with(['items.productVariant.product', 'exchanges', 'returns', 'delivery', 'deliveryCompany'])
             ->get();
 
         $exchangeReceipts = SaleExchange::query()
             ->whereDate('payment_received_date', $date)
-            ->with('sale')
+            ->with(['sale.delivery', 'sale.deliveryCompany'])
             ->get();
 
         $returnReceipts = SaleReturn::query()
             ->whereDate('payment_received_date', $date)
-            ->with('sale')
+            ->with(['sale.delivery', 'sale.deliveryCompany'])
             ->get();
 
         $entries = $this->buildDailyEntries($sales, $exchangeReceipts, $returnReceipts);
@@ -401,17 +464,17 @@ class ReportController extends Controller
             ->where('payment_status', 'paid')
             ->whereNotNull('payment_received_date')
             ->whereBetween('payment_received_date', [$start->toDateString(), $end->toDateString()])
-            ->with(['items.productVariant.product', 'exchanges', 'returns'])
+            ->with(['items.productVariant.product', 'exchanges', 'returns', 'delivery', 'deliveryCompany'])
             ->get();
 
         $exchangeReceipts = SaleExchange::query()
             ->whereBetween('payment_received_date', [$start->toDateString(), $end->toDateString()])
-            ->with('sale')
+            ->with(['sale.delivery', 'sale.deliveryCompany'])
             ->get();
 
         $returnReceipts = SaleReturn::query()
             ->whereBetween('payment_received_date', [$start->toDateString(), $end->toDateString()])
-            ->with('sale')
+            ->with(['sale.delivery', 'sale.deliveryCompany'])
             ->get();
 
         $headers = [
@@ -471,7 +534,7 @@ class ReportController extends Controller
             'product_total_usd' => $this->baseSaleProductRevenue($sale),
             'product_cogs_usd' => $this->baseSaleCogs($sale),
             'delivery_cost_usd' => (string) $sale->actual_delivery_cost_usd,
-            'delivery_company' => $sale->delivery?->delivery_company,
+            'delivery_company' => $this->deliveryCompanyName($sale),
             'note' => $sale->note,
             'price_pack_usd' => $this->baseSaleRevenue($sale),
             'total_usd' => $this->baseSaleRevenue($sale),
@@ -491,7 +554,7 @@ class ReportController extends Controller
             'product_total_usd' => (string) $exchange->new_items_subtotal_usd,
             'product_cogs_usd' => (string) $exchange->additional_cogs_usd,
             'delivery_cost_usd' => (string) $exchange->exchange_delivery_cost_usd,
-            'delivery_company' => $exchange->sale?->delivery?->delivery_company,
+            'delivery_company' => $this->deliveryCompanyName($exchange->sale),
             'note' => $exchange->note,
             'price_pack_usd' => (string) $exchange->total_additional_amount_usd,
             'total_usd' => (string) $exchange->total_additional_amount_usd,
@@ -511,7 +574,7 @@ class ReportController extends Controller
             'product_total_usd' => (string) ($return->total_refund_usd * -1),
             'product_cogs_usd' => (string) ($return->items->sum('cogs_usd') * -1),
             'delivery_cost_usd' => '0.0000',
-            'delivery_company' => $return->sale?->delivery?->delivery_company,
+            'delivery_company' => $this->deliveryCompanyName($return->sale),
             'note' => $return->note,
             'price_pack_usd' => (string) ($return->total_refund_usd * -1),
             'total_usd' => (string) ($return->total_refund_usd * -1),
@@ -599,12 +662,22 @@ class ReportController extends Controller
             ->map(fn (Collection $items, string $company) => [
                 'company' => $company,
                 'orders' => $items->count(),
+                'qty_sold' => $items->sum('qty_sold'),
                 'delivery_cost_usd' => $this->decimalize($items->sum('delivery_cost_usd')),
                 'revenue_usd' => $this->decimalize($items->sum('price_pack_usd')),
                 'profit_usd' => $this->decimalize($items->sum('profit_usd')),
             ])
             ->sortByDesc('orders')
             ->values();
+    }
+
+    private function deliveryCompanyName(?Sale $sale): ?string
+    {
+        if (! $sale) {
+            return null;
+        }
+
+        return $sale->deliveryCompany?->name ?? $sale->delivery?->delivery_company;
     }
 
     private function buildSourceBreakdown(Collection $entries): Collection

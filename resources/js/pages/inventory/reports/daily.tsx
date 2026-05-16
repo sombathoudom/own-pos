@@ -549,6 +549,12 @@ function ReportsDaily() {
                                                 <th className="text-center">
                                                     Orders
                                                 </th>
+                                                <th className="text-center">
+                                                    Packs
+                                                </th>
+                                                <th className="text-end">
+                                                    Total
+                                                </th>
                                                 <th className="text-end">
                                                     Delivery
                                                 </th>
@@ -566,6 +572,14 @@ function ReportsDaily() {
                                                     <td className="text-center">
                                                         {item.orders}
                                                     </td>
+                                                    <td className="text-center">
+                                                        {item.qty_sold}
+                                                    </td>
+                                                    <td className="text-end">
+                                                        {money(
+                                                            item.revenue_usd,
+                                                        )}
+                                                    </td>
                                                     <td className="text-end">
                                                         {money(
                                                             item.delivery_cost_usd,
@@ -579,7 +593,7 @@ function ReportsDaily() {
                                             {courier_breakdown.length === 0 && (
                                                 <tr>
                                                     <td
-                                                        colSpan={4}
+                                                        colSpan={6}
                                                         className="py-3 text-center text-muted"
                                                     >
                                                         No data.
