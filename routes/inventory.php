@@ -3,6 +3,7 @@
 use App\Http\Controllers\Inventory\AuditLogController;
 use App\Http\Controllers\Inventory\CategoryController;
 use App\Http\Controllers\Inventory\DailyClosingController;
+use App\Http\Controllers\Inventory\DeliveryCompanyController;
 use App\Http\Controllers\Inventory\ExpenseController;
 use App\Http\Controllers\Inventory\LowStockAlertController;
 use App\Http\Controllers\Inventory\OrderDeliveryController;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('categories', CategoryController::class);
     Route::resource('suppliers', SupplierController::class);
+    Route::resource('delivery-companies', DeliveryCompanyController::class);
     Route::get('products/search', [ProductController::class, 'search'])->name('products.search');
     Route::resource('products', ProductController::class);
     Route::resource('purchases', PurchaseController::class)->except(['destroy']);

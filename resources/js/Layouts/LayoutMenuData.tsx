@@ -1,4 +1,10 @@
+import { useState } from 'react';
+
 const navdata = () => {
+    const [isReportsOpen, setIsReportsOpen] = useState(false);
+
+    const isReportsActive = window.location.pathname.startsWith('/reports');
+
     return {
         props: {
             children: [
@@ -83,10 +89,65 @@ const navdata = () => {
                     link: '/daily-closings',
                 },
                 {
+                    id: 'delivery-companies',
+                    label: 'Delivery Companies',
+                    icon: 'ri-truck-line',
+                    link: '/delivery-companies',
+                },
+                {
                     id: 'reports',
                     label: 'Reports',
                     icon: 'ri-bar-chart-box-line',
-                    link: '/reports/daily',
+                    link: '/#',
+                    click: (e: React.MouseEvent) => {
+                        e.preventDefault();
+                        setIsReportsOpen(!isReportsOpen);
+                    },
+                    stateVariables: isReportsOpen || isReportsActive,
+                    subItems: [
+                        {
+                            id: 'reports-daily',
+                            label: 'Daily Sales',
+                            link: '/reports/daily',
+                            parentId: 'reports',
+                        },
+                        {
+                            id: 'reports-monthly',
+                            label: 'Monthly Sales',
+                            link: '/reports/monthly',
+                            parentId: 'reports',
+                        },
+                        {
+                            id: 'reports-profit',
+                            label: 'Profit & Loss',
+                            link: '/reports/profit',
+                            parentId: 'reports',
+                        },
+                        {
+                            id: 'reports-category-profit',
+                            label: 'Category Profit',
+                            link: '/reports/category-profit',
+                            parentId: 'reports',
+                        },
+                        {
+                            id: 'reports-stock-value',
+                            label: 'Stock Value',
+                            link: '/reports/stock-value',
+                            parentId: 'reports',
+                        },
+                        {
+                            id: 'reports-stock-loss',
+                            label: 'Stock Loss',
+                            link: '/reports/stock-loss',
+                            parentId: 'reports',
+                        },
+                        {
+                            id: 'reports-delivery-failed',
+                            label: 'Failed Delivery',
+                            link: '/reports/delivery-failed',
+                            parentId: 'reports',
+                        },
+                    ],
                 },
                 {
                     id: 'low-stock',

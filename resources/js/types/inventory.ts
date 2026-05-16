@@ -386,3 +386,15 @@ export type InventoryDailyClosing = {
 export type DailyClosingIndexPageProps = InventoryIndexPageProps<{
     closings: LaravelPaginator<InventoryDailyClosing>;
 }>;
+
+export type InventoryDeliveryCompany = {
+    id: number;
+    name: string;
+    delivery_cost_usd: string;
+    status: string;
+    note: string | null;
+};
+
+export type DeliveryCompanyIndexPageProps = InventoryIndexPageProps<{
+    companies: LaravelPaginator<InventoryDeliveryCompany>;
+}>;
