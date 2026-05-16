@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreSaleRequest;
 use App\Http\Requests\Inventory\UpdateSaleRequest;
 use App\Models\Category;
+use App\Models\DeliveryCompany;
 use App\Models\ProductVariant;
 use App\Models\Sale;
 use App\Services\DailyClosingLock;
@@ -118,6 +119,7 @@ class SaleController extends Controller
             ]),
             'invoiceNo' => 'INV-'.now()->format('Ymd').'-'.Str::upper(Str::random(4)),
             'sourcePageOptions' => ['DL', 'DC', 'Walk-in', 'Other'],
+            'deliveryCompanies' => DeliveryCompany::where('status', 'active')->orderBy('name')->get(['id', 'name', 'delivery_cost_usd']),
         ]);
     }
 
@@ -169,6 +171,7 @@ class SaleController extends Controller
             'categories' => $categories,
             'sizes' => $sizes,
             'sourcePageOptions' => ['DL', 'DC', 'Walk-in', 'Other'],
+            'deliveryCompanies' => DeliveryCompany::where('status', 'active')->orderBy('name')->get(['id', 'name', 'delivery_cost_usd']),
         ]);
     }
 
@@ -186,6 +189,7 @@ class SaleController extends Controller
                     'customer_phone' => $validated['customer_phone'] ?? null,
                     'customer_address' => $validated['customer_address'] ?? null,
                     'source_page' => $validated['source_page'] ?? null,
+                    'delivery_company_id' => $validated['delivery_company_id'] ?? null,
                     'sale_date' => $validated['sale_date'],
                     'currency' => $validated['currency'] ?? 'USD',
                     'exchange_rate' => $validated['exchange_rate'] ?? 4100,
@@ -601,6 +605,7 @@ class SaleController extends Controller
                 'customer_phone' => $sale->customer_phone,
                 'customer_address' => $sale->customer_address,
                 'source_page' => $sale->source_page,
+                'delivery_company_id' => $sale->delivery_company_id,
                 'sale_date' => $sale->sale_date?->toDateString(),
                 'currency' => $sale->currency,
                 'exchange_rate' => $sale->exchange_rate,
@@ -640,6 +645,7 @@ class SaleController extends Controller
                 ],
             ]),
             'sourcePageOptions' => ['DL', 'DC', 'Walk-in', 'Other'],
+            'deliveryCompanies' => DeliveryCompany::where('status', 'active')->orderBy('name')->get(['id', 'name', 'delivery_cost_usd']),
         ]);
     }
 

@@ -12,6 +12,9 @@ import {
 } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
+import DeliveryCompanyPicker, {
+    type DeliveryCompanyOption,
+} from '@/Components/Inventory/DeliveryCompanyPicker';
 import Layout from '@/Layouts';
 import { store as salesStore, index as salesIndex } from '@/routes/sales';
 import { getCurrentDate } from '@/utils/dateTime';
@@ -43,6 +46,7 @@ type FormData = {
     customer_name: string;
     customer_phone: string;
     source_page: string;
+    delivery_company_id: number | null;
     sale_date: string;
     currency: string;
     exchange_rate: string;
@@ -58,16 +62,18 @@ type SalesCreateProps = {
     variants: Variant[];
     invoiceNo: string;
     sourcePageOptions: string[];
+    deliveryCompanies: DeliveryCompanyOption[];
 };
 
 function SalesCreate() {
-    const { variants, invoiceNo, sourcePageOptions } =
+    const { variants, invoiceNo, sourcePageOptions, deliveryCompanies } =
         usePage<SalesCreateProps>().props;
 
     const { data, setData, post, processing, errors } = useForm<FormData>({
         customer_name: '',
         customer_phone: '',
         source_page: 'Other',
+        delivery_company_id: null,
         sale_date: getCurrentDate(),
         currency: 'USD',
         exchange_rate: '1',
@@ -78,7 +84,6 @@ function SalesCreate() {
         note: '',
         items: [],
     });
-
     const [search, setSearch] = useState('');
     const [showPicker, setShowPicker] = useState(false);
 
@@ -900,6 +905,23 @@ function SalesCreate() {
                                                         )
                                                     }
                                                     style={{ width: 100 }}
+                                                />
+                                            </div>
+
+                                            <div className="mb-3">
+                                                <Form.Label className="text-muted mb-2">
+                                                    Delivery Company
+                                                </Form.Label>
+                                                <DeliveryCompanyPicker
+                                                    companies={deliveryCompanies}
+                                                    selectedId={data.delivery_company_id}
+                                                    onChange={(company) => {
+                                                        setData('delivery_company_id', company?.id ?? null);
+                                                        if (company) {
+                                                            setData('actual_delivery_cost_usd', company.delivery_cost_usd);
+                                                        }
+                                                    }}
+                                                    customerDeliveryFee={Number(data.customer_delivery_fee_usd) || 0}
                                                 />
                                             </div>
 

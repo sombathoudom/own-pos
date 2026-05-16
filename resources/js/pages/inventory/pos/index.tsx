@@ -14,6 +14,9 @@ import {
 } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
+import DeliveryCompanyPicker, {
+    type DeliveryCompanyOption,
+} from '@/Components/Inventory/DeliveryCompanyPicker';
 import Layout from '@/Layouts';
 import { store as salesStore } from '@/routes/sales';
 import { getCurrentDate } from '@/utils/dateTime';
@@ -47,10 +50,11 @@ type PosProps = {
     categories: Record<number, string>;
     sizes: string[];
     sourcePageOptions: string[];
+    deliveryCompanies: DeliveryCompanyOption[];
 };
 
 function PosIndex() {
-    const { variants, categories, sizes, sourcePageOptions } =
+    const { variants, categories, sizes, sourcePageOptions, deliveryCompanies } =
         usePage<PosProps>().props;
 
     const { data, setData, post, processing, errors } = useForm({
@@ -58,6 +62,7 @@ function PosIndex() {
         customer_phone: '',
         customer_address: '',
         source_page: 'Walk-in',
+        delivery_company_id: null as number | null,
         sale_date: getCurrentDate(),
         currency: 'USD',
         exchange_rate: '1',
@@ -996,6 +1001,23 @@ function PosIndex() {
                                                 />
                                             </div>
 
+                                            <div className="mb-2">
+                                                <Form.Label className="small mb-1 text-muted">
+                                                    Delivery Company
+                                                </Form.Label>
+                                                <DeliveryCompanyPicker
+                                                    companies={deliveryCompanies}
+                                                    selectedId={data.delivery_company_id}
+                                                    onChange={(company) => {
+                                                        setData('delivery_company_id', company?.id ?? null);
+                                                        if (company) {
+                                                            setData('actual_delivery_cost_usd', company.delivery_cost_usd);
+                                                        }
+                                                    }}
+                                                    customerDeliveryFee={Number(data.customer_delivery_fee_usd) || 0}
+                                                />
+                                            </div>
+
                                             <div className="d-flex justify-content-between align-items-center">
                                                 <span className="text-muted">
                                                     Delivery
@@ -1339,6 +1361,22 @@ function PosIndex() {
                                         setData('discount_usd', e.target.value)
                                     }
                                     style={{ width: 80 }}
+                                />
+                            </div>
+                            <div className="mb-2">
+                                <Form.Label className="small mb-1 text-muted">
+                                    Delivery Company
+                                </Form.Label>
+                                <DeliveryCompanyPicker
+                                    companies={deliveryCompanies}
+                                    selectedId={data.delivery_company_id}
+                                    onChange={(company) => {
+                                        setData('delivery_company_id', company?.id ?? null);
+                                        if (company) {
+                                            setData('actual_delivery_cost_usd', company.delivery_cost_usd);
+                                        }
+                                    }}
+                                    customerDeliveryFee={Number(data.customer_delivery_fee_usd) || 0}
                                 />
                             </div>
                             <div className="d-flex justify-content-between align-items-center">
