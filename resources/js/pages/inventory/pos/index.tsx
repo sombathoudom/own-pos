@@ -1,5 +1,6 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     Alert,
     Badge,
@@ -14,11 +15,13 @@ import {
 } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
-import DeliveryCompanyPicker, {
-    type DeliveryCompanyOption,
-} from '@/Components/Inventory/DeliveryCompanyPicker';
+import CustomerSelect from '@/Components/Inventory/CustomerSelect';
+import DeliveryCompanyPicker from '@/Components/Inventory/DeliveryCompanyPicker';
+import type { DeliveryCompanyOption } from '@/Components/Inventory/DeliveryCompanyPicker';
 import Layout from '@/Layouts';
+import { store as customersStore } from '@/routes/customers';
 import { store as salesStore } from '@/routes/sales';
+import type { InventoryCustomer } from '@/types';
 import { getCurrentDate } from '@/utils/dateTime';
 
 type Variant = {
@@ -50,28 +53,43 @@ type PosProps = {
     categories: Record<number, string>;
     sizes: string[];
     sourcePageOptions: string[];
+    customers: InventoryCustomer[];
     deliveryCompanies: DeliveryCompanyOption[];
+    createdCustomer?: InventoryCustomer | null;
 };
 
 function PosIndex() {
-    const { variants, categories, sizes, sourcePageOptions, deliveryCompanies } =
-        usePage<PosProps>().props;
+    const {
+        variants,
+        categories,
+        sizes,
+        sourcePageOptions,
+        customers,
+        deliveryCompanies,
+        createdCustomer,
+    } = usePage<PosProps>().props;
 
     const { data, setData, post, processing, errors } = useForm({
-        customer_name: '',
-        customer_phone: '',
-        customer_address: '',
+        customer_id: createdCustomer?.id ?? null,
         source_page: 'Walk-in',
         delivery_company_id: null as number | null,
         sale_date: getCurrentDate(),
         currency: 'USD',
-        exchange_rate: '1',
+        exchange_rate: '4100',
         discount_usd: '0',
         customer_delivery_fee_usd: '0',
         actual_delivery_cost_usd: '0',
         paid_usd: '0',
         note: '',
         items: [] as CartItem[],
+    });
+
+    const customerForm = useForm({
+        name: '',
+        phone: '',
+        address: '',
+        status: 'active',
+        redirect_to: 'pos',
     });
 
     const [search, setSearch] = useState('');
@@ -219,6 +237,31 @@ function PosIndex() {
     const change = Math.max(0, paid - total);
     const due = Math.max(0, total - paid);
     const totalQty = data.items.reduce((sum, i) => sum + i.qty, 0);
+    const availableCustomers = useMemo(() => {
+        if (!createdCustomer) {
+            return customers;
+        }
+
+        const exists = customers.some(
+            (customer) => customer.id === createdCustomer.id,
+        );
+
+        if (exists) {
+            return customers;
+        }
+
+        return [...customers, createdCustomer].sort((left, right) =>
+            left.name.localeCompare(right.name),
+        );
+    }, [customers, createdCustomer]);
+
+    const selectedCustomer = useMemo(
+        () =>
+            availableCustomers.find(
+                (customer) => customer.id === data.customer_id,
+            ) ?? null,
+        [availableCustomers, data.customer_id],
+    );
 
     const submitForm = () => {
         post(salesStore.url(), {
@@ -249,6 +292,15 @@ function PosIndex() {
 
     const clearCart = () => {
         setData('items', []);
+    };
+
+    const submitCustomerForm = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        customerForm.post(customersStore.url(), {
+            preserveState: false,
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -674,51 +726,43 @@ function PosIndex() {
                                                         Customer
                                                     </span>
                                                     <div className="small text-muted">
-                                                        Source:{' '}
+                                                        Source:
                                                         {data.source_page}
                                                     </div>
                                                 </div>
-                                                <Button
-                                                    variant="link"
-                                                    size="sm"
-                                                    className="p-0"
-                                                    onClick={() =>
-                                                        setShowCustomerModal(
-                                                            true,
-                                                        )
-                                                    }
-                                                >
-                                                    {data.customer_name
-                                                        ? 'Edit'
-                                                        : 'Add'}
-                                                </Button>
                                             </div>
-                                            {data.customer_name ? (
-                                                <div className="small">
-                                                    <div className="fw-medium">
-                                                        {data.customer_name}
-                                                    </div>
-                                                    {data.customer_phone && (
-                                                        <div className="text-muted">
-                                                            {
-                                                                data.customer_phone
-                                                            }
-                                                        </div>
-                                                    )}
-                                                    {data.customer_address && (
-                                                        <div className="text-muted">
-                                                            {
-                                                                data.customer_address
-                                                            }
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div className="small text-muted">
-                                                    Walk-in customer
-                                                </div>
-                                            )}
 
+                                            <Row>
+                                                <Col md={8}>
+                                                    <CustomerSelect
+                                                        customers={
+                                                            availableCustomers
+                                                        }
+                                                        value={data.customer_id}
+                                                        onChange={(
+                                                            customerId,
+                                                        ) =>
+                                                            setData(
+                                                                'customer_id',
+                                                                customerId,
+                                                            )
+                                                        }
+                                                        inputId="customer_id"
+                                                        placeholder="Search customer"
+                                                    />
+                                                </Col>
+                                                <Col md={4}>
+                                                    <Button
+                                                        onClick={() =>
+                                                            setShowCustomerModal(
+                                                                true,
+                                                            )
+                                                        }
+                                                    >
+                                                        Add Customer
+                                                    </Button>
+                                                </Col>
+                                            </Row>
                                             <div className="mt-3">
                                                 <Form.Label className="small mb-1 text-muted">
                                                     Source Page
@@ -1006,15 +1050,29 @@ function PosIndex() {
                                                     Delivery Company
                                                 </Form.Label>
                                                 <DeliveryCompanyPicker
-                                                    companies={deliveryCompanies}
-                                                    selectedId={data.delivery_company_id}
+                                                    companies={
+                                                        deliveryCompanies
+                                                    }
+                                                    selectedId={
+                                                        data.delivery_company_id
+                                                    }
                                                     onChange={(company) => {
-                                                        setData('delivery_company_id', company?.id ?? null);
+                                                        setData(
+                                                            'delivery_company_id',
+                                                            company?.id ?? null,
+                                                        );
                                                         if (company) {
-                                                            setData('actual_delivery_cost_usd', company.delivery_cost_usd);
+                                                            setData(
+                                                                'actual_delivery_cost_usd',
+                                                                company.delivery_cost_usd,
+                                                            );
                                                         }
                                                     }}
-                                                    customerDeliveryFee={Number(data.customer_delivery_fee_usd) || 0}
+                                                    customerDeliveryFee={
+                                                        Number(
+                                                            data.customer_delivery_fee_usd,
+                                                        ) || 0
+                                                    }
                                                 />
                                             </div>
 
@@ -1371,12 +1429,22 @@ function PosIndex() {
                                     companies={deliveryCompanies}
                                     selectedId={data.delivery_company_id}
                                     onChange={(company) => {
-                                        setData('delivery_company_id', company?.id ?? null);
+                                        setData(
+                                            'delivery_company_id',
+                                            company?.id ?? null,
+                                        );
                                         if (company) {
-                                            setData('actual_delivery_cost_usd', company.delivery_cost_usd);
+                                            setData(
+                                                'actual_delivery_cost_usd',
+                                                company.delivery_cost_usd,
+                                            );
                                         }
                                     }}
-                                    customerDeliveryFee={Number(data.customer_delivery_fee_usd) || 0}
+                                    customerDeliveryFee={
+                                        Number(
+                                            data.customer_delivery_fee_usd,
+                                        ) || 0
+                                    }
                                 />
                             </div>
                             <div className="d-flex justify-content-between align-items-center">
@@ -1476,71 +1544,92 @@ function PosIndex() {
                 centered
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>Customer Info</Modal.Title>
+                    <Modal.Title>Add Customer</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Name</Form.Label>
-                        <Form.Control
-                            value={data.customer_name}
-                            onChange={(e) =>
-                                setData('customer_name', e.target.value)
-                            }
-                            placeholder="Customer name"
-                        />
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Phone</Form.Label>
-                        <Form.Control
-                            value={data.customer_phone}
-                            onChange={(e) =>
-                                setData('customer_phone', e.target.value)
-                            }
-                            placeholder="Phone number"
-                        />
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Source Page</Form.Label>
-                        <Form.Select
-                            value={data.source_page}
-                            onChange={(e) =>
-                                setData('source_page', e.target.value)
-                            }
-                        >
-                            {sourcePageOptions.map((option) => (
-                                <option key={option} value={option}>
-                                    {option}
-                                </option>
-                            ))}
-                        </Form.Select>
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Address</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows={2}
-                            value={data.customer_address}
-                            onChange={(e) =>
-                                setData('customer_address', e.target.value)
-                            }
-                            placeholder="Delivery address"
-                        />
-                    </Form.Group>
+                    <Form onSubmit={submitCustomerForm}>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Name</Form.Label>
+                            <Form.Control
+                                value={customerForm.data.name}
+                                onChange={(event) =>
+                                    customerForm.setData(
+                                        'name',
+                                        event.target.value,
+                                    )
+                                }
+                                placeholder="Customer name"
+                                isInvalid={!!customerForm.errors.name}
+                            />
+                            <Form.Control.Feedback
+                                type="invalid"
+                                className="d-block"
+                            >
+                                {customerForm.errors.name}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Phone</Form.Label>
+                            <Form.Control
+                                value={customerForm.data.phone}
+                                onChange={(event) =>
+                                    customerForm.setData(
+                                        'phone',
+                                        event.target.value,
+                                    )
+                                }
+                                placeholder="Phone number"
+                                isInvalid={!!customerForm.errors.phone}
+                            />
+                            <Form.Control.Feedback
+                                type="invalid"
+                                className="d-block"
+                            >
+                                {customerForm.errors.phone}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Address</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={2}
+                                value={customerForm.data.address}
+                                onChange={(event) =>
+                                    customerForm.setData(
+                                        'address',
+                                        event.target.value,
+                                    )
+                                }
+                                placeholder="Delivery address"
+                                isInvalid={!!customerForm.errors.address}
+                            />
+                            <Form.Control.Feedback
+                                type="invalid"
+                                className="d-block"
+                            >
+                                {customerForm.errors.address}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                        <div className="d-flex justify-content-end gap-2">
+                            <Button
+                                type="button"
+                                variant="light"
+                                onClick={() => setShowCustomerModal(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                disabled={customerForm.processing}
+                            >
+                                {customerForm.processing
+                                    ? 'Saving...'
+                                    : 'Create Customer'}
+                            </Button>
+                        </div>
+                    </Form>
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button
-                        variant="light"
-                        onClick={() => setShowCustomerModal(false)}
-                    >
-                        Close
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => setShowCustomerModal(false)}
-                    >
-                        Save
-                    </Button>
-                </Modal.Footer>
             </Modal>
 
             {/* Sale Preview Modal */}
@@ -1563,21 +1652,21 @@ function PosIndex() {
                             Customer Information
                         </h6>
                         <div className="bg-light rounded p-3">
-                            {data.customer_name ? (
+                            {selectedCustomer ? (
                                 <>
                                     <div className="fw-semibold">
-                                        {data.customer_name}
+                                        {selectedCustomer.name}
                                     </div>
-                                    {data.customer_phone && (
+                                    {selectedCustomer.phone && (
                                         <div className="small text-muted">
                                             <i className="ri-phone-line me-1"></i>
-                                            {data.customer_phone}
+                                            {selectedCustomer.phone}
                                         </div>
                                     )}
-                                    {data.customer_address && (
+                                    {selectedCustomer.address && (
                                         <div className="small text-muted">
                                             <i className="ri-map-pin-line me-1"></i>
-                                            {data.customer_address}
+                                            {selectedCustomer.address}
                                         </div>
                                     )}
                                     <div className="small mt-1 text-muted">

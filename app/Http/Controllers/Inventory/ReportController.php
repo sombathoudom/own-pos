@@ -188,7 +188,7 @@ class ReportController extends Controller
         $sales = Sale::query()
             ->whereDate('sale_date', $date)
             ->where('order_status', '!=', 'cancelled')
-            ->with(['items', 'deliveryCompany', 'delivery'])
+            ->with(['items', 'deliveryCompany', 'delivery', 'customer'])
             ->get();
 
         $deliveryRows = $sales
@@ -202,7 +202,7 @@ class ReportController extends Controller
                 return [
                     'company' => $company,
                     'invoice_no' => $sale->invoice_no,
-                    'customer_name' => $sale->customer_name ?? 'Walk-in',
+                    'customer_name' => $sale->customer?->name ?? 'Walk-in',
                     'source_page' => $sale->source_page,
                     'packs' => (int) $sale->items->sum('qty'),
                     'total_usd' => $this->decimalize($sale->total_usd),
@@ -415,17 +415,17 @@ class ReportController extends Controller
             ->where('payment_status', 'paid')
             ->whereNotNull('payment_received_date')
             ->whereDate('payment_received_date', $date)
-            ->with(['items.productVariant.product', 'exchanges', 'returns', 'delivery', 'deliveryCompany'])
+            ->with(['items.productVariant.product', 'exchanges', 'returns', 'delivery', 'deliveryCompany', 'customer'])
             ->get();
 
         $exchangeReceipts = SaleExchange::query()
             ->whereDate('payment_received_date', $date)
-            ->with(['sale.delivery', 'sale.deliveryCompany'])
+            ->with(['sale.delivery', 'sale.deliveryCompany', 'sale.customer'])
             ->get();
 
         $returnReceipts = SaleReturn::query()
             ->whereDate('payment_received_date', $date)
-            ->with(['sale.delivery', 'sale.deliveryCompany'])
+            ->with(['sale.delivery', 'sale.deliveryCompany', 'sale.customer'])
             ->get();
 
         $entries = $this->buildDailyEntries($sales, $exchangeReceipts, $returnReceipts);
@@ -464,17 +464,17 @@ class ReportController extends Controller
             ->where('payment_status', 'paid')
             ->whereNotNull('payment_received_date')
             ->whereBetween('payment_received_date', [$start->toDateString(), $end->toDateString()])
-            ->with(['items.productVariant.product', 'exchanges', 'returns', 'delivery', 'deliveryCompany'])
+            ->with(['items.productVariant.product', 'exchanges', 'returns', 'delivery', 'deliveryCompany', 'customer'])
             ->get();
 
         $exchangeReceipts = SaleExchange::query()
             ->whereBetween('payment_received_date', [$start->toDateString(), $end->toDateString()])
-            ->with(['sale.delivery', 'sale.deliveryCompany'])
+            ->with(['sale.delivery', 'sale.deliveryCompany', 'sale.customer'])
             ->get();
 
         $returnReceipts = SaleReturn::query()
             ->whereBetween('payment_received_date', [$start->toDateString(), $end->toDateString()])
-            ->with(['sale.delivery', 'sale.deliveryCompany'])
+            ->with(['sale.delivery', 'sale.deliveryCompany', 'sale.customer'])
             ->get();
 
         $headers = [
@@ -525,7 +525,7 @@ class ReportController extends Controller
         $saleEntries = $sales->map(fn (Sale $sale) => [
             'id' => 'sale-'.$sale->id,
             'invoice_no' => $sale->invoice_no,
-            'customer_name' => $sale->customer_name ?? 'Walk-in',
+            'customer_name' => $sale->customer?->name ?? 'Walk-in',
             'entry_type' => 'sale',
             'order_status' => $sale->order_status,
             'source_page' => $sale->source_page,
@@ -545,7 +545,7 @@ class ReportController extends Controller
         $exchangeEntries = $exchangeReceipts->map(fn (SaleExchange $exchange) => [
             'id' => 'exchange-'.$exchange->id,
             'invoice_no' => ($exchange->sale?->invoice_no ?? 'Sale').' / EX-'.$exchange->id,
-            'customer_name' => $exchange->sale?->customer_name ?? 'Walk-in',
+            'customer_name' => $exchange->sale?->customer?->name ?? 'Walk-in',
             'entry_type' => 'exchange',
             'order_status' => 'completed',
             'source_page' => $exchange->sale?->source_page,
@@ -565,7 +565,7 @@ class ReportController extends Controller
         $returnEntries = $returnReceipts->map(fn (SaleReturn $return) => [
             'id' => 'return-'.$return->id,
             'invoice_no' => ($return->sale?->invoice_no ?? 'Sale').' / RET-'.$return->id,
-            'customer_name' => $return->sale?->customer_name ?? 'Walk-in',
+            'customer_name' => $return->sale?->customer?->name ?? 'Walk-in',
             'entry_type' => 'return',
             'order_status' => $return->sale?->order_status ?? 'returned',
             'source_page' => $return->sale?->source_page,

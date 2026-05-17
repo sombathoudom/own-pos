@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Category;
+use App\Models\Customer;
 use App\Models\DeliveryCompany;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -103,9 +104,10 @@ test('authenticated user can create a sale with fifo deduction', function () {
     $response->assertRedirect();
 
     $this->assertDatabaseHas('sales', [
-        'customer_name' => null,
+        'customer_id' => null,
         'source_page' => 'DL',
         'total_usd' => '32.5000',
+        'total_khr' => '133250.0000',
         'paid_usd' => '30.0000',
         'payment_status' => 'partial',
         'order_status' => 'confirmed',
@@ -209,4 +211,126 @@ test('sale show includes delivery company name', function () {
             ->component('inventory/sales/show')
             ->where('sale.delivery_company.name', 'J&T Express')
         );
+});
+
+test('sales create and pos pages include active customers for searchable selection', function () {
+    $customer = Customer::factory()->create([
+        'name' => 'Searchable Customer',
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('sales.create'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('inventory/sales/create')
+            ->where('customers.0.id', $customer->id)
+            ->where('customers.0.name', 'Searchable Customer')
+        );
+
+    $this->actingAs($this->user)
+        ->get(route('pos'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('inventory/pos/index')
+            ->where('customers.0.id', $customer->id)
+            ->where('customers.0.name', 'Searchable Customer')
+        );
+});
+
+test('sale can be created for an existing customer', function () {
+    $customer = Customer::factory()->create();
+
+    $this->actingAs($this->user)
+        ->post(route('sales.store'), [
+            'customer_id' => $customer->id,
+            'sale_date' => '2026-05-13',
+            'source_page' => 'Walk-in',
+            'currency' => 'USD',
+            'exchange_rate' => 4100,
+            'discount_usd' => 0,
+            'customer_delivery_fee_usd' => 0,
+            'actual_delivery_cost_usd' => 0,
+            'paid_usd' => 6,
+            'items' => [
+                [
+                    'product_variant_id' => $this->variant->id,
+                    'qty' => 1,
+                    'unit_price_usd' => 6,
+                    'discount_usd' => 0,
+                ],
+            ],
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('sales', [
+        'customer_id' => $customer->id,
+        'total_usd' => '6.0000',
+        'total_khr' => '24600.0000',
+    ]);
+});
+
+test('sale edit can update the delivery company', function () {
+    $firstCompany = DeliveryCompany::create([
+        'name' => 'First Delivery',
+        'delivery_cost_usd' => 1.00,
+        'status' => 'active',
+    ]);
+
+    $secondCompany = DeliveryCompany::create([
+        'name' => 'Second Delivery',
+        'delivery_cost_usd' => 2.00,
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($this->user)->post(route('sales.store'), [
+        'sale_date' => '2026-05-13',
+        'source_page' => 'DL',
+        'delivery_company_id' => $firstCompany->id,
+        'currency' => 'USD',
+        'exchange_rate' => 4100,
+        'discount_usd' => 0,
+        'customer_delivery_fee_usd' => 2,
+        'actual_delivery_cost_usd' => 1,
+        'paid_usd' => 8,
+        'items' => [
+            [
+                'product_variant_id' => $this->variant->id,
+                'qty' => 1,
+                'unit_price_usd' => 6,
+                'discount_usd' => 0,
+            ],
+        ],
+    ])->assertRedirect();
+
+    $sale = Sale::firstOrFail();
+
+    $this->actingAs($this->user)
+        ->put(route('sales.update', $sale), [
+            'customer_id' => null,
+            'source_page' => 'DL',
+            'delivery_company_id' => $secondCompany->id,
+            'sale_date' => '2026-05-13',
+            'currency' => 'USD',
+            'exchange_rate' => 4100,
+            'discount_usd' => 0,
+            'customer_delivery_fee_usd' => 2,
+            'actual_delivery_cost_usd' => 1,
+            'paid_usd' => 8,
+            'note' => '',
+            'items' => [
+                [
+                    'product_variant_id' => $this->variant->id,
+                    'qty' => 1,
+                    'unit_price_usd' => 6,
+                    'discount_usd' => 0,
+                ],
+            ],
+        ])
+        ->assertRedirect(route('sales.show', $sale));
+
+    $this->assertDatabaseHas('sales', [
+        'id' => $sale->id,
+        'delivery_company_id' => $secondCompany->id,
+    ]);
 });

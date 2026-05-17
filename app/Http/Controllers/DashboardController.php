@@ -183,6 +183,7 @@ class DashboardController extends Controller
     {
         return Sale::query()
             ->whereNotNull('payment_received_date')
+            ->with('customer:id,name')
             ->orderByDesc('payment_received_date')
             ->orderByDesc('id')
             ->limit(8)
@@ -190,7 +191,7 @@ class DashboardController extends Controller
             ->map(fn (Sale $sale) => [
                 'id' => $sale->id,
                 'invoice_no' => $sale->invoice_no,
-                'customer_name' => $sale->customer_name,
+                'customer_name' => $sale->customer?->name,
                 'payment_received_date' => $sale->payment_received_date?->toDateString(),
                 'total_usd' => $this->formatMoney((float) $sale->total_usd),
                 'paid_usd' => $this->formatMoney((float) $sale->paid_usd),

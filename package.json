@@ -66,6 +66,7 @@
         "react-bootstrap": "^2.10.10",
         "react-dom": "^19.2.0",
         "react-i18next": "^17.0.7",
+        "react-select": "^5.10.2",
         "react-toastify": "^11.1.0",
         "sass": "^1.99.0",
         "simplebar-react": "^3.3.2",

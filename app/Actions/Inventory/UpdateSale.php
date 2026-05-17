@@ -76,6 +76,8 @@ final class UpdateSale
             $deliveryProfit = bcsub($deliveryFee, $actualDeliveryCost, 4);
             $total = bcadd(bcsub($subtotal, $discount, 4), $deliveryFee, 4);
             $paid = (string) ($saleData['paid_usd'] ?? $sale->paid_usd);
+            $exchangeRate = (string) ($saleData['exchange_rate'] ?? $sale->exchange_rate);
+            $totalKhr = bcmul($total, $exchangeRate, 0);
 
             $paymentStatus = 'unpaid';
             if (bccomp($paid, $total, 4) >= 0) {
@@ -85,10 +87,9 @@ final class UpdateSale
             }
 
             $sale->update([
-                'customer_name' => $saleData['customer_name'] ?? $sale->customer_name,
-                'customer_phone' => $saleData['customer_phone'] ?? $sale->customer_phone,
-                'customer_address' => $saleData['customer_address'] ?? $sale->customer_address,
+                'customer_id' => $saleData['customer_id'] ?? $sale->customer_id,
                 'source_page' => $saleData['source_page'] ?? $sale->source_page,
+                'delivery_company_id' => $saleData['delivery_company_id'] ?? $sale->delivery_company_id,
                 'sale_date' => $saleData['sale_date'] ?? $sale->sale_date,
                 'currency' => $saleData['currency'] ?? $sale->currency,
                 'exchange_rate' => $saleData['exchange_rate'] ?? $sale->exchange_rate,
@@ -100,6 +101,7 @@ final class UpdateSale
                 'delivery_profit_usd' => $deliveryProfit,
                 'original_total_usd' => $total,
                 'total_usd' => $total,
+                'total_khr' => $totalKhr,
                 'paid_usd' => $paid,
                 'payment_status' => $paymentStatus,
                 'note' => $saleData['note'] ?? $sale->note,

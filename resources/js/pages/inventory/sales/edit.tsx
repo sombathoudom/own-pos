@@ -1,5 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { type ReactNode, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import {
     Alert,
     Badge,
@@ -12,8 +13,11 @@ import {
 } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
+import CustomerSelect from '@/Components/Inventory/CustomerSelect';
+import type { DeliveryCompanyOption } from '@/Components/Inventory/DeliveryCompanyPicker';
 import Layout from '@/Layouts';
 import { update as salesUpdate } from '@/routes/sales';
+import type { InventoryCustomer } from '@/types';
 
 type Variant = {
     id: number;
@@ -49,9 +53,8 @@ type SaleItem = {
 type Sale = {
     id: number;
     invoice_no: string;
-    customer_name: string | null;
-    customer_phone: string | null;
-    customer_address: string | null;
+    customer_id: number | null;
+    delivery_company_id: number | null;
     source_page: string | null;
     sale_date: string;
     currency: string;
@@ -72,9 +75,8 @@ type CartItem = {
 };
 
 type FormData = {
-    customer_name: string;
-    customer_phone: string;
-    customer_address: string;
+    customer_id: number | null;
+    delivery_company_id: number | null;
     source_page: string;
     sale_date: string;
     currency: string;
@@ -90,11 +92,13 @@ type FormData = {
 type SalesEditProps = {
     sale: Sale;
     variants: Variant[];
+    customers: InventoryCustomer[];
     sourcePageOptions: string[];
+    deliveryCompanies: DeliveryCompanyOption[];
 };
 
 function SalesEdit() {
-    const { sale, variants, sourcePageOptions } =
+    const { sale, variants, customers, sourcePageOptions, deliveryCompanies } =
         usePage<SalesEditProps>().props;
 
     const initialItems: CartItem[] = useMemo(() => {
@@ -107,9 +111,8 @@ function SalesEdit() {
     }, [sale.items]);
 
     const { data, setData, put, processing, errors } = useForm<FormData>({
-        customer_name: sale.customer_name ?? '',
-        customer_phone: sale.customer_phone ?? '',
-        customer_address: sale.customer_address ?? '',
+        customer_id: sale.customer_id,
+        delivery_company_id: sale.delivery_company_id,
         source_page: sale.source_page ?? 'Other',
         sale_date: sale.sale_date,
         currency: sale.currency,
@@ -191,6 +194,11 @@ function SalesEdit() {
     const paid = Number(data.paid_usd) || 0;
     const due = Math.max(0, total - paid);
 
+    const selectedCustomer = useMemo(
+        () => customers.find((customer) => customer.id === data.customer_id) ?? null,
+        [customers, data.customer_id],
+    );
+
     const totalQty = data.items.reduce(
         (sum, item) => sum + (Number(item.qty) || 0),
         0,
@@ -231,40 +239,45 @@ function SalesEdit() {
                                             <Badge bg="info">Editing</Badge>
                                         </div>
                                         <Row>
-                                            <Col lg={4}>
+                                            <Col lg={8}>
                                                 <div className="mb-3">
-                                                    <Form.Label>
-                                                        Customer Name
-                                                    </Form.Label>
-                                                    <Form.Control
-                                                        value={
-                                                            data.customer_name
-                                                        }
-                                                        onChange={(e) =>
-                                                            setData(
-                                                                'customer_name',
-                                                                e.target.value,
-                                                            )
-                                                        }
+                                                    <Form.Label>Customer</Form.Label>
+                                                    <CustomerSelect
+                                                        customers={customers}
+                                                        value={data.customer_id}
+                                                        onChange={(customerId) => setData('customer_id', customerId)}
+                                                        inputId="customer_id"
+                                                        placeholder="Search and select a customer"
                                                     />
+                                                    {errors.customer_id && (
+                                                        <div className="mt-1 d-block small text-danger">
+                                                            {errors.customer_id}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </Col>
                                             <Col lg={4}>
                                                 <div className="mb-3">
-                                                    <Form.Label>
-                                                        Customer Phone
-                                                    </Form.Label>
-                                                    <Form.Control
-                                                        value={
-                                                            data.customer_phone
-                                                        }
-                                                        onChange={(e) =>
-                                                            setData(
-                                                                'customer_phone',
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                    />
+                                                    <Form.Label>Selected Customer</Form.Label>
+                                                    <div className="rounded border bg-light-subtle p-3 small">
+                                                        {selectedCustomer ? (
+                                                            <>
+                                                                <div className="fw-medium">
+                                                                    {selectedCustomer.name}
+                                                                </div>
+                                                                <div className="text-muted">
+                                                                    {selectedCustomer.phone || 'No phone'}
+                                                                </div>
+                                                                <div className="text-muted">
+                                                                    {selectedCustomer.address || 'No address'}
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="text-muted">
+                                                                Walk-in customer
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </Col>
                                             <Col lg={4}>
@@ -294,28 +307,53 @@ function SalesEdit() {
                                                     </Form.Select>
                                                 </div>
                                             </Col>
-                                        </Row>
-                                        <Row>
                                             <Col lg={4}>
                                                 <div className="mb-3">
                                                     <Form.Label>
-                                                        Customer Address
+                                                        Delivery Company
                                                     </Form.Label>
-                                                    <Form.Control
-                                                        as="textarea"
-                                                        rows={2}
-                                                        value={
-                                                            data.customer_address
-                                                        }
+                                                    <Form.Select
+                                                        value={data.delivery_company_id ?? ''}
                                                         onChange={(e) =>
                                                             setData(
-                                                                'customer_address',
-                                                                e.target.value,
+                                                                'delivery_company_id',
+                                                                e.target.value === ''
+                                                                    ? null
+                                                                    : Number(
+                                                                          e.target.value,
+                                                                      ),
                                                             )
                                                         }
-                                                    />
+                                                        isInvalid={
+                                                            !!errors.delivery_company_id
+                                                        }
+                                                    >
+                                                        <option value="">
+                                                            No delivery company
+                                                        </option>
+                                                        {deliveryCompanies.map(
+                                                            (company) => (
+                                                                <option
+                                                                    key={company.id}
+                                                                    value={company.id}
+                                                                >
+                                                                    {company.name}
+                                                                </option>
+                                                            ),
+                                                        )}
+                                                    </Form.Select>
+                                                    <Form.Control.Feedback
+                                                        type="invalid"
+                                                        className="d-block"
+                                                    >
+                                                        {
+                                                            errors.delivery_company_id
+                                                        }
+                                                    </Form.Control.Feedback>
                                                 </div>
                                             </Col>
+                                        </Row>
+                                        <Row>
                                             <Col lg={4}>
                                                 <div className="mb-3">
                                                     <Form.Label>
@@ -889,6 +927,6 @@ function SalesEdit() {
     );
 }
 
-SalesEdit.layout = (page: React.ReactNode) => <Layout>{page}</Layout>;
+SalesEdit.layout = (page: ReactNode) => <Layout>{page}</Layout>;
 
 export default SalesEdit;

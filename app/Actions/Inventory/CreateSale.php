@@ -73,6 +73,8 @@ final class CreateSale
             $deliveryProfit = bcsub($deliveryFee, $actualDeliveryCost, 4);
             $total = bcadd(bcsub($subtotal, $discount, 4), $deliveryFee, 4);
             $paid = (string) ($saleData['paid_usd'] ?? '0');
+            $exchangeRate = (string) '4100';
+            $totalKhr = bcmul($total, $exchangeRate, 0);
 
             $paymentStatus = 'unpaid';
             if (bccomp($paid, $total, 4) >= 0) {
@@ -89,6 +91,7 @@ final class CreateSale
                 'delivery_profit_usd' => $deliveryProfit,
                 'original_total_usd' => $total,
                 'total_usd' => $total,
+                'total_khr' => $totalKhr,
                 'paid_usd' => $paid,
                 'payment_status' => $paymentStatus,
                 'order_status' => 'confirmed',

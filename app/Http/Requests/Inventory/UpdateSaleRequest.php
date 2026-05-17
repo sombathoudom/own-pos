@@ -14,9 +14,7 @@ class UpdateSaleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_name' => ['nullable', 'string', 'max:255'],
-            'customer_phone' => ['nullable', 'string', 'max:50'],
-            'customer_address' => ['nullable', 'string', 'max:500'],
+            'customer_id' => ['nullable', 'exists:customers,id'],
             'source_page' => ['nullable', 'string', 'in:DL,DC,Walk-in,Other'],
             'delivery_company_id' => ['nullable', 'integer', 'exists:delivery_companies,id'],
             'sale_date' => ['required', 'date'],

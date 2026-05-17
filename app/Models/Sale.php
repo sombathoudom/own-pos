@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['invoice_no', 'customer_name', 'customer_phone', 'customer_address', 'source_page', 'delivery_company_id', 'sale_date', 'currency', 'exchange_rate', 'original_subtotal_usd', 'subtotal_usd', 'discount_usd', 'original_delivery_fee_usd', 'customer_delivery_fee_usd', 'actual_delivery_cost_usd', 'delivery_profit_usd', 'original_total_usd', 'total_usd', 'paid_usd', 'payment_received_date', 'delivery_completed_date', 'payment_status', 'order_status', 'note', 'created_by'])]
+#[Fillable(['customer_id', 'invoice_no', 'source_page', 'delivery_company_id', 'sale_date', 'currency', 'exchange_rate', 'original_subtotal_usd', 'subtotal_usd', 'discount_usd', 'original_delivery_fee_usd', 'customer_delivery_fee_usd', 'actual_delivery_cost_usd', 'delivery_profit_usd', 'original_total_usd', 'total_usd', 'total_khr', 'paid_usd', 'payment_received_date', 'delivery_completed_date', 'payment_status', 'order_status', 'note', 'created_by'])]
 class Sale extends Model
 {
     use Auditable, HasFactory;
@@ -31,8 +31,14 @@ class Sale extends Model
             'delivery_profit_usd' => 'decimal:4',
             'original_total_usd' => 'decimal:4',
             'total_usd' => 'decimal:4',
+            'total_khr' => 'decimal:4',
             'paid_usd' => 'decimal:4',
         ];
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function items(): HasMany

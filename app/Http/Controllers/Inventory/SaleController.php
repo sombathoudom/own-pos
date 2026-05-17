@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreSaleRequest;
 use App\Http\Requests\Inventory\UpdateSaleRequest;
 use App\Models\Category;
+use App\Models\Customer;
 use App\Models\DeliveryCompany;
 use App\Models\ProductVariant;
 use App\Models\Sale;
@@ -30,9 +31,10 @@ class SaleController extends Controller
         $search = $request->string('search')->toString();
 
         $sales = Sale::query()
-            ->with(['items.productVariant.product', 'deliveryCompany'])
+            ->with(['items.productVariant.product', 'deliveryCompany', 'customer'])
             ->when($search !== '', fn ($query) => $query->where('invoice_no', 'like', "%{$search}%")
-                ->orWhere('customer_name', 'like', "%{$search}%"))
+                ->orWhereHas('customer', fn ($q) => $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")))
             ->orderByDesc('sale_date')
             ->paginate(20)
             ->withQueryString();
@@ -41,8 +43,12 @@ class SaleController extends Controller
             'sales' => $sales->through(fn (Sale $sale) => [
                 'id' => $sale->id,
                 'invoice_no' => $sale->invoice_no,
-                'customer_name' => $sale->customer_name,
-                'customer_phone' => $sale->customer_phone,
+                'customer_id' => $sale->customer_id,
+                'customer' => $sale->customer ? [
+                    'id' => $sale->customer->id,
+                    'name' => $sale->customer->name,
+                    'phone' => $sale->customer->phone,
+                ] : null,
                 'source_page' => $sale->source_page,
                 'delivery_company' => $sale->deliveryCompany ? [
                     'id' => $sale->deliveryCompany->id,
@@ -60,6 +66,7 @@ class SaleController extends Controller
                 'delivery_profit_usd' => $sale->delivery_profit_usd,
                 'original_total_usd' => $sale->original_total_usd,
                 'total_usd' => $sale->total_usd,
+                'total_khr' => $sale->total_khr,
                 'paid_usd' => $sale->paid_usd,
                 'payment_received_date' => $sale->payment_received_date?->toDateString(),
                 'delivery_completed_date' => $sale->delivery_completed_date?->toDateString(),
@@ -123,6 +130,7 @@ class SaleController extends Controller
             ]),
             'invoiceNo' => 'INV-'.now()->format('Ymd').'-'.Str::upper(Str::random(4)),
             'sourcePageOptions' => ['DL', 'DC', 'Walk-in', 'Other'],
+            'customers' => $this->customerOptions(),
             'deliveryCompanies' => DeliveryCompany::where('status', 'active')->orderBy('name')->get(['id', 'name', 'delivery_cost_usd']),
         ]);
     }
@@ -175,6 +183,7 @@ class SaleController extends Controller
             'categories' => $categories,
             'sizes' => $sizes,
             'sourcePageOptions' => ['DL', 'DC', 'Walk-in', 'Other'],
+            'customers' => $this->customerOptions(),
             'deliveryCompanies' => DeliveryCompany::where('status', 'active')->orderBy('name')->get(['id', 'name', 'delivery_cost_usd']),
         ]);
     }
@@ -189,9 +198,7 @@ class SaleController extends Controller
             $sale = $createSale->handle(
                 saleData: [
                     'invoice_no' => 'INV-'.now()->format('Ymd').'-'.Str::upper(Str::random(4)),
-                    'customer_name' => $validated['customer_name'] ?? null,
-                    'customer_phone' => $validated['customer_phone'] ?? null,
-                    'customer_address' => $validated['customer_address'] ?? null,
+                    'customer_id' => $validated['customer_id'] ?? null,
                     'source_page' => $validated['source_page'] ?? null,
                     'delivery_company_id' => $validated['delivery_company_id'] ?? null,
                     'sale_date' => $validated['sale_date'],
@@ -293,7 +300,7 @@ class SaleController extends Controller
 
     public function confirmDelivery(Sale $sale): Response
     {
-        $sale->load('items.productVariant.product', 'delivery', 'deliveryConfirmations');
+        $sale->load('items.productVariant.product', 'delivery', 'deliveryConfirmations', 'customer');
 
         $variants = ProductVariant::query()
             ->with(['product:id,name,category_id', 'product.category:id,name', 'stockBalance'])
@@ -320,7 +327,7 @@ class SaleController extends Controller
                 'id' => $sale->id,
                 'invoice_no' => $sale->invoice_no,
                 'sale_date' => $sale->sale_date?->toDateString(),
-                'customer_name' => $sale->customer_name,
+                'customer_name' => $sale->customer?->name,
                 'discount_usd' => $sale->discount_usd,
                 'subtotal_usd' => $sale->subtotal_usd,
                 'customer_delivery_fee_usd' => $sale->customer_delivery_fee_usd,
@@ -431,7 +438,7 @@ class SaleController extends Controller
 
     public function show(Sale $sale): Response
     {
-        $sale->load('items.productVariant.product', 'items.costLayers.stockLayer', 'createdBy', 'deliveryCompany', 'returns.items', 'exchanges.items.saleItem.productVariant', 'exchanges.items.newVariant.product', 'exchanges.items.newSaleItem.productVariant', 'deliveryConfirmations.items.originalVariant.product', 'deliveryConfirmations.items.finalVariant.product');
+        $sale->load('items.productVariant.product', 'items.costLayers.stockLayer', 'createdBy', 'deliveryCompany', 'customer', 'returns.items', 'exchanges.items.saleItem.productVariant', 'exchanges.items.newVariant.product', 'exchanges.items.newSaleItem.productVariant', 'deliveryConfirmations.items.originalVariant.product', 'deliveryConfirmations.items.finalVariant.product');
 
         $variants = ProductVariant::query()
             ->with(['product:id,name,category_id', 'product.category:id,name', 'stockBalance'])
@@ -457,8 +464,11 @@ class SaleController extends Controller
             'sale' => [
                 'id' => $sale->id,
                 'invoice_no' => $sale->invoice_no,
-                'customer_name' => $sale->customer_name,
-                'customer_phone' => $sale->customer_phone,
+                'customer_id' => $sale->customer_id,
+                'customer_name' => $sale->customer?->name,
+                'customer_phone' => $sale->customer?->phone,
+                'customer_address' => $sale->customer?->address,
+                'customer' => $this->customerData($sale->customer),
                 'source_page' => $sale->source_page,
                 'delivery_company' => $sale->deliveryCompany ? [
                     'id' => $sale->deliveryCompany->id,
@@ -476,6 +486,7 @@ class SaleController extends Controller
                 'delivery_profit_usd' => $sale->delivery_profit_usd,
                 'original_total_usd' => $sale->original_total_usd,
                 'total_usd' => $sale->total_usd,
+                'total_khr' => $sale->total_khr,
                 'paid_usd' => $sale->paid_usd,
                 'payment_received_date' => $sale->payment_received_date?->toDateString(),
                 'delivery_completed_date' => $sale->delivery_completed_date?->toDateString(),
@@ -597,7 +608,7 @@ class SaleController extends Controller
 
     public function edit(Sale $sale): Response
     {
-        $sale->load('items.productVariant.product');
+        $sale->load('items.productVariant.product', 'customer');
 
         $variants = ProductVariant::query()
             ->with(['product:id,name,category_id,image_path', 'product.category:id,name', 'stockBalance'])
@@ -609,9 +620,11 @@ class SaleController extends Controller
             'sale' => [
                 'id' => $sale->id,
                 'invoice_no' => $sale->invoice_no,
-                'customer_name' => $sale->customer_name,
-                'customer_phone' => $sale->customer_phone,
-                'customer_address' => $sale->customer_address,
+                'customer_id' => $sale->customer_id,
+                'customer_name' => $sale->customer?->name,
+                'customer_phone' => $sale->customer?->phone,
+                'customer_address' => $sale->customer?->address,
+                'customer' => $this->customerData($sale->customer),
                 'source_page' => $sale->source_page,
                 'delivery_company_id' => $sale->delivery_company_id,
                 'sale_date' => $sale->sale_date?->toDateString(),
@@ -653,6 +666,7 @@ class SaleController extends Controller
                 ],
             ]),
             'sourcePageOptions' => ['DL', 'DC', 'Walk-in', 'Other'],
+            'customers' => $this->customerOptions(),
             'deliveryCompanies' => DeliveryCompany::where('status', 'active')->orderBy('name')->get(['id', 'name', 'delivery_cost_usd']),
         ]);
     }
@@ -687,5 +701,41 @@ class SaleController extends Controller
         }
 
         return to_route('sales.show', $sale)->with('toast', ['type' => 'success', 'message' => 'Sale updated successfully.']);
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string, phone: string|null, address: string|null, status: string}>
+     */
+    private function customerOptions(): array
+    {
+        return Customer::query()
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone', 'address', 'status'])
+            ->map(fn (Customer $customer) => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+                'address' => $customer->address,
+                'status' => $customer->status,
+            ])
+            ->all();
+    }
+
+    /**
+     * @return array{id: int, name: string, phone: string|null, address: string|null}|null
+     */
+    private function customerData(?Customer $customer): ?array
+    {
+        if (! $customer) {
+            return null;
+        }
+
+        return [
+            'id' => $customer->id,
+            'name' => $customer->name,
+            'phone' => $customer->phone,
+            'address' => $customer->address,
+        ];
     }
 }

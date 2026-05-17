@@ -1,5 +1,6 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { type ReactNode, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import {
     Alert,
     Badge,
@@ -12,11 +13,12 @@ import {
 } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
-import DeliveryCompanyPicker, {
-    type DeliveryCompanyOption,
-} from '@/Components/Inventory/DeliveryCompanyPicker';
+import CustomerSelect from '@/Components/Inventory/CustomerSelect';
+import DeliveryCompanyPicker from '@/Components/Inventory/DeliveryCompanyPicker';
+import type { DeliveryCompanyOption } from '@/Components/Inventory/DeliveryCompanyPicker';
 import Layout from '@/Layouts';
 import { store as salesStore, index as salesIndex } from '@/routes/sales';
+import type { InventoryCustomer } from '@/types';
 import { getCurrentDate } from '@/utils/dateTime';
 
 type Variant = {
@@ -43,8 +45,7 @@ type CartItem = {
 };
 
 type FormData = {
-    customer_name: string;
-    customer_phone: string;
+    customer_id: number | null;
     source_page: string;
     delivery_company_id: number | null;
     sale_date: string;
@@ -62,21 +63,21 @@ type SalesCreateProps = {
     variants: Variant[];
     invoiceNo: string;
     sourcePageOptions: string[];
+    customers: InventoryCustomer[];
     deliveryCompanies: DeliveryCompanyOption[];
 };
 
 function SalesCreate() {
-    const { variants, invoiceNo, sourcePageOptions, deliveryCompanies } =
+    const { variants, sourcePageOptions, customers, deliveryCompanies } =
         usePage<SalesCreateProps>().props;
 
     const { data, setData, post, processing, errors } = useForm<FormData>({
-        customer_name: '',
-        customer_phone: '',
+        customer_id: null,
         source_page: 'Other',
         delivery_company_id: null,
         sale_date: getCurrentDate(),
         currency: 'USD',
-        exchange_rate: '1',
+        exchange_rate: '4100',
         discount_usd: '0',
         customer_delivery_fee_usd: '0',
         actual_delivery_cost_usd: '0',
@@ -159,6 +160,11 @@ function SalesCreate() {
         0,
     );
 
+    const selectedCustomer = useMemo(
+        () => customers.find((customer) => customer.id === data.customer_id) ?? null,
+        [customers, data.customer_id],
+    );
+
     const submit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         post(salesStore.url());
@@ -191,60 +197,49 @@ function SalesCreate() {
                                             Sale Details
                                         </h4>
                                         <Row>
-                                            <Col lg={4}>
+                                            <Col lg={8}>
                                                 <div className="mb-3">
                                                     <Form.Label>
-                                                        Customer Name
+                                                        Customer
                                                     </Form.Label>
-                                                    <Form.Control
-                                                        value={
-                                                            data.customer_name
-                                                        }
-                                                        onChange={(e) =>
-                                                            setData(
-                                                                'customer_name',
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        isInvalid={
-                                                            !!errors.customer_name
-                                                        }
-                                                        placeholder="Optional"
+                                                    <CustomerSelect
+                                                        customers={customers}
+                                                        value={data.customer_id}
+                                                        onChange={(customerId) => setData('customer_id', customerId)}
+                                                        inputId="customer_id"
+                                                        placeholder="Search and select a customer"
                                                     />
-                                                    <Form.Control.Feedback
-                                                        type="invalid"
-                                                        className="d-block"
-                                                    >
-                                                        {errors.customer_name}
-                                                    </Form.Control.Feedback>
+                                                    {errors.customer_id && (
+                                                        <div className="mt-1 d-block small text-danger">
+                                                            {errors.customer_id}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </Col>
                                             <Col lg={4}>
                                                 <div className="mb-3">
                                                     <Form.Label>
-                                                        Customer Phone
+                                                        Selected Customer
                                                     </Form.Label>
-                                                    <Form.Control
-                                                        value={
-                                                            data.customer_phone
-                                                        }
-                                                        onChange={(e) =>
-                                                            setData(
-                                                                'customer_phone',
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        isInvalid={
-                                                            !!errors.customer_phone
-                                                        }
-                                                        placeholder="Optional"
-                                                    />
-                                                    <Form.Control.Feedback
-                                                        type="invalid"
-                                                        className="d-block"
-                                                    >
-                                                        {errors.customer_phone}
-                                                    </Form.Control.Feedback>
+                                                    <div className="rounded border bg-light-subtle p-3 small">
+                                                        {selectedCustomer ? (
+                                                            <>
+                                                                <div className="fw-medium">
+                                                                    {selectedCustomer.name}
+                                                                </div>
+                                                                <div className="text-muted">
+                                                                    {selectedCustomer.phone || 'No phone'}
+                                                                </div>
+                                                                <div className="text-muted">
+                                                                    {selectedCustomer.address || 'No address'}
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="text-muted">
+                                                                Walk-in customer
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </Col>
                                             <Col lg={4}>

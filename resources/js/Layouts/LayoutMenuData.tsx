@@ -29,6 +29,12 @@ const navdata = () => {
                     link: '/categories',
                 },
                 {
+                    id: 'customers',
+                    label: 'Customers',
+                    icon: 'ri-user-3-line',
+                    link: '/customers',
+                },
+                {
                     id: 'suppliers',
                     label: 'Suppliers',
                     icon: 'ri-truck-line',

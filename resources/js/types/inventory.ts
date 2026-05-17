@@ -24,6 +24,14 @@ export type InventorySupplier = {
     status: string;
 };
 
+export type InventoryCustomer = {
+    id: number;
+    name: string;
+    phone: string | null;
+    address: string | null;
+    status: string;
+};
+
 export type InventoryStockBalance = {
     qty_on_hand: number;
 };
@@ -104,6 +112,10 @@ export type CategoryIndexPageProps = InventoryIndexPageProps<{
 
 export type SupplierIndexPageProps = InventoryIndexPageProps<{
     suppliers: LaravelPaginator<InventorySupplier>;
+}>;
+
+export type CustomerIndexPageProps = InventoryIndexPageProps<{
+    customers: LaravelPaginator<InventoryCustomer>;
 }>;
 
 export type ProductIndexPageProps = InventoryIndexPageProps<{
@@ -244,8 +256,11 @@ export type InventoryDeliveryConfirmation = {
 export type InventorySale = {
     id: number;
     invoice_no: string;
+    customer_id: number | null;
     customer_name: string | null;
     customer_phone: string | null;
+    customer_address?: string | null;
+    customer?: InventoryCustomer | null;
     source_page: string | null;
     delivery_company: {
         id: number;
@@ -263,6 +278,7 @@ export type InventorySale = {
     delivery_profit_usd: string;
     original_total_usd: string;
     total_usd: string;
+    total_khr?: string;
     paid_usd: string;
     payment_received_date: string | null;
     delivery_completed_date: string | null;
