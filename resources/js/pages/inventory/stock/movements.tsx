@@ -17,56 +17,80 @@ import { formatDateTime } from '@/utils/dateTime';
 
 const TYPE_OPTIONS = [
     { value: '', label: 'All Types' },
-    { value: 'purchase', label: 'Purchase' },
-    { value: 'sale', label: 'Sale' },
+    { value: 'purchase', label: 'Purchase (Inbound)' },
+    { value: 'sale', label: 'Sale (Outbound)' },
+    { value: 'edit_sale', label: 'Sale Edit' },
 ];
+
+const TYPE_LABELS: Record<string, string> = {
+    purchase: 'Purchase',
+    sale: 'Sale',
+    edit_sale: 'Sale Edit',
+};
 
 function StockMovements() {
     const { movements, filters } = usePage<StockMovementIndexPageProps>().props;
-    const [variantId, setVariantId] = useState(
-        filters.product_variant_id ?? '',
-    );
+    const [search, setSearch] = useState(filters.search ?? '');
     const [type, setType] = useState(filters.type ?? '');
 
     useEffect(() => {
-        setVariantId(filters.product_variant_id ?? '');
+        setSearch(filters.search ?? '');
         setType(filters.type ?? '');
-    }, [filters.product_variant_id, filters.type]);
+    }, [filters.search, filters.type]);
 
-    const handleFilter = (event: FormEvent<HTMLFormElement>) => {
+    const handleFilter = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         router.get(
             stockMovements.url(),
             {
-                product_variant_id: variantId || undefined,
+                search: search || undefined,
                 type: type || undefined,
             },
             { preserveScroll: true, preserveState: true },
         );
     };
 
-    const typeBadge = (qtyChange: number) => {
-        if (qtyChange > 0)
+    const directionBadge = (qtyChange: number) => {
+        if (qtyChange > 0) {
             return (
                 <Badge bg="success">
                     <i className="ri-arrow-down-line me-1" />
-                    Inbound
+                    In
                 </Badge>
             );
+        }
+
         return (
             <Badge bg="danger">
                 <i className="ri-arrow-up-line me-1" />
-                Outbound
+                Out
             </Badge>
         );
     };
 
+    const typeBadge = (movementType: string) => {
+        const label = TYPE_LABELS[movementType] ?? movementType;
+
+        const bg =
+            movementType === 'purchase'
+                ? 'success'
+                : movementType === 'sale'
+                  ? 'danger'
+                  : 'warning';
+
+        return <Badge bg={bg}>{label}</Badge>;
+    };
+
     const referenceLabel = (movement: InventoryStockMovement) => {
-        if (!movement.reference) return '—';
+        if (!movement.reference) {
+            return '—';
+        }
 
         const { type: refType, label } = movement.reference;
-        if (!label) return '—';
+        if (!label) {
+            return '—';
+        }
 
         if (refType === 'Purchase') {
             return (
@@ -88,6 +112,21 @@ function StockMovements() {
 
         return label;
     };
+
+    const clearFilters = () => {
+        setSearch('');
+        setType('');
+        router.get(
+            stockMovements.url(),
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+            },
+        );
+    };
+
+    const hasFilters = search || type;
 
     return (
         <>
@@ -114,18 +153,18 @@ function StockMovements() {
                                 className="d-flex mb-3 flex-wrap gap-2"
                             >
                                 <Form.Control
-                                    placeholder="Filter by Variant ID..."
-                                    type="number"
-                                    value={variantId}
+                                    placeholder="Search SKU, product name, color or size..."
+                                    type="search"
+                                    value={search}
                                     onChange={(e) =>
-                                        setVariantId(e.target.value)
+                                        setSearch(e.target.value)
                                     }
-                                    style={{ maxWidth: 180 }}
+                                    style={{ maxWidth: 320 }}
                                 />
                                 <Form.Select
                                     value={type}
                                     onChange={(e) => setType(e.target.value)}
-                                    style={{ maxWidth: 160 }}
+                                    style={{ maxWidth: 180 }}
                                 >
                                     {TYPE_OPTIONS.map((opt) => (
                                         <option
@@ -140,23 +179,13 @@ function StockMovements() {
                                     <i className="ri-filter-search-line me-1" />
                                     Filter
                                 </Button>
-                                {(variantId || type) && (
+                                {hasFilters && (
                                     <Button
                                         type="button"
                                         variant="light"
-                                        onClick={() => {
-                                            setVariantId('');
-                                            setType('');
-                                            router.get(
-                                                stockMovements.url(),
-                                                {},
-                                                {
-                                                    preserveScroll: true,
-                                                    preserveState: true,
-                                                },
-                                            );
-                                        }}
+                                        onClick={clearFilters}
                                     >
+                                        <i className="ri-close-circle-line me-1" />
                                         Clear
                                     </Button>
                                 )}
@@ -169,6 +198,7 @@ function StockMovements() {
                                 >
                                     <thead className="table-light">
                                         <tr>
+                                            <th>Direction</th>
                                             <th>Type</th>
                                             <th>SKU</th>
                                             <th>Product</th>
@@ -187,9 +217,12 @@ function StockMovements() {
                                         {movements.data.map((movement) => (
                                             <tr key={movement.id}>
                                                 <td>
-                                                    {typeBadge(
+                                                    {directionBadge(
                                                         movement.qty_change,
                                                     )}
+                                                </td>
+                                                <td>
+                                                    {typeBadge(movement.type)}
                                                 </td>
                                                 <td>
                                                     <span className="fw-medium">
@@ -232,8 +265,7 @@ function StockMovements() {
                                                     {movement.qty_change}
                                                 </td>
                                                 <td className="text-end">
-                                                    $
-                                                    {Number(
+                                                    ${Number(
                                                         movement.unit_cost_usd,
                                                     ).toFixed(2)}
                                                 </td>
@@ -255,7 +287,7 @@ function StockMovements() {
                                         {movements.data.length === 0 && (
                                             <tr>
                                                 <td
-                                                    colSpan={8}
+                                                    colSpan={9}
                                                     className="py-4 text-center text-muted"
                                                 >
                                                     <i className="ri-inbox-line fs-2 d-block mb-2" />

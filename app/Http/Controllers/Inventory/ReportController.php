@@ -135,8 +135,8 @@ class ReportController extends Controller
         $grossProfit = $this->decimalize($entries->sum('profit_usd'));
         $totalExpenses = (string) $expenses->sum('amount_usd');
         $netProfit = bcsub($grossProfit, $totalExpenses, 4);
-        $totalQtySold = $sales->flatMap(fn ($s) => $s->items)->sum('qty')
-            + $exchangeReceipts->sum('additional_qty_sold')
+        $replacementItemIds = $exchangeReceipts->flatMap(fn ($ex) => $ex->items->pluck('new_sale_item_id'))->filter()->all();
+        $totalQtySold = $sales->flatMap(fn ($s) => $s->items)->whereNotIn('id', $replacementItemIds)->sum('qty')
             - $returnReceipts->sum(function (SaleReturn $return) {
                 return $return->items->sum('qty');
             });
@@ -637,7 +637,7 @@ class ReportController extends Controller
     private function baseSaleProfit(Sale $sale): string
     {
         return bcsub(
-            $this->baseSaleProductProfit($sale),
+            bcsub($this->baseSaleRevenue($sale), $this->baseSaleCogs($sale), 4),
             (string) $sale->actual_delivery_cost_usd,
             4,
         );

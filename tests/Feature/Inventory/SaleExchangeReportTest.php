@@ -170,7 +170,7 @@ test('size change after successful delivery keeps original receipt date and reco
     expect($sale->paid_usd)->toBe('16.0000');
     expect($sale->payment_status)->toBe('paid');
 
-    $this->get(route('reports.daily', ['date' => '2026-05-14']))
+    $this->get(route('reports.daily', ['from' => '2026-05-14', 'to' => '2026-05-14']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('inventory/reports/daily')
@@ -182,7 +182,7 @@ test('size change after successful delivery keeps original receipt date and reco
             )
         );
 
-    $this->get(route('reports.daily', ['date' => '2026-05-16']))
+    $this->get(route('reports.daily', ['from' => '2026-05-16', 'to' => '2026-05-16']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('inventory/reports/daily')

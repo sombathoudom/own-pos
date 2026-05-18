@@ -296,7 +296,7 @@ test('report shows return entries with negative amounts on receipt date', functi
         ],
     ])->assertRedirect();
 
-    $response = $this->get(route('reports.daily', ['date' => '2026-05-15']));
+    $response = $this->get(route('reports.daily', ['from' => '2026-05-15', 'to' => '2026-05-15']));
     $response->assertOk();
 
     $entries = $response->inertiaPage()['props']['entries'];

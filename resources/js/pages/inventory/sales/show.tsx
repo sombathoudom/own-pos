@@ -13,6 +13,7 @@ import {
 } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
+import CustomerSelect from '@/Components/Inventory/CustomerSelect';
 import Layout from '@/Layouts';
 import { store as storeConfirmDelivery } from '@/routes/sales/confirm-delivery';
 import {
@@ -23,7 +24,8 @@ import {
     returnMethod,
     updatePayment,
 } from '@/routes/sales';
-import type { SaleShowPageProps } from '@/types';
+import { updateDetails as updateSaleDetails } from '@/routes/sales';
+import type { InventoryCustomer, SaleShowPageProps } from '@/types';
 import { getCurrentDate } from '@/utils/dateTime';
 
 type ExchangeItemForm = {
@@ -40,7 +42,8 @@ type NewExchangeItemForm = {
 };
 
 function SalesShow() {
-    const { sale, variants } = usePage<SaleShowPageProps>().props;
+    const { sale, variants, customers, deliveryCompanies } =
+        usePage<SaleShowPageProps>().props;
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelling, setCancelling] = useState(false);
     const [showReturnModal, setShowReturnModal] = useState(false);
@@ -419,15 +422,23 @@ function SalesShow() {
                                             <div className="small text-muted">
                                                 Customer
                                             </div>
-                                            <div className="fw-medium">
-                                                {sale.customer_name ||
-                                                    'Walk-in'}
-                                            </div>
-                                            {sale.customer_phone && (
-                                                <div className="small text-muted">
-                                                    {sale.customer_phone}
-                                                </div>
-                                            )}
+                                            <CustomerSelect
+                                                customers={customers}
+                                                value={sale.customer_id}
+                                                onChange={(customerId) =>
+                                                    router.patch(
+                                                        updateSaleDetails.url(
+                                                            sale.id,
+                                                        ),
+                                                        {
+                                                            customer_id:
+                                                                customerId,
+                                                        },
+                                                    )
+                                                }
+                                                inputId="customer_id"
+                                                placeholder="Search and select a customer"
+                                            />
                                         </Col>
                                         <Col md={6}>
                                             <div className="small text-muted">
@@ -442,18 +453,75 @@ function SalesShow() {
                                             <div className="small text-muted">
                                                 Source Page
                                             </div>
-                                            <div>
-                                                {sale.source_page || 'Other'}
-                                            </div>
+                                            <Form.Select
+                                                value={sale.source_page || 'Other'}
+                                                onChange={(e) =>
+                                                    router.patch(
+                                                        updateSaleDetails.url(
+                                                            sale.id,
+                                                        ),
+                                                        {
+                                                            source_page:
+                                                                e.target.value,
+                                                        },
+                                                    )
+                                                }
+                                            >
+                                                {[
+                                                    'DL',
+                                                    'DC',
+                                                    'Walk-in',
+                                                    'Other',
+                                                ].map((opt) => (
+                                                    <option
+                                                        key={opt}
+                                                        value={opt}
+                                                    >
+                                                        {opt}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
                                         </Col>
                                         <Col md={6} className="mt-3">
                                             <div className="small text-muted">
                                                 Delivery Company
                                             </div>
-                                            <div>
-                                                {sale.delivery_company?.name ||
-                                                    '-'}
-                                            </div>
+                                            <Form.Select
+                                                value={
+                                                    sale.delivery_company?.id ??
+                                                    ''
+                                                }
+                                                onChange={(e) =>
+                                                    router.patch(
+                                                        updateSaleDetails.url(
+                                                            sale.id,
+                                                        ),
+                                                        {
+                                                            delivery_company_id:
+                                                                e.target.value ===
+                                                                ''
+                                                                    ? null
+                                                                    : Number(
+                                                                          e.target.value,
+                                                                      ),
+                                                        },
+                                                    )
+                                                }
+                                            >
+                                                <option value="">
+                                                    No delivery company
+                                                </option>
+                                                {deliveryCompanies.map(
+                                                    (company) => (
+                                                        <option
+                                                            key={company.id}
+                                                            value={company.id}
+                                                        >
+                                                            {company.name}
+                                                        </option>
+                                                    ),
+                                                )}
+                                            </Form.Select>
                                         </Col>
                                     </Row>
 

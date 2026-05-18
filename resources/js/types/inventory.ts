@@ -297,6 +297,12 @@ export type SaleIndexPageProps = InventoryIndexPageProps<{
 
 export type SaleShowPageProps = {
     sale: InventorySale;
+    customers: InventoryCustomer[];
+    deliveryCompanies: Array<{
+        id: number;
+        name: string;
+        delivery_cost_usd: string;
+    }>;
     variants: Array<{
         id: number;
         sku: string;

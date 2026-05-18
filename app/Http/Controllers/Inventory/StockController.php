@@ -68,12 +68,21 @@ class StockController extends Controller
 
     public function movements(Request $request): Response
     {
-        $productVariantId = $request->integer('product_variant_id');
+        $search = $request->string('search')->toString();
         $type = $request->string('type')->toString();
 
         $movements = StockMovement::query()
             ->with('productVariant.product', 'stockLayer')
-            ->when($productVariantId, fn ($query, $id) => $query->where('product_variant_id', $id))
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('productVariant', function ($pvq) use ($search) {
+                        $pvq->where('sku', 'like', "%{$search}%")
+                            ->orWhere('color', 'like', "%{$search}%")
+                            ->orWhere('size', 'like', "%{$search}%")
+                            ->orWhereHas('product', fn ($pq) => $pq->where('name', 'like', "%{$search}%"));
+                    });
+                });
+            })
             ->when($type !== '', fn ($query) => $query->where('type', $type))
             ->orderByDesc('created_at')
             ->paginate(20)
@@ -126,7 +135,7 @@ class StockController extends Controller
         return Inertia::render('inventory/stock/movements', [
             'movements' => $movements,
             'filters' => [
-                'product_variant_id' => $productVariantId ? (string) $productVariantId : '',
+                'search' => $search,
                 'type' => $type,
             ],
         ]);

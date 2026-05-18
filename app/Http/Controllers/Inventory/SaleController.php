@@ -510,6 +510,8 @@ class SaleController extends Controller
             ->get(['id', 'product_id', 'sku', 'style_name', 'color', 'size', 'sale_price_usd']);
 
         return Inertia::render('inventory/sales/show', [
+            'customers' => $this->customerOptions(),
+            'deliveryCompanies' => DeliveryCompany::where('status', 'active')->orderBy('name')->get(['id', 'name', 'delivery_cost_usd']),
             'variants' => $variants->map(fn ($v) => [
                 'id' => $v->id,
                 'sku' => $v->sku,
@@ -773,6 +775,40 @@ class SaleController extends Controller
         }
 
         return to_route('sales.show', $sale)->with('toast', ['type' => 'success', 'message' => 'Sale updated successfully.']);
+    }
+
+    public function updateDetails(Request $request, Sale $sale): RedirectResponse
+    {
+        $validated = $request->validate([
+            'customer_id' => ['nullable', 'exists:customers,id'],
+            'delivery_company_id' => ['nullable', 'integer', 'exists:delivery_companies,id'],
+            'source_page' => ['nullable', 'string', 'in:DL,DC,Walk-in,Other'],
+            'note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $updateData = [];
+
+        if (array_key_exists('customer_id', $validated)) {
+            $updateData['customer_id'] = $validated['customer_id'];
+        }
+
+        if (array_key_exists('delivery_company_id', $validated)) {
+            $updateData['delivery_company_id'] = $validated['delivery_company_id'];
+        }
+
+        if (array_key_exists('source_page', $validated)) {
+            $updateData['source_page'] = $validated['source_page'];
+        }
+
+        if (array_key_exists('note', $validated)) {
+            $updateData['note'] = $validated['note'];
+        }
+
+        if (count($updateData) > 0) {
+            $sale->update($updateData);
+        }
+
+        return to_route('sales.show', $sale)->with('toast', ['type' => 'success', 'message' => 'Sale details updated successfully.']);
     }
 
     /**

@@ -79,6 +79,11 @@ function ReportsDaily() {
         0,
     );
     const totalProfit = entries.reduce((s, e) => s + Number(e.profit_usd), 0);
+    const totalExpenses = expense_breakdown.reduce(
+        (s, e) => s + Number(e.amount_usd),
+        0,
+    );
+    const netProfit = totalProfit - totalExpenses;
 
     return (
         <>
@@ -462,6 +467,42 @@ function ReportsDaily() {
                                                 </td>
                                                 <td></td>
                                             </tr>
+                                            {totalExpenses > 0 && (
+                                                <>
+                                                    <tr className="table-danger fw-bold">
+                                                        <td
+                                                            colSpan={10}
+                                                            className="px-3 text-end"
+                                                        >
+                                                            Expenses / Boosting
+                                                        </td>
+                                                        <td className="text-end">
+                                                            -$
+                                                            {totalExpenses.toFixed(
+                                                                2,
+                                                            )}
+                                                        </td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr
+                                                        className={`fw-bold ${netProfit >= 0 ? 'table-success' : 'table-danger'}`}
+                                                    >
+                                                        <td
+                                                            colSpan={10}
+                                                            className="px-3 text-end"
+                                                        >
+                                                            Net Profit
+                                                        </td>
+                                                        <td className="text-end">
+                                                            $
+                                                            {netProfit.toFixed(
+                                                                2,
+                                                            )}
+                                                        </td>
+                                                        <td></td>
+                                                    </tr>
+                                                </>
+                                            )}
                                         </tfoot>
                                     )}
                                 </Table>

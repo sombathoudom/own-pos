@@ -39,6 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('sales/{sale}/confirm-delivery', [SaleController::class, 'storeDeliveryConfirmation'])->name('sales.confirm-delivery.store');
     Route::post('sales/{sale}/exchange', [SaleController::class, 'exchange'])->name('sales.exchange');
     Route::post('sales/{sale}/update-payment', [SaleController::class, 'updatePayment'])->name('sales.update-payment');
+    Route::patch('sales/{sale}/update-details', [SaleController::class, 'updateDetails'])->name('sales.update-details');
     Route::get('stock', [StockController::class, 'index'])->name('stock.index');
     Route::get('stock/movements', [StockController::class, 'movements'])->name('stock.movements');
 
