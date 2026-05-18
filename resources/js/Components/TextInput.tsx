@@ -4,7 +4,7 @@ export default forwardRef(function TextInput(
     { type = 'text', className = '', isFocused = false, ...props }: any,
     ref,
 ) {
-    const input: any = ref ? ref : useRef();
+    const input: any = ref ? ref : useRef(null);
 
     useEffect(() => {
         if (isFocused) {

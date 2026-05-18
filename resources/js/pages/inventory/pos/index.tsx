@@ -2,6 +2,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+    Accordion,
     Alert,
     Badge,
     Button,
@@ -793,219 +794,240 @@ function PosIndex() {
 
                                         {/* Cart Items */}
                                         <div
-                                            className="vstack mb-3 gap-3"
+                                            className="vstack mb-3 gap-2"
                                             style={{
                                                 maxHeight: 300,
                                                 overflowY: 'auto',
                                             }}
                                         >
-                                            {data.items.map((item) => {
-                                                const variant = getVariant(
-                                                    item.product_variant_id,
-                                                );
-                                                if (!variant) return null;
+                                            {data.items.length > 0 && (
+                                                <Accordion
+                                                    className="custom-accordionwithicon custom-accordion-border accordion-border-box accordion-success"
+                                                    id="cartAccordion"
+                                                >
+                                                    {data.items.map((item, index) => {
+                                                        const variant = getVariant(
+                                                            item.product_variant_id,
+                                                        );
+                                                        if (!variant) return null;
 
-                                                return (
-                                                    <div
-                                                        key={
-                                                            item.product_variant_id
-                                                        }
-                                                        className="rounded-3 bg-light border-2 border-primary p-3"
-                                                        style={{
-                                                            boxShadow:
-                                                                '0 2px 6px rgba(13, 110, 253, 0.15)',
-                                                        }}
-                                                    >
-                                                        {/* Product Header */}
-                                                        <div className="d-flex justify-content-between align-items-start mb-2">
-                                                            <div className="me-2 flex-grow-1">
-                                                                <div
-                                                                    className="fw-bold mb-1"
-                                                                    style={{
-                                                                        fontSize:
-                                                                            '0.95rem',
-                                                                    }}
-                                                                >
-                                                                    {
-                                                                        variant
-                                                                            .product
-                                                                            .name
-                                                                    }
-                                                                </div>
-                                                                <div className="d-flex align-items-center flex-wrap gap-2">
-                                                                    <Badge
-                                                                        bg="secondary"
-                                                                        className="font-monospace"
-                                                                    >
-                                                                        {
-                                                                            variant.sku
-                                                                        }
-                                                                    </Badge>
-                                                                    <span
-                                                                        className="small text-muted"
-                                                                        style={{
-                                                                            fontSize:
-                                                                                '0.75rem',
-                                                                        }}
-                                                                    >
-                                                                        {
-                                                                            variant.color
-                                                                        }{' '}
-                                                                        /{' '}
-                                                                        {
-                                                                            variant.size
-                                                                        }
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            <Button
-                                                                variant="link"
-                                                                className="text-danger p-0"
-                                                                onClick={() =>
-                                                                    removeFromCart(
-                                                                        item.product_variant_id,
-                                                                    )
+                                                        const itemTotal =
+                                                            item.qty *
+                                                                Number(
+                                                                    item.unit_price_usd,
+                                                                ) -
+                                                            Number(
+                                                                item.discount_usd,
+                                                            );
+
+                                                        return (
+                                                            <Accordion.Item
+                                                                key={
+                                                                    item.product_variant_id
                                                                 }
+                                                                eventKey={String(index)}
+                                                                className="material-shadow mb-2"
                                                             >
-                                                                <i className="ri-delete-bin-line fs-5"></i>
-                                                            </Button>
-                                                        </div>
+                                                                <Accordion.Header>
+                                                                    <div className="d-flex justify-content-between align-items-center w-100 me-3">
+                                                                        <div className="d-flex align-items-center gap-2">
+                                                                            <span className="fw-semibold">
+                                                                                {
+                                                                                    variant
+                                                                                        .product
+                                                                                        .name
+                                                                                }
+                                                                            </span>
+                                                                            <span className="text-muted">
+                                                                                -
+                                                                            </span>
+                                                                            <Badge
+                                                                                bg="secondary"
+                                                                                className="font-monospace"
+                                                                                style={{
+                                                                                    fontSize:
+                                                                                        '0.7rem',
+                                                                                }}
+                                                                            >
+                                                                                {
+                                                                                    variant.size
+                                                                                }
+                                                                            </Badge>
+                                                                        </div>
+                                                                        <div className="d-flex align-items-center gap-2">
+                                                                            <span className="fw-bold text-success">
+                                                                                $
+                                                                                {itemTotal.toFixed(
+                                                                                    2,
+                                                                                )}
+                                                                            </span>
+                                                                            <Button
+                                                                                variant="link"
+                                                                                className="text-danger p-0 ms-2"
+                                                                                onClick={(
+                                                                                    e,
+                                                                                ) => {
+                                                                                    e.stopPropagation();
+                                                                                    removeFromCart(
+                                                                                        item.product_variant_id,
+                                                                                    );
+                                                                                }}
+                                                                            >
+                                                                                <i className="ri-delete-bin-line"></i>
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+                                                                </Accordion.Header>
+                                                                <Accordion.Body>
+                                                                    {/* Product Info */}
+                                                                    <div className="d-flex align-items-center gap-2 mb-3">
+                                                                        <Badge
+                                                                            bg="secondary"
+                                                                            className="font-monospace"
+                                                                        >
+                                                                            {
+                                                                                variant.sku
+                                                                            }
+                                                                        </Badge>
+                                                                        <span className="small text-muted">
+                                                                            {
+                                                                                variant.color
+                                                                            }{' '}
+                                                                            /{' '}
+                                                                            {
+                                                                                variant.size
+                                                                            }
+                                                                        </span>
+                                                                    </div>
 
-                                                        {/* Quantity Controls - Large and Prominent */}
-                                                        <div className="mb-2">
-                                                            <div className="small fw-semibold mb-1 text-muted">
-                                                                QUANTITY
-                                                            </div>
-                                                            <div className="d-flex align-items-center gap-2">
-                                                                <Button
-                                                                    variant="primary"
-                                                                    size="lg"
-                                                                    className="px-3"
-                                                                    onClick={() =>
-                                                                        updateQty(
-                                                                            item.product_variant_id,
-                                                                            -1,
-                                                                        )
-                                                                    }
-                                                                    disabled={
-                                                                        item.qty <=
-                                                                        1
-                                                                    }
-                                                                >
-                                                                    <i className="ri-subtract-line"></i>
-                                                                </Button>
-                                                                <div
-                                                                    className="flex-grow-1 rounded border border-2 border-primary bg-white py-2 text-center"
-                                                                    style={{
-                                                                        fontSize:
-                                                                            '1.5rem',
-                                                                        fontWeight:
-                                                                            'bold',
-                                                                        color: '#0d6efd',
-                                                                    }}
-                                                                >
-                                                                    {item.qty}
-                                                                </div>
-                                                                <Button
-                                                                    variant="primary"
-                                                                    size="lg"
-                                                                    className="px-3"
-                                                                    onClick={() =>
-                                                                        updateQty(
-                                                                            item.product_variant_id,
-                                                                            1,
-                                                                        )
-                                                                    }
-                                                                    disabled={
-                                                                        item.qty >=
-                                                                        variant.stock_on_hand
-                                                                    }
-                                                                >
-                                                                    <i className="ri-add-line"></i>
-                                                                </Button>
-                                                            </div>
-                                                        </div>
+                                                                    {/* Quantity Controls */}
+                                                                    <div className="mb-3">
+                                                                        <div className="small fw-semibold mb-1 text-muted">
+                                                                            QUANTITY
+                                                                        </div>
+                                                                        <div className="d-flex align-items-center gap-2">
+                                                                            <Button
+                                                                                variant="primary"
+                                                                                size="sm"
+                                                                                className="px-3"
+                                                                                onClick={() =>
+                                                                                    updateQty(
+                                                                                        item.product_variant_id,
+                                                                                        -1,
+                                                                                    )
+                                                                                }
+                                                                                disabled={
+                                                                                    item.qty <=
+                                                                                    1
+                                                                                }
+                                                                            >
+                                                                                <i className="ri-subtract-line"></i>
+                                                                            </Button>
+                                                                            <div
+                                                                                className="flex-grow-1 rounded border border-primary bg-white py-1 text-center"
+                                                                                style={{
+                                                                                    fontSize:
+                                                                                        '1.25rem',
+                                                                                    fontWeight:
+                                                                                        'bold',
+                                                                                    color: '#0d6efd',
+                                                                                }}
+                                                                            >
+                                                                                {
+                                                                                    item.qty
+                                                                                }
+                                                                            </div>
+                                                                            <Button
+                                                                                variant="primary"
+                                                                                size="sm"
+                                                                                className="px-3"
+                                                                                onClick={() =>
+                                                                                    updateQty(
+                                                                                        item.product_variant_id,
+                                                                                        1,
+                                                                                    )
+                                                                                }
+                                                                                disabled={
+                                                                                    item.qty >=
+                                                                                    variant.stock_on_hand
+                                                                                }
+                                                                            >
+                                                                                <i className="ri-add-line"></i>
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
 
-                                                        {/* Price & Discount */}
-                                                        <div className="row g-2">
-                                                            <div className="col-6">
-                                                                <div className="small mb-1 text-muted">
-                                                                    Unit Price
-                                                                </div>
-                                                                <Form.Control
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    value={
-                                                                        item.unit_price_usd
-                                                                    }
-                                                                    onChange={(
-                                                                        e,
-                                                                    ) =>
-                                                                        updateCartPrice(
-                                                                            item.product_variant_id,
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                        )
-                                                                    }
-                                                                />
-                                                            </div>
-                                                            <div className="col-6">
-                                                                <div className="small mb-1 text-muted">
-                                                                    Discount
-                                                                </div>
-                                                                <Form.Control
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    min="0"
-                                                                    value={
-                                                                        item.discount_usd
-                                                                    }
-                                                                    onChange={(
-                                                                        e,
-                                                                    ) =>
-                                                                        updateCartDiscount(
-                                                                            item.product_variant_id,
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                        )
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        </div>
+                                                                    {/* Price & Discount */}
+                                                                    <div className="row g-2">
+                                                                        <div className="col-6">
+                                                                            <div className="small mb-1 text-muted">
+                                                                                Unit
+                                                                                Price
+                                                                            </div>
+                                                                            <Form.Control
+                                                                                type="number"
+                                                                                step="0.01"
+                                                                                value={
+                                                                                    item.unit_price_usd
+                                                                                }
+                                                                                onChange={(
+                                                                                    e,
+                                                                                ) =>
+                                                                                    updateCartPrice(
+                                                                                        item.product_variant_id,
+                                                                                        e
+                                                                                            .target
+                                                                                            .value,
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                        <div className="col-6">
+                                                                            <div className="small mb-1 text-muted">
+                                                                                Discount
+                                                                            </div>
+                                                                            <Form.Control
+                                                                                type="number"
+                                                                                step="0.01"
+                                                                                min="0"
+                                                                                value={
+                                                                                    item.discount_usd
+                                                                                }
+                                                                                onChange={(
+                                                                                    e,
+                                                                                ) =>
+                                                                                    updateCartDiscount(
+                                                                                        item.product_variant_id,
+                                                                                        e
+                                                                                            .target
+                                                                                            .value,
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                    </div>
 
-                                                        {/* Item Total */}
-                                                        <div className="border-top mt-2 pt-2">
-                                                            <div className="d-flex justify-content-between align-items-center">
-                                                                <span className="text-muted">
-                                                                    Item Total
-                                                                </span>
-                                                                <span
-                                                                    className="fw-bold text-success"
-                                                                    style={{
-                                                                        fontSize:
-                                                                            '1.25rem',
-                                                                    }}
-                                                                >
-                                                                    $
-                                                                    {(
-                                                                        item.qty *
-                                                                            Number(
-                                                                                item.unit_price_usd,
-                                                                            ) -
-                                                                        Number(
-                                                                            item.discount_usd,
-                                                                        )
-                                                                    ).toFixed(
-                                                                        2,
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
+                                                                    {/* Item Total */}
+                                                                    <div className="border-top mt-3 pt-2">
+                                                                        <div className="d-flex justify-content-between align-items-center">
+                                                                            <span className="text-muted">
+                                                                                Item
+                                                                                Total
+                                                                            </span>
+                                                                            <span className="fw-bold text-success">
+                                                                                $
+                                                                                {itemTotal.toFixed(
+                                                                                    2,
+                                                                                )}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </Accordion.Body>
+                                                            </Accordion.Item>
+                                                        );
+                                                    })}
+                                                </Accordion>
+                                            )}
                                             {data.items.length === 0 && (
                                                 <div className="py-4 text-center text-muted">
                                                     <i className="ri-shopping-cart-line fs-2 d-block mb-2"></i>
