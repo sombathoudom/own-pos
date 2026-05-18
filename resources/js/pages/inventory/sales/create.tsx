@@ -914,6 +914,9 @@ function SalesCreate() {
                                                         setData('delivery_company_id', company?.id ?? null);
                                                         if (company) {
                                                             setData('actual_delivery_cost_usd', company.delivery_cost_usd);
+                                                            if (!data.customer_delivery_fee_usd || data.customer_delivery_fee_usd === '0') {
+                                                                setData('customer_delivery_fee_usd', company.delivery_cost_usd);
+                                                            }
                                                         }
                                                     }}
                                                     customerDeliveryFee={Number(data.customer_delivery_fee_usd) || 0}

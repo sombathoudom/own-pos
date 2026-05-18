@@ -306,7 +306,14 @@ function SalesIndex() {
                                                         </Badge>
                                                     </td>
                                                     <td>{sale.sale_date}</td>
-                                                    <td>{sale.items.length}</td>
+                                                    <td>
+                                                        {sale.items.reduce(
+                                                            (sum, item) =>
+                                                                sum +
+                                                                (item.qty || 0),
+                                                            0,
+                                                        )}
+                                                    </td>
                                                     <td>
                                                         $
                                                         {Number(

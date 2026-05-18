@@ -103,16 +103,16 @@ test('daily report exposes summary expense and courier breakdown', function () {
         'created_by' => $this->user->id,
     ]);
 
-    $this->get(route('reports.daily', ['date' => '2026-05-14']))
+    $this->get(route('reports.daily', ['from' => '2026-05-14', 'to' => '2026-05-14']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('inventory/reports/daily')
             ->where('summary.orders_count', 1)
             ->where('summary.product_total_usd', '12.0000')
             ->where('summary.price_pack_usd', '14.0000')
-            ->where('summary.gross_profit_usd', '8.5500')
+            ->where('summary.gross_profit_usd', '6.5500')
             ->where('summary.boost_expense_usd', '1.5000')
-            ->where('summary.net_profit_usd', '7.0500')
+            ->where('summary.net_profit_usd', '5.0500')
             ->where('expense_breakdown.0.category', 'Boost')
             ->where('courier_breakdown.0.company', 'VET Express')
             ->where('courier_breakdown.0.qty_sold', 2)
@@ -192,9 +192,9 @@ test('monthly report exposes daily ledger and purchase breakdown', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('inventory/reports/monthly')
             ->where('summary.total_revenue', '14.0000')
-            ->where('summary.net_profit', '3.5500')
+            ->where('summary.net_profit', '1.5500')
             ->where('daily_ledger.0.date', '2026-05-14')
-            ->where('daily_ledger.0.net_profit_usd', '3.5500')
+            ->where('daily_ledger.0.net_profit_usd', '1.5500')
             ->where('expense_breakdown.0.category', 'Salary')
             ->where('purchase_breakdown.0.purchase_no', 'PO-001')
             ->where('source_breakdown.0.source_page', 'DC')

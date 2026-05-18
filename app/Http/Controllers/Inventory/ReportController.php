@@ -23,36 +23,47 @@ class ReportController extends Controller
 {
     public function daily(Request $request): Response
     {
-        $date = $request->date('date') ?? now();
+        $from = $request->date('from') ?? now();
+        $to = $request->date('to') ?? $from;
+
+        if ($to->lt($from)) {
+            $to = $from;
+        }
 
         $sales = Sale::query()
             ->where('payment_status', 'paid')
             ->whereNotNull('payment_received_date')
-            ->whereDate('payment_received_date', $date)
+            ->whereDate('payment_received_date', '>=', $from->toDateString())
+            ->whereDate('payment_received_date', '<=', $to->toDateString())
             ->with(['items.productVariant.product', 'exchanges', 'returns.items', 'delivery', 'deliveryCompany'])
             ->get();
 
         $exchangeReceipts = SaleExchange::query()
-            ->whereDate('payment_received_date', $date)
+            ->whereDate('payment_received_date', '>=', $from->toDateString())
+            ->whereDate('payment_received_date', '<=', $to->toDateString())
             ->with(['sale.delivery', 'sale.deliveryCompany'])
             ->get();
 
         $returnReceipts = SaleReturn::query()
-            ->whereDate('payment_received_date', $date)
+            ->whereDate('payment_received_date', '>=', $from->toDateString())
+            ->whereDate('payment_received_date', '<=', $to->toDateString())
             ->with(['sale.delivery', 'sale.deliveryCompany', 'items'])
             ->get();
 
         $entries = $this->buildDailyEntries($sales, $exchangeReceipts, $returnReceipts);
         $expenses = Expense::query()
-            ->whereDate('expense_date', $date)
+            ->whereDate('expense_date', '>=', $from->toDateString())
+            ->whereDate('expense_date', '<=', $to->toDateString())
             ->get();
 
         $closings = DailyClosing::query()
-            ->whereDate('closing_date', $date)
+            ->whereDate('closing_date', '>=', $from->toDateString())
+            ->whereDate('closing_date', '<=', $to->toDateString())
             ->get();
 
         return Inertia::render('inventory/reports/daily', [
-            'date' => $date->toDateString(),
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
             'entries' => $entries,
             'closings' => $closings,
             'summary' => $this->buildDailySummary($entries, $expenses),
@@ -124,21 +135,18 @@ class ReportController extends Controller
         $grossProfit = $this->decimalize($entries->sum('profit_usd'));
         $totalExpenses = (string) $expenses->sum('amount_usd');
         $netProfit = bcsub($grossProfit, $totalExpenses, 4);
-        $totalQtySold = $deliveryConfirmations->sum(
-            fn ($confirmation) => $confirmation->items->sum(fn ($item) => $item->accepted_qty + $item->added_qty),
-        ) + $exchangeReceipts->sum('additional_qty_sold')
-          - $returnReceipts->sum(function (SaleReturn $return) {
-              return $return->items->sum('qty');
-          });
+        $totalQtySold = $sales->flatMap(fn ($s) => $s->items)->sum('qty')
+            + $exchangeReceipts->sum('additional_qty_sold')
+            - $returnReceipts->sum(function (SaleReturn $return) {
+                return $return->items->sum('qty');
+            });
 
-        $topSelling = $deliveryConfirmations->flatMap(function ($confirmation) {
-            return $confirmation->items->map(function ($item) {
-                $variantId = $item->final_product_variant_id ?? $item->original_product_variant_id;
-
+        $topSelling = $sales->flatMap(function ($sale) {
+            return $sale->items->map(function ($item) {
                 return [
-                    'variant_id' => $variantId,
-                    'qty' => $item->accepted_qty + $item->added_qty,
-                    'revenue' => $item->final_total_usd,
+                    'variant_id' => $item->product_variant_id,
+                    'qty' => $item->qty,
+                    'revenue' => $item->total_usd,
                 ];
             });
         })
@@ -263,7 +271,7 @@ class ReportController extends Controller
                 'variant_id' => $items->first()->product_variant_id,
                 'sku' => $items->first()->productVariant?->sku,
                 'product_name' => $items->first()->productVariant?->product?->name,
-                'qty_sold' => $items->sum('final_qty'),
+                'qty_sold' => $items->sum('qty'),
                 'revenue' => (string) $items->sum('total_usd'),
                 'cogs' => (string) $items->sum('cogs_usd'),
                 'profit' => (string) $items->sum('profit_usd'),
@@ -363,7 +371,7 @@ class ReportController extends Controller
             ->map(fn ($items) => [
                 'category_id' => $items->first()->productVariant?->product?->category_id,
                 'category_name' => $items->first()->productVariant?->product?->category?->name ?? 'Uncategorized',
-                'qty_sold' => $items->sum('final_qty'),
+                'qty_sold' => $items->sum('qty'),
                 'revenue' => (string) $items->sum('total_usd'),
                 'cogs' => (string) $items->sum('cogs_usd'),
                 'profit' => (string) $items->sum('profit_usd'),
@@ -409,30 +417,42 @@ class ReportController extends Controller
 
     public function exportDailyCsv(Request $request): StreamedResponse
     {
-        $date = $request->date('date') ?? now();
+        $from = $request->date('from') ?? now();
+        $to = $request->date('to') ?? $from;
+
+        if ($to->lt($from)) {
+            $to = $from;
+        }
 
         $sales = Sale::query()
             ->where('payment_status', 'paid')
             ->whereNotNull('payment_received_date')
-            ->whereDate('payment_received_date', $date)
+            ->whereDate('payment_received_date', '>=', $from->toDateString())
+            ->whereDate('payment_received_date', '<=', $to->toDateString())
             ->with(['items.productVariant.product', 'exchanges', 'returns', 'delivery', 'deliveryCompany', 'customer'])
             ->get();
 
         $exchangeReceipts = SaleExchange::query()
-            ->whereDate('payment_received_date', $date)
+            ->whereDate('payment_received_date', '>=', $from->toDateString())
+            ->whereDate('payment_received_date', '<=', $to->toDateString())
             ->with(['sale.delivery', 'sale.deliveryCompany', 'sale.customer'])
             ->get();
 
         $returnReceipts = SaleReturn::query()
-            ->whereDate('payment_received_date', $date)
+            ->whereDate('payment_received_date', '>=', $from->toDateString())
+            ->whereDate('payment_received_date', '<=', $to->toDateString())
             ->with(['sale.delivery', 'sale.deliveryCompany', 'sale.customer'])
             ->get();
 
         $entries = $this->buildDailyEntries($sales, $exchangeReceipts, $returnReceipts);
 
+        $fileName = $from->equalTo($to)
+            ? 'daily-report-'.$from->toDateString().'.csv'
+            : 'daily-report-'.$from->toDateString().'-to-'.$to->toDateString().'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="daily-report-'.$date->toDateString().'.csv"',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
         ];
 
         return response()->stream(function () use ($entries) {
@@ -522,6 +542,7 @@ class ReportController extends Controller
 
     private function buildDailyEntries(Collection $sales, Collection $exchangeReceipts, Collection $returnReceipts): Collection
     {
+
         $saleEntries = $sales->map(fn (Sale $sale) => [
             'id' => 'sale-'.$sale->id,
             'invoice_no' => $sale->invoice_no,
@@ -529,8 +550,8 @@ class ReportController extends Controller
             'entry_type' => 'sale',
             'order_status' => $sale->order_status,
             'source_page' => $sale->source_page,
-            'qty_sold' => (int) $sale->items->sum('final_qty'),
-            'price_mix' => $this->describePriceMix($sale->items),
+            'qty_sold' => (int) $sale->items->sum('qty'),
+            'price_mix' => $this->describeOriginalPriceMix($sale->items),
             'product_total_usd' => $this->baseSaleProductRevenue($sale),
             'product_cogs_usd' => $this->baseSaleCogs($sale),
             'delivery_cost_usd' => (string) $sale->actual_delivery_cost_usd,
@@ -604,10 +625,19 @@ class ReportController extends Controller
         return bcsub($this->baseSaleRevenue($sale), $deliveryRevenue, 4);
     }
 
-    private function baseSaleProfit(Sale $sale): string
+    private function baseSaleProductProfit(Sale $sale): string
     {
         return bcsub(
             bcsub($this->baseSaleRevenue($sale), $this->baseSaleCogs($sale), 4),
+            (string) $sale->customer_delivery_fee_usd,
+            4,
+        );
+    }
+
+    private function baseSaleProfit(Sale $sale): string
+    {
+        return bcsub(
+            $this->baseSaleProductProfit($sale),
             (string) $sale->actual_delivery_cost_usd,
             4,
         );
@@ -626,18 +656,20 @@ class ReportController extends Controller
     private function buildDailySummary(Collection $entries, Collection $expenses): array
     {
         $grossProfit = (string) $entries->sum('profit_usd');
+        $deliveryCost = (string) $entries->sum('delivery_cost_usd');
         $expenseTotal = (string) $expenses->sum('amount_usd');
+        $netProfit = bcsub($grossProfit, $expenseTotal, 4);
 
         return [
             'orders_count' => $entries->count(),
             'qty_sold' => $entries->sum('qty_sold'),
             'product_total_usd' => $this->decimalize($entries->sum('product_total_usd')),
             'product_cogs_usd' => $this->decimalize($entries->sum('product_cogs_usd')),
-            'delivery_cost_usd' => $this->decimalize($entries->sum('delivery_cost_usd')),
+            'delivery_cost_usd' => $this->decimalize($deliveryCost),
             'price_pack_usd' => $this->decimalize($entries->sum('price_pack_usd')),
             'gross_profit_usd' => $this->decimalize($grossProfit),
             'boost_expense_usd' => $this->decimalize($expenseTotal),
-            'net_profit_usd' => bcsub($grossProfit, $expenseTotal, 4),
+            'net_profit_usd' => $netProfit,
         ];
     }
 
@@ -739,6 +771,16 @@ class ReportController extends Controller
             ->filter(fn ($item) => $item->final_qty > 0)
             ->groupBy(fn ($item) => number_format((float) $item->unit_price_usd, 2, '.', ''))
             ->map(fn (Collection $items, string $price) => '$'.$price.' x '.$items->sum('final_qty'))
+            ->values()
+            ->implode(', ');
+    }
+
+    private function describeOriginalPriceMix(Collection $saleItems): string
+    {
+        return $saleItems
+            ->filter(fn ($item) => (int) ($item->qty ?? 0) > 0)
+            ->groupBy(fn ($item) => number_format((float) $item->unit_price_usd, 2, '.', ''))
+            ->map(fn (Collection $items, string $price) => '$'.$price.' x '.(int) $items->sum('qty'))
             ->values()
             ->implode(', ');
     }

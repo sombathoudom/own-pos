@@ -29,7 +29,8 @@ type Entry = {
 
 function ReportsDaily() {
     const {
-        date,
+        from,
+        to,
         entries,
         closings,
         summary,
@@ -37,7 +38,8 @@ function ReportsDaily() {
         courier_breakdown,
         source_breakdown,
     } = usePage<{
-        date: string;
+        from: string;
+        to: string;
         entries: Entry[];
         closings: any[];
         summary: Record<string, string | number>;
@@ -46,13 +48,14 @@ function ReportsDaily() {
         source_breakdown: any[];
     }>().props;
 
-    const [selectedDate, setSelectedDate] = useState(date);
+    const [dateFrom, setDateFrom] = useState(from);
+    const [dateTo, setDateTo] = useState(to);
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         router.get(
             '/reports/daily',
-            { date: selectedDate },
+            { from: dateFrom, to: dateTo },
             { preserveScroll: true, preserveState: true },
         );
     };
@@ -79,7 +82,7 @@ function ReportsDaily() {
 
     return (
         <>
-            <Head title="Daily Sales Report" />
+            <Head title={`Daily Sales Report${from !== to ? ` (${from} - ${to})` : ''}`} />
             <div className="page-content">
                 <Container fluid>
                     <BreadCrumb
@@ -94,7 +97,10 @@ function ReportsDaily() {
                             <Row className="align-items-center g-3">
                                 <Col lg={8}>
                                     <h4 className="mb-1">
-                                        Daily business report for {date}
+                                        Daily business report{' '}
+                                        {from === to
+                                            ? `for ${from}`
+                                            : `from ${from} to ${to}`}
                                     </h4>
                                     <p className="mb-0 text-muted">
                                         Sales, cost, delivery, courier activity,
@@ -105,14 +111,24 @@ function ReportsDaily() {
                                 <Col lg={4}>
                                     <Form
                                         onSubmit={submit}
-                                        className="d-flex gap-2"
+                                        className="d-flex gap-2 align-items-center"
                                     >
                                         <Form.Control
                                             type="date"
-                                            value={selectedDate}
+                                            value={dateFrom}
                                             onChange={(e) =>
-                                                setSelectedDate(e.target.value)
+                                                setDateFrom(e.target.value)
                                             }
+                                            style={{ width: 140 }}
+                                        />
+                                        <span className="text-muted">to</span>
+                                        <Form.Control
+                                            type="date"
+                                            value={dateTo}
+                                            onChange={(e) =>
+                                                setDateTo(e.target.value)
+                                            }
+                                            style={{ width: 140 }}
                                         />
                                         <button
                                             type="submit"
@@ -122,7 +138,10 @@ function ReportsDaily() {
                                         </button>
                                         <a
                                             href={dailyRoutes.export.url({
-                                                query: { date: selectedDate },
+                                                query: {
+                                                    from: dateFrom,
+                                                    to: dateTo,
+                                                },
                                             })}
                                             className="btn btn-light border"
                                         >
@@ -174,7 +193,7 @@ function ReportsDaily() {
                         <SummaryCard
                             label="Gross Profit"
                             value={money(summary.gross_profit_usd)}
-                            note={`Day: ${closings.length > 0 ? 'Closed' : 'Open'}`}
+                            note="After delivery cost"
                             tone="dark"
                             icon="ri-line-chart-line"
                         />
@@ -255,7 +274,7 @@ function ReportsDaily() {
                                                 Price Pack
                                             </th>
                                             <th className="text-end">Profit</th>
-                                            <th>Other</th>
+                                            <th>Delivery</th>
                                         </tr>
                                     </thead>
                                     <tbody>

@@ -1089,6 +1089,16 @@ function PosIndex() {
                                                                 'actual_delivery_cost_usd',
                                                                 company.delivery_cost_usd,
                                                             );
+                                                            if (
+                                                                !data.customer_delivery_fee_usd ||
+                                                                data.customer_delivery_fee_usd ===
+                                                                    '0'
+                                                            ) {
+                                                                setData(
+                                                                    'customer_delivery_fee_usd',
+                                                                    company.delivery_cost_usd,
+                                                                );
+                                                            }
                                                         }
                                                     }}
                                                     customerDeliveryFee={

@@ -673,11 +673,20 @@ class SaleController extends Controller
     {
         $sale->load('items.productVariant.product', 'customer');
 
-        $variants = ProductVariant::query()
+        $activeVariants = ProductVariant::query()
             ->with(['product:id,name,category_id,image_path', 'product.category:id,name', 'stockBalance'])
             ->where('status', 'active')
             ->orderBy('sku')
             ->get(['id', 'product_id', 'sku', 'style_name', 'color', 'size', 'sale_price_usd']);
+
+        $saleVariantIds = $sale->items->pluck('product_variant_id')->unique()->all();
+        $inactiveSaleVariants = ProductVariant::query()
+            ->with(['product:id,name,category_id,image_path', 'product.category:id,name', 'stockBalance'])
+            ->whereIn('id', $saleVariantIds)
+            ->where('status', '!=', 'active')
+            ->get(['id', 'product_id', 'sku', 'style_name', 'color', 'size', 'sale_price_usd']);
+
+        $variants = $activeVariants->merge($inactiveSaleVariants);
 
         return Inertia::render('inventory/sales/edit', [
             'sale' => [
