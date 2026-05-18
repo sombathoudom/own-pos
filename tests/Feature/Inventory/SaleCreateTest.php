@@ -334,3 +334,78 @@ test('sale edit can update the delivery company', function () {
         'delivery_company_id' => $secondCompany->id,
     ]);
 });
+
+test('sale receipt page shows printable invoice details', function () {
+    $customer = Customer::factory()->create([
+        'name' => 'Receipt Customer',
+        'phone' => '010101010',
+        'address' => 'Battambang',
+    ]);
+
+    $deliveryCompany = DeliveryCompany::create([
+        'name' => 'Receipt Delivery',
+        'delivery_cost_usd' => 1.50,
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($this->user)->post(route('sales.store'), [
+        'customer_id' => $customer->id,
+        'sale_date' => '2026-05-13',
+        'source_page' => 'Walk-in',
+        'delivery_company_id' => $deliveryCompany->id,
+        'currency' => 'USD',
+        'exchange_rate' => 4100,
+        'discount_usd' => 0,
+        'customer_delivery_fee_usd' => 0,
+        'actual_delivery_cost_usd' => 0,
+        'paid_usd' => 6,
+        'items' => [
+            [
+                'product_variant_id' => $this->variant->id,
+                'qty' => 1,
+                'unit_price_usd' => 6,
+                'discount_usd' => 0,
+            ],
+        ],
+    ])->assertRedirect();
+
+    $sale = Sale::firstOrFail();
+
+    $this->actingAs($this->user)
+        ->get(route('sales.receipt', $sale))
+        ->assertOk()
+        ->assertSee($sale->invoice_no)
+        ->assertSee('Receipt Customer')
+        ->assertSee('010101010')
+        ->assertSee('Battambang')
+        ->assertSee('Receipt Delivery')
+        ->assertSee('Hawai Blue');
+});
+
+test('pos sale creation can redirect to printable receipt', function () {
+    $response = $this->actingAs($this->user)->withHeader('X-Inertia', 'true')->post(route('sales.store'), [
+        'print_receipt' => true,
+        'sale_date' => '2026-05-13',
+        'source_page' => 'Walk-in',
+        'currency' => 'USD',
+        'exchange_rate' => 4100,
+        'discount_usd' => 0,
+        'customer_delivery_fee_usd' => 0,
+        'actual_delivery_cost_usd' => 0,
+        'paid_usd' => 6,
+        'items' => [
+            [
+                'product_variant_id' => $this->variant->id,
+                'qty' => 1,
+                'unit_price_usd' => 6,
+                'discount_usd' => 0,
+            ],
+        ],
+    ]);
+
+    $sale = Sale::firstOrFail();
+
+    $response
+        ->assertStatus(409)
+        ->assertHeader('X-Inertia-Location', route('sales.receipt', $sale));
+});

@@ -72,6 +72,7 @@ function PosIndex() {
 
     const { data, setData, post, processing, errors } = useForm({
         customer_id: createdCustomer?.id ?? null,
+        print_receipt: true,
         source_page: 'Walk-in',
         delivery_company_id: null as number | null,
         sale_date: getCurrentDate(),

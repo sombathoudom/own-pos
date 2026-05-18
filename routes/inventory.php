@@ -31,6 +31,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('purchases/{purchase}/arrive', [PurchaseController::class, 'arrive'])->name('purchases.arrive');
     Route::resource('sales', SaleController::class)->except(['destroy']);
     Route::get('pos', [SaleController::class, 'pos'])->name('pos');
+    Route::get('sales/{sale}/receipt', [SaleController::class, 'receipt'])->name('sales.receipt');
+    Route::post('sales/bulk-delivered-all', [SaleController::class, 'bulkDeliveredAll'])->name('sales.bulk-delivered-all');
     Route::post('sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
     Route::post('sales/{sale}/return', [SaleController::class, 'return'])->name('sales.return');
     Route::get('sales/{sale}/confirm-delivery', [SaleController::class, 'confirmDelivery'])->name('sales.confirm-delivery');

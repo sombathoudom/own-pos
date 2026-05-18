@@ -17,8 +17,10 @@ import Pagination from '@/Components/Pagination';
 import Layout from '@/Layouts';
 import { store as storeConfirmDelivery } from '@/routes/sales/confirm-delivery';
 import {
+    bulkDeliveredAll as salesBulkDeliveredAll,
     edit as salesEdit,
     create as salesCreate,
+    receipt as salesReceipt,
     show as salesShow,
     index as salesIndex,
 } from '@/routes/sales';
@@ -31,6 +33,7 @@ function SalesIndex() {
     const [confirmingSaleId, setConfirmingSaleId] = useState<number | null>(
         null,
     );
+    const [selectedSaleIds, setSelectedSaleIds] = useState<number[]>([]);
 
     useEffect(() => {
         setSearch(filters.search ?? '');
@@ -88,6 +91,7 @@ function SalesIndex() {
         router.post(
             storeConfirmDelivery.url(sale.id),
             {
+                redirect_to: 'index',
                 confirmation_date: getCurrentDate(),
                 status: 'delivered',
                 items: sale.items.map((item) => ({
@@ -102,6 +106,47 @@ function SalesIndex() {
             {
                 preserveScroll: true,
                 onFinish: () => setConfirmingSaleId(null),
+            },
+        );
+    };
+
+    const deliverableSaleIds = sales.data
+        .filter((sale) => canConfirmDelivery(sale))
+        .map((sale) => sale.id);
+
+    const allDeliverableSelected =
+        deliverableSaleIds.length > 0 &&
+        deliverableSaleIds.every((saleId) => selectedSaleIds.includes(saleId));
+
+    const toggleSaleSelection = (saleId: number) => {
+        setSelectedSaleIds((current) =>
+            current.includes(saleId)
+                ? current.filter((id) => id !== saleId)
+                : [...current, saleId],
+        );
+    };
+
+    const toggleSelectAllDeliverable = () => {
+        setSelectedSaleIds((current) =>
+            allDeliverableSelected
+                ? current.filter((id) => !deliverableSaleIds.includes(id))
+                : Array.from(new Set([...current, ...deliverableSaleIds])),
+        );
+    };
+
+    const handleBulkDeliveredAll = () => {
+        if (selectedSaleIds.length === 0) {
+            return;
+        }
+
+        router.post(
+            salesBulkDeliveredAll.url(),
+            {
+                sale_ids: selectedSaleIds,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => setSelectedSaleIds([]),
             },
         );
     };
@@ -136,7 +181,17 @@ function SalesIndex() {
                                             </h5>
                                         </div>
                                         <div className="col-sm-auto">
-                                            <div className="d-flex flex-wrap gap-1">
+                                             <div className="d-flex flex-wrap gap-1">
+                                                {deliverableSaleIds.length > 0 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="primary"
+                                                        disabled={selectedSaleIds.length === 0}
+                                                        onClick={handleBulkDeliveredAll}
+                                                    >
+                                                        Delivered Selected ({selectedSaleIds.length})
+                                                    </Button>
+                                                )}
                                                 <Form
                                                     onSubmit={handleSearch}
                                                     className="d-flex gap-2"
@@ -195,6 +250,14 @@ function SalesIndex() {
                                     <Table className="table-striped" responsive>
                                         <thead>
                                             <tr>
+                                                <th className="text-center" style={{ width: 44 }}>
+                                                    <Form.Check
+                                                        type="checkbox"
+                                                        checked={allDeliverableSelected}
+                                                        onChange={toggleSelectAllDeliverable}
+                                                        disabled={deliverableSaleIds.length === 0}
+                                                    />
+                                                </th>
                                                 <th>Invoice #</th>
                                                 <th>Customer</th>
                                                 <th>Source</th>
@@ -211,6 +274,14 @@ function SalesIndex() {
                                         <tbody>
                                             {sales.data.map((sale) => (
                                                 <tr key={sale.id}>
+                                                    <td className="text-center">
+                                                        <Form.Check
+                                                            type="checkbox"
+                                                            checked={selectedSaleIds.includes(sale.id)}
+                                                            disabled={!canConfirmDelivery(sale)}
+                                                            onChange={() => toggleSaleSelection(sale.id)}
+                                                        />
+                                                    </td>
                                                     <td className="fw-medium">
                                                         {sale.invoice_no}
                                                     </td>
@@ -286,6 +357,16 @@ function SalesIndex() {
                                                                         : 'Delivered All'}
                                                                 </Button>
                                                             )}
+                                                            <a
+                                                                className="btn btn-sm btn-outline-dark"
+                                                                href={salesReceipt.url(
+                                                                    {
+                                                                        sale: sale.id,
+                                                                    },
+                                                                )}
+                                                            >
+                                                                Receipt
+                                                            </a>
                                                             <Link
                                                                 className="btn btn-sm btn-outline-secondary"
                                                                 href={salesEdit.url(
@@ -313,7 +394,7 @@ function SalesIndex() {
                                             {sales.data.length === 0 && (
                                                 <tr>
                                                     <td
-                                                        colSpan={9}
+                                                        colSpan={10}
                                                         className="py-4 text-center text-muted"
                                                     >
                                                         No sales found.

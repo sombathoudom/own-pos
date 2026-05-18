@@ -296,6 +296,69 @@ test('delivery confirmation accepts unchanged delivered order', function () {
     ]);
 });
 
+test('delivered all from sales index redirects back to sales index', function () {
+    $this->post(route('sales.store'), [
+        'sale_date' => '2026-05-13',
+        'customer_delivery_fee_usd' => 2,
+        'actual_delivery_cost_usd' => 1,
+        'items' => [
+            [
+                'product_variant_id' => $this->originalVariant->id,
+                'qty' => 2,
+                'unit_price_usd' => 6.00,
+            ],
+        ],
+    ])->assertRedirect();
+
+    $sale = Sale::first();
+    $saleItem = $sale->items()->first();
+
+    $this->post(route('sales.confirm-delivery.store', $sale), [
+        'redirect_to' => 'index',
+        'confirmation_date' => '2026-05-14',
+        'status' => 'delivered',
+        'items' => [
+            [
+                'sale_item_id' => $saleItem->id,
+                'accepted_qty' => 2,
+                'changed_qty' => 0,
+            ],
+        ],
+        'added_items' => [],
+        'final_delivery_fee_usd' => 2,
+        'actual_delivery_cost_usd' => 1,
+    ])->assertRedirect(route('sales.index'));
+});
+
+test('bulk delivered all confirms multiple sales and redirects to sales index', function () {
+    $createSale = function (string $date): Sale {
+        $this->post(route('sales.store'), [
+            'sale_date' => $date,
+            'customer_delivery_fee_usd' => 2,
+            'actual_delivery_cost_usd' => 1,
+            'items' => [
+                [
+                    'product_variant_id' => $this->originalVariant->id,
+                    'qty' => 1,
+                    'unit_price_usd' => 6.00,
+                ],
+            ],
+        ])->assertRedirect();
+
+        return Sale::query()->latest('id')->firstOrFail();
+    };
+
+    $firstSale = $createSale('2026-05-13');
+    $secondSale = $createSale('2026-05-14');
+
+    $this->post(route('sales.bulk-delivered-all'), [
+        'sale_ids' => [$firstSale->id, $secondSale->id],
+    ])->assertRedirect(route('sales.index'));
+
+    expect($firstSale->fresh()->order_status)->toBe('completed');
+    expect($secondSale->fresh()->order_status)->toBe('completed');
+});
+
 test('failed delivery does not mark sale as paid', function () {
     $this->post(route('sales.store'), [
         'sale_date' => '2026-05-13',

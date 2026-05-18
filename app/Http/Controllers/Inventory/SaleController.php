@@ -17,11 +17,13 @@ use App\Models\DeliveryCompany;
 use App\Models\ProductVariant;
 use App\Models\Sale;
 use App\Services\DailyClosingLock;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Throwable;
 
 class SaleController extends Controller
@@ -188,7 +190,7 @@ class SaleController extends Controller
         ]);
     }
 
-    public function store(StoreSaleRequest $request, CreateSale $createSale): RedirectResponse
+    public function store(StoreSaleRequest $request, CreateSale $createSale): HttpResponse
     {
         $validated = $request->validated();
 
@@ -217,7 +219,24 @@ class SaleController extends Controller
             return back()->withErrors(['items' => $e->getMessage()]);
         }
 
+        if ($request->boolean('print_receipt')) {
+            if ($request->header('X-Inertia')) {
+                return Inertia::location(route('sales.receipt', $sale));
+            }
+
+            return to_route('sales.receipt', $sale);
+        }
+
         return to_route('sales.show', $sale)->with('toast', ['type' => 'success', 'message' => 'Sale created and stock deducted.']);
+    }
+
+    public function receipt(Sale $sale): View
+    {
+        $sale->load(['customer', 'deliveryCompany', 'items.productVariant.product']);
+
+        return view('inventory.sales.receipt', [
+            'sale' => $this->receiptData($sale),
+        ]);
     }
 
     public function cancel(Request $request, Sale $sale, CancelSale $cancelSale): RedirectResponse
@@ -359,6 +378,7 @@ class SaleController extends Controller
     public function storeDeliveryConfirmation(Request $request, Sale $sale, ConfirmSaleDelivery $confirmSaleDelivery): RedirectResponse
     {
         $validated = $request->validate([
+            'redirect_to' => ['nullable', 'string', 'in:index'],
             'confirmation_date' => ['required', 'date'],
             'status' => ['required', 'string', 'in:delivered,partially_delivered,changed_items,added_items,cancelled_at_door,failed_delivery'],
             'items' => ['required', 'array', 'min:1'],
@@ -396,7 +416,50 @@ class SaleController extends Controller
             return back()->withErrors(['general' => $e->getMessage()]);
         }
 
+        if (($validated['redirect_to'] ?? null) === 'index') {
+            return to_route('sales.index')->with('toast', ['type' => 'success', 'message' => 'Delivery confirmed.']);
+        }
+
         return to_route('sales.show', $sale)->with('toast', ['type' => 'success', 'message' => 'Delivery confirmed and sale finalized.']);
+    }
+
+    public function bulkDeliveredAll(Request $request, ConfirmSaleDelivery $confirmSaleDelivery): RedirectResponse
+    {
+        $validated = $request->validate([
+            'sale_ids' => ['required', 'array', 'min:1'],
+            'sale_ids.*' => ['required', 'integer', 'exists:sales,id'],
+        ]);
+
+        $sales = Sale::query()
+            ->with('items')
+            ->whereIn('id', $validated['sale_ids'])
+            ->get();
+
+        try {
+            foreach ($sales as $sale) {
+                $confirmSaleDelivery->handle(
+                    sale: $sale,
+                    confirmationDate: now()->toDateString(),
+                    status: 'delivered',
+                    items: $sale->items->map(fn ($item) => [
+                        'sale_item_id' => $item->id,
+                        'accepted_qty' => $item->qty,
+                        'changed_qty' => 0,
+                    ])->values()->all(),
+                    addedItems: [],
+                    finalDeliveryFeeUsd: (string) $sale->customer_delivery_fee_usd,
+                    actualDeliveryCostUsd: (string) $sale->actual_delivery_cost_usd,
+                    confirmedBy: $request->user()?->id,
+                );
+            }
+        } catch (Throwable $e) {
+            return back()->withErrors(['general' => $e->getMessage()]);
+        }
+
+        return to_route('sales.index')->with('toast', [
+            'type' => 'success',
+            'message' => 'Selected sales marked as delivered.',
+        ]);
     }
 
     public function updatePayment(Request $request, Sale $sale): RedirectResponse
@@ -736,6 +799,44 @@ class SaleController extends Controller
             'name' => $customer->name,
             'phone' => $customer->phone,
             'address' => $customer->address,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function receiptData(Sale $sale): array
+    {
+        return [
+            'id' => $sale->id,
+            'invoice_no' => $sale->invoice_no,
+            'sale_date' => $sale->sale_date?->format('Y-m-d H:i'),
+            'customer_name' => $sale->customer?->name,
+            'customer_phone' => $sale->customer?->phone,
+            'customer_address' => $sale->customer?->address,
+            'delivery_company_name' => $sale->deliveryCompany?->name,
+            'discount_usd' => (string) $sale->discount_usd,
+            'customer_delivery_fee_usd' => (string) $sale->customer_delivery_fee_usd,
+            'total_usd' => (string) $sale->total_usd,
+            'paid_usd' => (string) $sale->paid_usd,
+            'payment_status' => $sale->payment_status,
+            'remaining_usd' => bccomp((string) $sale->total_usd, (string) $sale->paid_usd, 4) > 0
+                ? bcsub((string) $sale->total_usd, (string) $sale->paid_usd, 4)
+                : '0.0000',
+            'items' => $sale->items->map(function ($item) {
+                $parts = array_filter([
+                    $item->productVariant?->product?->name,
+                    $item->productVariant?->color,
+                    $item->productVariant?->size,
+                ]);
+
+                return [
+                    'product_name' => implode(' / ', $parts),
+                    'qty' => $item->qty,
+                    'unit_price_usd' => (string) $item->unit_price_usd,
+                    'total_usd' => (string) $item->total_usd,
+                ];
+            })->values()->all(),
         ];
     }
 }
