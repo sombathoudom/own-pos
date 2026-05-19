@@ -175,9 +175,9 @@ class SaleController extends Controller
                 'sale_price_usd' => $v->sale_price_usd,
                 'stock_on_hand' => $v->stockBalance?->qty_on_hand ?? 0,
                 'product' => [
-                    'id' => $v->product?->id,
+                    'id' => (int) $v->product?->id,
                     'name' => $v->product?->name,
-                    'category_id' => $v->product?->category_id,
+                    'category_id' => (int) $v->product?->category_id,
                     'category' => $v->product?->category?->name,
                     'image_url' => $v->product?->imageUrl(),
                 ],
