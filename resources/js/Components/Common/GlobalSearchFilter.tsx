@@ -1,8 +1,8 @@
+import { Link } from '@inertiajs/react';
 import React, { useState } from 'react';
 import { Col, Row, Button, Dropdown } from 'react-bootstrap';
 import Flatpickr from 'react-flatpickr';
 import Select from 'react-select';
-import { Link } from '@inertiajs/react';
 
 const ProductsGlobalFilter = () => {
     return (
@@ -38,6 +38,7 @@ const CustomersGlobalFilter = () => {
             ],
         },
     ];
+
     return (
         <React.Fragment>
             <Col xl={7}>
@@ -129,6 +130,7 @@ const OrderGlobalFilter = () => {
             ],
         },
     ];
+
     return (
         <React.Fragment>
             <Col sm={6} className="col-xxl-2">
@@ -235,6 +237,7 @@ const CompaniesGlobalFilter = () => {
             ],
         },
     ];
+
     return (
         <React.Fragment>
             <div className="col-md-auto ms-auto">
@@ -324,6 +327,7 @@ const InvoiceListGlobalSearch = () => {
             ],
         },
     ];
+
     return (
         <React.Fragment>
             <Col sm={4} xxl={3}>

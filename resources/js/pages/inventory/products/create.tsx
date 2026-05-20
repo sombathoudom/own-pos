@@ -1,11 +1,12 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
-    type ChangeEvent,
-    type FormEvent,
-    type ReactNode,
+    
+    
+    
     useEffect,
-    useState,
+    useState
 } from 'react';
+import type {ChangeEvent, FormEvent, ReactNode} from 'react';
 import {
     Alert,
     Button,
@@ -93,6 +94,7 @@ function ProductsCreate() {
     useEffect(() => {
         if (!data.image) {
             setImagePreviewUrl(null);
+
             return;
         }
 
@@ -135,6 +137,7 @@ function ProductsCreate() {
                     size,
                     sale_price_usd: defaultPrice,
                 };
+
                 return {
                     ...variant,
                     sku: buildSmartSku(data.name, variant),

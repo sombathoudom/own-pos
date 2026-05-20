@@ -11,6 +11,7 @@ type DeliveryCompanyPickerProps = {
     selectedId: number | null;
     onChange: (company: DeliveryCompanyOption | null) => void;
     customerDeliveryFee?: number;
+    disabled?: boolean;
 };
 
 export default function DeliveryCompanyPicker({
@@ -18,10 +19,11 @@ export default function DeliveryCompanyPicker({
     selectedId,
     onChange,
     customerDeliveryFee = 0,
+    disabled = false,
 }: DeliveryCompanyPickerProps) {
     if (companies.length === 0) {
         return (
-            <div className="small text-muted fst-italic">
+            <div className="small fst-italic text-muted">
                 No delivery companies configured.{' '}
                 <a href="/delivery-companies/create" target="_blank">
                     Add one
@@ -38,11 +40,12 @@ export default function DeliveryCompanyPicker({
     return (
         <div>
             {/* Box grid */}
-            <div className="d-flex flex-wrap gap-2 mb-2">
+            <div className="d-flex mb-2 flex-wrap gap-2">
                 {/* None option */}
                 <button
                     type="button"
                     onClick={() => onChange(null)}
+                    disabled={disabled}
                     className={`btn btn-sm px-3 py-2 ${
                         selectedId === null
                             ? 'btn-secondary'
@@ -56,12 +59,14 @@ export default function DeliveryCompanyPicker({
 
                 {companies.map((company) => {
                     const isSelected = selectedId === company.id;
+
                     return (
                         <button
                             key={company.id}
                             type="button"
                             onClick={() => onChange(company)}
-                            className={`btn btn-sm px-3 py-2 d-flex flex-column align-items-center gap-1 ${
+                            disabled={disabled}
+                            className={`btn btn-sm d-flex flex-column align-items-center gap-1 px-3 py-2 ${
                                 isSelected
                                     ? 'btn-primary shadow'
                                     : 'btn-outline-primary'
@@ -85,7 +90,7 @@ export default function DeliveryCompanyPicker({
             {/* Profit hint */}
             {selected && deliveryProfit !== null && (
                 <div className="small">
-                    <span className="text-muted me-1">Delivery profit:</span>
+                    <span className="me-1 text-muted">Delivery profit:</span>
                     <Badge
                         bg={deliveryProfit >= 0 ? 'success' : 'danger'}
                         className="fw-normal"
@@ -93,9 +98,9 @@ export default function DeliveryCompanyPicker({
                         {deliveryProfit >= 0 ? '+' : ''}$
                         {deliveryProfit.toFixed(2)}
                     </Badge>
-                    <span className="text-muted ms-2">
-                        (${customerDeliveryFee.toFixed(2)} charged −{' '}
-                        ${Number(selected.delivery_cost_usd).toFixed(2)} cost)
+                    <span className="ms-2 text-muted">
+                        (${customerDeliveryFee.toFixed(2)} charged − $
+                        {Number(selected.delivery_cost_usd).toFixed(2)} cost)
                     </span>
                 </div>
             )}

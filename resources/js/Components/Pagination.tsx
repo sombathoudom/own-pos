@@ -1,5 +1,5 @@
-import React from 'react';
 import { Link } from '@inertiajs/react';
+import React from 'react';
 import type { LaravelPaginator } from '@/types/app';
 
 type Props<T> = { paginator: LaravelPaginator<T> };
@@ -62,7 +62,13 @@ export default function Pagination<T>({ paginator }: Props<T>) {
 }
 
 function normalizeLabel(label: string) {
-    if (label.includes('Previous')) return '&laquo;';
-    if (label.includes('Next')) return '&raquo;';
+    if (label.includes('Previous')) {
+return '&laquo;';
+}
+
+    if (label.includes('Next')) {
+return '&raquo;';
+}
+
     return label;
 }

@@ -1,14 +1,14 @@
-import React, { useEffect, useCallback } from 'react';
+import { Link } from '@inertiajs/react';
 import PropTypes from 'prop-types';
+import React, { useEffect, useCallback } from 'react';
 import { Collapse } from 'react-bootstrap';
 // Import Data
+import { withTranslation } from 'react-i18next';
+import { useShallow } from 'zustand/react/shallow';
+import { useLayoutStore } from '../../stores/layout-store';
 import navdata from '../LayoutMenuData';
 //i18n
-import { withTranslation } from 'react-i18next';
 // import withRouter from "../../Components/Common/withRouter";
-import { Link } from '@inertiajs/react';
-import { useLayoutStore } from '../../stores/layout-store';
-import { useShallow } from 'zustand/react/shallow';
 
 const VerticalLayout = (props: any) => {
     const navData = navdata().props.children;
@@ -29,11 +29,12 @@ const VerticalLayout = (props: any) => {
 
     //vertical and semibox resize events
     const resizeSidebarMenu = useCallback(() => {
-        var windowSize = document.documentElement.clientWidth;
+        const windowSize = document.documentElement.clientWidth;
         const humberIcon = document.querySelector(
             '.hamburger-icon',
         ) as HTMLElement;
-        var hamburgerIcon = document.querySelector('.hamburger-icon');
+        const hamburgerIcon = document.querySelector('.hamburger-icon');
+
         if (windowSize >= 1025) {
             if (
                 document.documentElement.getAttribute('data-layout') ===
@@ -44,6 +45,7 @@ const VerticalLayout = (props: any) => {
                     leftsidbarSizeType,
                 );
             }
+
             if (
                 document.documentElement.getAttribute('data-layout') ===
                 'semibox'
@@ -53,6 +55,7 @@ const VerticalLayout = (props: any) => {
                     leftsidbarSizeType,
                 );
             }
+
             if (
                 (sidebarVisibilitytype === 'show' ||
                     layoutType === 'vertical' ||
@@ -70,6 +73,7 @@ const VerticalLayout = (props: any) => {
             }
         } else if (windowSize < 1025 && windowSize > 767) {
             document.body.classList.remove('twocolumn-panel');
+
             if (
                 document.documentElement.getAttribute('data-layout') ===
                 'vertical'
@@ -79,6 +83,7 @@ const VerticalLayout = (props: any) => {
                     'sm',
                 );
             }
+
             if (
                 document.documentElement.getAttribute('data-layout') ===
                 'semibox'
@@ -88,11 +93,13 @@ const VerticalLayout = (props: any) => {
                     'sm',
                 );
             }
+
             if (humberIcon) {
                 humberIcon.classList.add('open');
             }
         } else if (windowSize <= 767) {
             document.body.classList.remove('vertical-sidebar-enable');
+
             if (
                 document.documentElement.getAttribute('data-layout') !==
                 'horizontal'
@@ -102,6 +109,7 @@ const VerticalLayout = (props: any) => {
                     'lg',
                 );
             }
+
             if (humberIcon) {
                 humberIcon.classList.add('open');
             }
@@ -124,11 +132,12 @@ const VerticalLayout = (props: any) => {
             // const pathName= window.location.pathname + path;
             const ul = document.getElementById('navbar-nav') as HTMLElement;
             const items: any = ul.getElementsByTagName('a');
-            let itemsArray = [...items]; // converts NodeList to Array
+            const itemsArray = [...items]; // converts NodeList to Array
             removeActivation(itemsArray);
-            let matchingMenuItem = itemsArray.find((x) => {
+            const matchingMenuItem = itemsArray.find((x) => {
                 return x.pathname === pathName;
             });
+
             if (matchingMenuItem) {
                 activateParentDropdown(matchingMenuItem);
             }
@@ -138,7 +147,7 @@ const VerticalLayout = (props: any) => {
 
     function activateParentDropdown(item: any) {
         item.classList.add('active');
-        let parentCollapseDiv = item.closest('.collapse.menu-dropdown');
+        const parentCollapseDiv = item.closest('.collapse.menu-dropdown');
 
         if (parentCollapseDiv) {
             // to set aria expand true remaining
@@ -148,6 +157,7 @@ const VerticalLayout = (props: any) => {
                 'aria-expanded',
                 'true',
             );
+
             if (
                 parentCollapseDiv.parentElement.closest(
                     '.collapse.menu-dropdown',
@@ -156,13 +166,16 @@ const VerticalLayout = (props: any) => {
                 parentCollapseDiv.parentElement
                     .closest('.collapse')
                     .classList.add('show');
+
                 if (
                     parentCollapseDiv.parentElement.closest('.collapse')
                         .previousElementSibling
-                )
-                    parentCollapseDiv.parentElement
+                ) {
+parentCollapseDiv.parentElement
                         .closest('.collapse')
                         .previousElementSibling.classList.add('active');
+}
+
                 if (
                     parentCollapseDiv.parentElement
                         .closest('.collapse')
@@ -178,13 +191,15 @@ const VerticalLayout = (props: any) => {
                         .previousElementSibling.classList.add('active');
                 }
             }
+
             return false;
         }
+
         return false;
     }
 
     const removeActivation = (items: any) => {
-        let actiItems = items.filter((x: any) =>
+        const actiItems = items.filter((x: any) =>
             x.classList.contains('active'),
         );
 
@@ -193,16 +208,20 @@ const VerticalLayout = (props: any) => {
                 if (!item.classList.contains('active')) {
                     item.setAttribute('aria-expanded', false);
                 }
+
                 if (item.nextElementSibling) {
                     item.nextElementSibling.classList.remove('show');
                 }
             }
+
             if (item.classList.contains('nav-link')) {
                 if (item.nextElementSibling) {
                     item.nextElementSibling.classList.remove('show');
                 }
+
                 item.setAttribute('aria-expanded', false);
             }
+
             item.classList.remove('active');
         });
     };

@@ -1,4 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
+import React, { useState } from 'react';
 import {
     Badge,
     Button,
@@ -10,8 +12,6 @@ import {
     Row,
     Table,
 } from 'react-bootstrap';
-import React, { useState } from 'react';
-import { router } from '@inertiajs/react';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
@@ -78,10 +78,18 @@ function PurchasesShow() {
     const [arrivalDate, setArrivalDate] = useState(getCurrentDate());
 
     const statusBadge = (status: string) => {
-        if (status === 'in_transit')
-            return <Badge bg="warning">In Transit</Badge>;
-        if (status === 'arrived') return <Badge bg="success">Arrived</Badge>;
-        if (status === 'draft') return <Badge bg="secondary">Draft</Badge>;
+        if (status === 'in_transit') {
+return <Badge bg="warning">In Transit</Badge>;
+}
+
+        if (status === 'arrived') {
+return <Badge bg="success">Arrived</Badge>;
+}
+
+        if (status === 'draft') {
+return <Badge bg="secondary">Draft</Badge>;
+}
+
         return <Badge bg="secondary">{status}</Badge>;
     };
 

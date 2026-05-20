@@ -1,11 +1,12 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
-    type ChangeEvent,
-    type FormEvent,
-    type ReactNode,
+    
+    
+    
     useEffect,
-    useState,
+    useState
 } from 'react';
+import type {ChangeEvent, FormEvent, ReactNode} from 'react';
 import {
     Button,
     Card,
@@ -141,6 +142,7 @@ function ProductsEdit() {
                     size,
                     sale_price_usd: '0',
                 };
+
                 return {
                     ...variant,
                     sku: buildSmartSku(data.name, variant),

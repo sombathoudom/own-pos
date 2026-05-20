@@ -30,8 +30,14 @@ export default function MediaIdPickerGroup({
     const hasPreview = !!previewUrl;
 
     const helperText = useMemo(() => {
-        if (hasPreview) return '';
-        if (!value) return placeholder;
+        if (hasPreview) {
+return '';
+}
+
+        if (!value) {
+return placeholder;
+}
+
         return `Media #${value}`;
     }, [hasPreview, value, placeholder]);
 
@@ -99,7 +105,10 @@ export default function MediaIdPickerGroup({
                 attachOnConfirm={false}
                 onPicked={(items) => {
                     const first = items?.[0];
-                    if (!first) return;
+
+                    if (!first) {
+return;
+}
 
                     onChange(first.id);
 

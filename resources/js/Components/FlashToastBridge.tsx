@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 import { toast } from 'react-toastify';
 
 type PageProps = {
@@ -21,6 +21,7 @@ export default function FlashToastBridge() {
                 toastId: flash.now,
             });
         }
+
         if (flash?.error) {
             toast(flash.error, {
                 hideProgressBar: true,

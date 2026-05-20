@@ -19,13 +19,15 @@ const Header = ({ onChangeLayoutMode, layoutModeType, headerClass }: any) => {
     };
 
     const toogleMenuBtn = () => {
-        var windowSize = document.documentElement.clientWidth;
+        const windowSize = document.documentElement.clientWidth;
         const humberIcon = document.querySelector(
             '.hamburger-icon',
         ) as HTMLElement;
         dispatch(changeSidebarVisibility('show'));
 
-        if (windowSize > 767) humberIcon.classList.toggle('open');
+        if (windowSize > 767) {
+humberIcon.classList.toggle('open');
+}
 
         //For collapse horizontal menu
         if (
@@ -87,6 +89,7 @@ const Header = ({ onChangeLayoutMode, layoutModeType, headerClass }: any) => {
                 : document.body.classList.add('twocolumn-panel');
         }
     };
+
     return (
         <React.Fragment>
             <header id="page-topbar" className={headerClass}>

@@ -1,17 +1,13 @@
 // resources/js/Components/Media/TargetMediaPanel.tsx
-import React, { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
-import { Button } from 'react-bootstrap';
-import { flashToast } from '../../utils/flashToast';
-
 import {
     DndContext,
     closestCenter,
     PointerSensor,
     useSensor,
-    useSensors,
-    type DragEndEvent,
+    useSensors
+    
 } from '@dnd-kit/core';
+import type {DragEndEvent} from '@dnd-kit/core';
 import {
     SortableContext,
     useSortable,
@@ -19,6 +15,11 @@ import {
     rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import axios from 'axios';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Button } from 'react-bootstrap';
+import { flashToast } from '../../utils/flashToast';
+
 
 type Item = {
     id: number;
@@ -129,9 +130,15 @@ export default function TargetMediaPanel({
         // Init orderMap for sortable collections if not set yet
         setOrderMap((prev) => {
             const next = { ...prev };
+
             for (const c of collections) {
-                if (!c.sortable) continue;
-                if (next[c.key]?.length) continue;
+                if (!c.sortable) {
+continue;
+}
+
+                if (next[c.key]?.length) {
+continue;
+}
 
                 const ids = list
                     .filter((it) => it.collection === c.key)
@@ -139,24 +146,32 @@ export default function TargetMediaPanel({
                     .sort((a, b) => a.sort - b.sort)
                     .map((it) => it.id);
 
-                if (ids.length) next[c.key] = ids;
+                if (ids.length) {
+next[c.key] = ids;
+}
             }
+
             return next;
         });
     };
 
     useEffect(() => {
-        if (!targetId) return;
+        if (!targetId) {
+return;
+}
+
         load();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [targetId, refreshKey]);
 
     const byCollection = useMemo(() => {
         const map: Record<string, Item[]> = {};
+
         for (const it of items) {
             map[it.collection] ??= [];
             map[it.collection].push(it);
         }
+
         return map;
     }, [items]);
 
@@ -170,21 +185,33 @@ export default function TargetMediaPanel({
                 `https://www.youtube.com/watch?v=${m.external_id}`,
                 '_blank',
             );
+
             return;
         }
-        if (m.url) window.open(m.url, '_blank');
+
+        if (m.url) {
+window.open(m.url, '_blank');
+}
     };
 
     const thumb = (m: Item) => {
         const isImage =
             m.kind === 'file' && (m.mime || '').startsWith('image/');
-        if (m.kind === 'external') return m.thumbnail;
-        if (isImage) return m.url;
+
+        if (m.kind === 'external') {
+return m.thumbnail;
+}
+
+        if (isImage) {
+return m.url;
+}
+
         return null;
     };
 
     const detach = async (mediaId: number, collection: string) => {
         setBusyId(mediaId);
+
         try {
             await axios.post(
                 route('media.detach'),
@@ -201,7 +228,10 @@ export default function TargetMediaPanel({
 
             // Update local order
             setOrderMap((prev) => {
-                if (!prev[collection]) return prev;
+                if (!prev[collection]) {
+return prev;
+}
+
                 return {
                     ...prev,
                     [collection]: prev[collection].filter(
@@ -220,6 +250,7 @@ export default function TargetMediaPanel({
 
     const setPrimary = async (mediaId: number, collection: string) => {
         setBusyId(mediaId);
+
         try {
             await axios.post(
                 route('media.setPrimary'),
@@ -245,6 +276,7 @@ export default function TargetMediaPanel({
         const list = (byCollection[collectionKey] || []).slice();
 
         const order = orderMap[collectionKey];
+
         if (order?.length) {
             const pos = new Map<number, number>();
             order.forEach((id, idx) => pos.set(id, idx));
@@ -252,6 +284,7 @@ export default function TargetMediaPanel({
             return list.sort((a, b) => {
                 const pa = pos.has(a.id) ? pos.get(a.id)! : 1e9 + a.sort;
                 const pb = pos.has(b.id) ? pos.get(b.id)! : 1e9 + b.sort;
+
                 return pa - pb;
             });
         }
@@ -282,12 +315,21 @@ export default function TargetMediaPanel({
         (collectionKey: string, list: Item[]) =>
         async (event: DragEndEvent) => {
             const { active, over } = event;
-            if (!over) return;
-            if (active.id === over.id) return;
+
+            if (!over) {
+return;
+}
+
+            if (active.id === over.id) {
+return;
+}
 
             const oldIndex = list.findIndex((x) => x.id === active.id);
             const newIndex = list.findIndex((x) => x.id === over.id);
-            if (oldIndex < 0 || newIndex < 0) return;
+
+            if (oldIndex < 0 || newIndex < 0) {
+return;
+}
 
             const nextList = arrayMove(list, oldIndex, newIndex);
             const orderedIds = nextList.map((x) => x.id);

@@ -1,5 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
-import { type ReactNode } from 'react';
+import type {ReactNode} from 'react';
 import { Card, Col, Container, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';

@@ -9,8 +9,8 @@ import {
     Row,
 } from 'react-bootstrap';
 
-import SettingsNav from '@/Components/SettingsNav';
 import BreadCrumb from '@/Components/Common/BreadCrumb';
+import SettingsNav from '@/Components/SettingsNav';
 import Layout from '@/Layouts';
 import {
     destroy as destroyProfile,

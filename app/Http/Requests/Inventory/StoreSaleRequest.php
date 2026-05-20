@@ -25,6 +25,7 @@ class StoreSaleRequest extends FormRequest
             'actual_delivery_cost_usd' => ['sometimes', 'numeric', 'min:0'],
             'paid_usd' => ['sometimes', 'numeric', 'min:0'],
             'print_receipt' => ['sometimes', 'boolean'],
+            'from_pos' => ['sometimes', 'boolean'],
             'note' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_variant_id' => ['required', 'exists:product_variants,id'],

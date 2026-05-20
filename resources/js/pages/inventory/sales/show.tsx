@@ -1,5 +1,6 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { type ReactNode, useMemo, useState } from 'react';
+import {  useMemo, useState } from 'react';
+import type {ReactNode} from 'react';
 import {
     Badge,
     Button,
@@ -15,7 +16,6 @@ import {
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import CustomerSelect from '@/Components/Inventory/CustomerSelect';
 import Layout from '@/Layouts';
-import { store as storeConfirmDelivery } from '@/routes/sales/confirm-delivery';
 import {
     cancel as saleCancel,
     confirmDelivery,
@@ -25,6 +25,7 @@ import {
     updatePayment,
 } from '@/routes/sales';
 import { updateDetails as updateSaleDetails } from '@/routes/sales';
+import { store as storeConfirmDelivery } from '@/routes/sales/confirm-delivery';
 import type { InventoryCustomer, SaleShowPageProps } from '@/types';
 import { getCurrentDate } from '@/utils/dateTime';
 
@@ -191,6 +192,7 @@ function SalesShow() {
 
         if (items.length === 0) {
             setShowReturnModal(false);
+
             return;
         }
 
@@ -1462,6 +1464,7 @@ function SalesShow() {
                                                 onChange={(event) => {
                                                     const value =
                                                         event.target.value;
+
                                                     if (
                                                         value === '' ||
                                                         Number(value) <=

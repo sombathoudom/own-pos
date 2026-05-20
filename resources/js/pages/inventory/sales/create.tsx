@@ -90,10 +90,15 @@ function SalesCreate() {
 
     const filteredVariants = useMemo(() => {
         const term = search.trim().toLowerCase();
-        if (!term) return variants.slice(0, 20);
+
+        if (!term) {
+return variants.slice(0, 20);
+}
+
         return variants.filter((v) => {
             const text =
                 `${v.sku} ${v.product.name} ${v.color ?? ''} ${v.size} ${v.style_name ?? ''}`.toLowerCase();
+
             return text.includes(term);
         });
     }, [variants, search]);
@@ -104,8 +109,13 @@ function SalesCreate() {
     );
 
     const addVariant = (variant: Variant) => {
-        if (selectedVariantIds.has(variant.id)) return;
-        if (variant.stock_on_hand <= 0) return;
+        if (selectedVariantIds.has(variant.id)) {
+return;
+}
+
+        if (variant.stock_on_hand <= 0) {
+return;
+}
 
         setData('items', [
             ...data.items,
@@ -145,6 +155,7 @@ function SalesCreate() {
         const qty = Number(item.qty) || 0;
         const price = Number(item.unit_price_usd) || 0;
         const discount = Number(item.discount_usd) || 0;
+
         return Math.max(0, qty * price - discount);
     };
 
@@ -177,6 +188,7 @@ function SalesCreate() {
             variant.size,
             variant.style_name,
         ].filter(Boolean);
+
         return parts.join(' / ');
     };
 
@@ -381,7 +393,11 @@ function SalesCreate() {
                                                     unknown
                                                 >
                                             ).items;
-                                            if (!itemsErr) return null;
+
+                                            if (!itemsErr) {
+return null;
+}
+
                                             return (
                                                 <Alert
                                                     variant="danger"
@@ -440,6 +456,7 @@ function SalesCreate() {
                                                                         5 &&
                                                                     variant.stock_on_hand >
                                                                         0;
+
                                                                 return (
                                                                     <button
                                                                         key={
@@ -482,13 +499,15 @@ function SalesCreate() {
                                                                             e,
                                                                         ) => {
                                                                             e.preventDefault();
+
                                                                             if (
                                                                                 !inCart &&
                                                                                 !outOfStock
-                                                                            )
-                                                                                addVariant(
+                                                                            ) {
+addVariant(
                                                                                     variant,
                                                                                 );
+}
                                                                         }}
                                                                         disabled={
                                                                             inCart ||
@@ -602,7 +621,10 @@ function SalesCreate() {
                                                 const variant = getVariant(
                                                     item.product_variant_id,
                                                 );
-                                                if (!variant) return null;
+
+                                                if (!variant) {
+return null;
+}
 
                                                 const qtyNum =
                                                     Number(item.qty) || 0;
@@ -912,8 +934,10 @@ function SalesCreate() {
                                                     selectedId={data.delivery_company_id}
                                                     onChange={(company) => {
                                                         setData('delivery_company_id', company?.id ?? null);
+
                                                         if (company) {
                                                             setData('actual_delivery_cost_usd', company.delivery_cost_usd);
+
                                                             if (!data.customer_delivery_fee_usd || data.customer_delivery_fee_usd === '0') {
                                                                 setData('customer_delivery_fee_usd', company.delivery_cost_usd);
                                                             }

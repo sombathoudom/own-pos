@@ -28,11 +28,14 @@ const resources = {
 const getLanguage = (): string => {
     if (typeof localStorage !== 'undefined') {
         const stored = localStorage.getItem('I18N_LANGUAGE');
+
         if (!stored) {
             localStorage.setItem('I18N_LANGUAGE', 'kh');
         }
+
         return stored || 'kh';
     }
+
     return 'kh';
 };
 

@@ -1,21 +1,15 @@
-import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
 
 //import Components
-import Header from './Header';
-import Sidebar from './Sidebar';
-import Footer from './Footer';
+import { ToastContainer } from 'react-toastify';
+import { useShallow } from 'zustand/react/shallow';
 import RightSidebar from '../Components/Common/RightSidebar';
 
-import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import FlashToastBridge from '../Components/FlashToastBridge';
 import BootTranslations from '../Components/BootTranslations';
-import { useLayoutStore } from '../stores/layout-store';
 import { changeHTMLAttribute } from '../slices/layouts/utils';
-import { useShallow } from 'zustand/react/shallow';
-
-//import actions
 import {
     changeLayout,
     changeSidebarTheme,
@@ -28,6 +22,12 @@ import {
     changeSidebarImageType,
     changeSidebarVisibility,
 } from '../slices/thunk';
+import { useLayoutStore } from '../stores/layout-store';
+
+//import actions
+import Footer from './Footer';
+import Header from './Header';
+import Sidebar from './Sidebar';
 
 const Layout = ({ children, props }: any) => {
     const [headerClass, setHeaderClass] = useState('');
@@ -118,7 +118,8 @@ const Layout = ({ children, props }: any) => {
     }, []);
 
     function scrollNavigation() {
-        var scrollup = document.documentElement.scrollTop;
+        const scrollup = document.documentElement.scrollTop;
+
         if (scrollup > 50) {
             setHeaderClass('topbar-shadow');
         } else {
@@ -130,6 +131,7 @@ const Layout = ({ children, props }: any) => {
         const humberIcon = document.querySelector(
             '.hamburger-icon',
         ) as HTMLElement;
+
         if (
             sidebarVisibilitytype === 'show' ||
             layoutType === 'vertical' ||

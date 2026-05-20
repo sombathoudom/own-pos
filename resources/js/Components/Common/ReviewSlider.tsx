@@ -1,6 +1,6 @@
 import React from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
 import { Card } from 'react-bootstrap';
+import { Swiper, SwiperSlide } from 'swiper/react';
 
 import companies1 from '../../../images/companies/img-1.png';
 import companies8 from '../../../images/companies/img-8.png';

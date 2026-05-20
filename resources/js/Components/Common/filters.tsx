@@ -51,6 +51,7 @@ export const SelectColumnFilter = ({
         preFilteredRows.forEach((row: any) => {
             options.add(row.values[id]);
         });
+
         return [...options.values()];
     }, [id, preFilteredRows]);
 

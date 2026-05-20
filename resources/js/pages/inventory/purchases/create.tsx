@@ -1,5 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { FormEvent, type ReactNode, useMemo, useState } from 'react';
+import {  useMemo, useState } from 'react';
+import type { FormEvent} from 'react';
+import type {ReactNode} from 'react';
 import {
     Alert,
     Badge,
@@ -103,6 +105,7 @@ function PurchasesCreate() {
         for (const row of formData.productRows) {
             for (const [variantId, qty] of Object.entries(row.variantQtys)) {
                 const qtyNum = Number(qty);
+
                 if (qtyNum > 0) {
                     const product = products.find(
                         (p) => String(p.id) === row.product_id,
@@ -133,9 +136,16 @@ function PurchasesCreate() {
 
     const filteredProducts = useMemo(() => {
         const term = productSearch.trim().toLowerCase();
+
         return products.filter((p) => {
-            if (selectedProductIds.has(String(p.id))) return false;
-            if (!term) return true;
+            if (selectedProductIds.has(String(p.id))) {
+return false;
+}
+
+            if (!term) {
+return true;
+}
+
             return p.name.toLowerCase().includes(term);
         });
     }, [products, selectedProductIds, productSearch]);
@@ -143,6 +153,7 @@ function PurchasesCreate() {
     const addProduct = (product: Product) => {
         const defaultSalePrice = product.variants[0]?.sale_price_usd ?? '0';
         const variantQtys: Record<string, string> = {};
+
         for (const v of product.variants) {
             variantQtys[String(v.id)] = '0';
         }
@@ -211,30 +222,47 @@ function PurchasesCreate() {
     const cloneSize = (sourceRowIndex: number, sourceSize: string) => {
         const sourceRow = data.productRows[sourceRowIndex];
         const sourceProduct = getProduct(sourceRow.product_id);
-        if (!sourceProduct) return;
+
+        if (!sourceProduct) {
+return;
+}
 
         // Find the variant with the source size
         const sourceVariant = sourceProduct.variants.find(
             (v) => v.size === sourceSize,
         );
-        if (!sourceVariant) return;
+
+        if (!sourceVariant) {
+return;
+}
 
         const sourceQty =
             sourceRow.variantQtys[String(sourceVariant.id)] || '0';
-        if (sourceQty === '0') return;
+
+        if (sourceQty === '0') {
+return;
+}
 
         // Update all other rows with the same size
         const updatedRows = data.productRows.map((row, rowIndex) => {
-            if (rowIndex === sourceRowIndex) return row;
+            if (rowIndex === sourceRowIndex) {
+return row;
+}
 
             const product = getProduct(row.product_id);
-            if (!product) return row;
+
+            if (!product) {
+return row;
+}
 
             // Find variant with matching size
             const matchingVariant = product.variants.find(
                 (v) => v.size === sourceSize,
             );
-            if (!matchingVariant) return row;
+
+            if (!matchingVariant) {
+return row;
+}
 
             // Clone the quantity
             return {
@@ -284,23 +312,34 @@ function PurchasesCreate() {
 
     const getDeliveryPerUnit = (row: ProductRow): number => {
         const qty = rowTotalQty(row);
-        if (!qty || !totalQtyAll) return 0;
+
+        if (!qty || !totalQtyAll) {
+return 0;
+}
+
         return (deliveryCost * qty) / totalQtyAll / qty;
     };
 
     const getLandedUnitCost = (row: ProductRow): number => {
         const unitCost = Number(row.unit_cost_usd) || 0;
+
         return unitCost + getDeliveryPerUnit(row);
     };
 
     const categoryBreakdown = useMemo(() => {
         const map: Record<string, number> = {};
+
         for (const row of data.productRows) {
             const product = getProduct(row.product_id);
-            if (!product) continue;
+
+            if (!product) {
+continue;
+}
+
             const catName = getCategoryName(product.category_id);
             map[catName] = (map[catName] || 0) + rowTotalQty(row);
         }
+
         return map;
     }, [data.productRows]);
 
@@ -313,6 +352,7 @@ function PurchasesCreate() {
         if (variant.color && variant.size) {
             return `${variant.color} / ${variant.size}`;
         }
+
         return variant.size || variant.color || variant.sku;
     };
 
@@ -606,7 +646,11 @@ function PurchasesCreate() {
                                                     unknown
                                                 >
                                             ).items;
-                                            if (!itemsError) return null;
+
+                                            if (!itemsError) {
+return null;
+}
+
                                             return (
                                                 <Alert
                                                     variant="danger"
@@ -772,15 +816,19 @@ function PurchasesCreate() {
                                                                                                 ) ===
                                                                                                 pid,
                                                                                         );
+
                                                                                     if (
                                                                                         !prod
-                                                                                    )
-                                                                                        return;
+                                                                                    ) {
+return;
+}
+
                                                                                     const variantQtys: Record<
                                                                                         string,
                                                                                         string
                                                                                     > =
                                                                                         {};
+
                                                                                     for (const v of prod.variants) {
                                                                                         variantQtys[
                                                                                             String(
@@ -789,6 +837,7 @@ function PurchasesCreate() {
                                                                                         ] =
                                                                                             '0';
                                                                                     }
+
                                                                                     const rows =
                                                                                         [
                                                                                             ...data.productRows,

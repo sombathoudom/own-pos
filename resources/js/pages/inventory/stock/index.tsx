@@ -1,11 +1,12 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
-    type FormEvent,
-    type ReactNode,
+    
+    
     useEffect,
     useMemo,
-    useState,
+    useState
 } from 'react';
+import type {FormEvent, ReactNode} from 'react';
 import {
     Badge,
     Button,
@@ -73,6 +74,7 @@ function StockIndex() {
         ).length;
         const lowStock = data.filter((v) => {
             const qty = v.stockBalance?.qty_on_hand ?? 0;
+
             return qty > 0 && qty <= 5;
         }).length;
 
@@ -80,8 +82,14 @@ function StockIndex() {
     }, [variants.data]);
 
     const stockBadge = (qty: number) => {
-        if (qty === 0) return <Badge bg="danger">Out of Stock</Badge>;
-        if (qty <= 5) return <Badge bg="warning">Low: {qty}</Badge>;
+        if (qty === 0) {
+return <Badge bg="danger">Out of Stock</Badge>;
+}
+
+        if (qty <= 5) {
+return <Badge bg="warning">Low: {qty}</Badge>;
+}
+
         return <Badge bg="success">In Stock: {qty}</Badge>;
     };
 

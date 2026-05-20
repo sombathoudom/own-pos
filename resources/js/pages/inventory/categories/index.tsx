@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
+import {   useEffect, useState } from 'react';
+import type {FormEvent, ReactNode} from 'react';
 import {
     Alert,
     Badge,

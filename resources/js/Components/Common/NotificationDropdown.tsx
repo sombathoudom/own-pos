@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Button, Col, Dropdown, Nav, NavLink, Row, Tab } from 'react-bootstrap';
 
 //import images
+import SimpleBar from 'simplebar-react';
+import bell from '../../../images/svg/bell.svg';
 import avatar2 from '../../../images/users/avatar-2.jpg';
-import avatar8 from '../../../images/users/avatar-8.jpg';
 import avatar3 from '../../../images/users/avatar-3.jpg';
 import avatar6 from '../../../images/users/avatar-6.jpg';
-import bell from '../../../images/svg/bell.svg';
+import avatar8 from '../../../images/users/avatar-8.jpg';
 
 //SimpleBar
-import SimpleBar from 'simplebar-react';
 
 const NotificationDropdown = () => {
     //Dropdown Toggle

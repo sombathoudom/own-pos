@@ -1,7 +1,6 @@
+import { Link } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
 import { Form } from 'react-bootstrap';
-import { Link } from '@inertiajs/react';
-import Navdata from '../../Layouts/LayoutMenuData';
 
 //SimpleBar
 import SimpleBar from 'simplebar-react';
@@ -10,6 +9,7 @@ import SimpleBar from 'simplebar-react';
 import image2 from '../../../images/users/avatar-2.jpg';
 import image3 from '../../../images/users/avatar-3.jpg';
 import image5 from '../../../images/users/avatar-5.jpg';
+import Navdata from '../../Layouts/LayoutMenuData';
 
 const SearchOption = () => {
     const navData = Navdata().props.children;
@@ -29,6 +29,7 @@ const SearchOption = () => {
 
         const handleSearchInput = () => {
             const inputLength = searchInput.value.length;
+
             if (inputLength > 0) {
                 dropdown.classList.add('show');
                 searchOptions.classList.remove('d-none');
@@ -57,6 +58,7 @@ const SearchOption = () => {
 
     const onKeyDownPress = (e: any) => {
         const { key } = e;
+
         if (key === 'Enter') {
             e.preventDefault();
             setSearchTerm(e.target.value);

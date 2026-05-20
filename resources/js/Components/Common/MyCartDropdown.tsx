@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import React, { useState } from 'react';
 import { Col, Dropdown, Row } from 'react-bootstrap';
 
@@ -8,9 +9,8 @@ import SimpleBar from 'simplebar-react';
 import image1 from '../../../images/products/img-1.png';
 import image2 from '../../../images/products/img-2.png';
 import image3 from '../../../images/products/img-3.png';
-import image6 from '../../../images/products/img-6.png';
 import image5 from '../../../images/products/img-5.png';
-import { Link } from '@inertiajs/react';
+import image6 from '../../../images/products/img-6.png';
 
 const MyCartDropdown = () => {
     const cartData = [

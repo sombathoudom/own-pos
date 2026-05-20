@@ -1,8 +1,8 @@
 // resources/js/Components/Media/MediaBankBrowser.tsx
-import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import ConfirmModal from '../Common/ConfirmModal';
+import React, { useEffect, useState } from 'react';
 import { flashToast } from '../../utils/flashToast';
+import ConfirmModal from '../Common/ConfirmModal';
 
 export type MediaItem = {
     id: number;
@@ -103,7 +103,11 @@ export default function MediaBankBrowser({
         // ✅ FIX: always enrich/overwrite map entries using latest data
         setSelectedMap((prev) => {
             const next = { ...prev };
-            for (const m of data.data) next[m.id] = m;
+
+            for (const m of data.data) {
+next[m.id] = m;
+}
+
             return next;
         });
 
@@ -122,16 +126,24 @@ export default function MediaBankBrowser({
     };
 
     const addToQueue = (files: FileList | null) => {
-        if (!files || files.length === 0) return;
+        if (!files || files.length === 0) {
+return;
+}
+
         setUploadError(null);
 
         const incoming = Array.from(files);
         setQueue((prev) => {
             const map = new Map<string, File>();
-            for (const f of prev)
-                map.set(`${f.name}|${f.size}|${f.lastModified}`, f);
-            for (const f of incoming)
-                map.set(`${f.name}|${f.size}|${f.lastModified}`, f);
+
+            for (const f of prev) {
+map.set(`${f.name}|${f.size}|${f.lastModified}`, f);
+}
+
+            for (const f of incoming) {
+map.set(`${f.name}|${f.size}|${f.lastModified}`, f);
+}
+
             return Array.from(map.values());
         });
     };
@@ -145,7 +157,9 @@ export default function MediaBankBrowser({
     const clearQueue = () => setQueue([]);
 
     const uploadQueue = async () => {
-        if (queue.length === 0) return;
+        if (queue.length === 0) {
+return;
+}
 
         setUploading(true);
         setProgress(0);
@@ -158,7 +172,10 @@ export default function MediaBankBrowser({
             const res = await axios.post(route('media.store'), fd, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 onUploadProgress: (evt) => {
-                    if (!evt.total) return;
+                    if (!evt.total) {
+return;
+}
+
                     setProgress(Math.round((evt.loaded * 100) / evt.total));
                 },
             });
@@ -170,20 +187,29 @@ export default function MediaBankBrowser({
             clearQueue();
             await load(1);
 
-            if (uploadedIds.length) onUploaded?.(uploadedIds);
+            if (uploadedIds.length) {
+onUploaded?.(uploadedIds);
+}
 
             // auto-select new uploads
             if (selectable && uploadedIds.length) {
                 setSelected((prev) => {
-                    if (!multiple) return [uploadedIds[0]];
+                    if (!multiple) {
+return [uploadedIds[0]];
+}
+
                     return Array.from(new Set([...prev, ...uploadedIds]));
                 });
 
                 setSelectedMap((prev) => {
                     const next = { ...prev };
+
                     for (const id of uploadedIds) {
-                        if (!next[id]) next[id] = { id } as any;
+                        if (!next[id]) {
+next[id] = { id } as any;
+}
                     }
+
                     return next;
                 });
             }
@@ -205,9 +231,12 @@ export default function MediaBankBrowser({
     };
 
     const addYoutube = async () => {
-        if (!ytUrl.trim()) return;
+        if (!ytUrl.trim()) {
+return;
+}
 
         setYtBusy(true);
+
         try {
             const res = await axios.post(route('media.youtube'), {
                 url: ytUrl.trim(),
@@ -226,7 +255,9 @@ export default function MediaBankBrowser({
                 }));
             }
 
-            if (newId) onUploaded?.([newId]);
+            if (newId) {
+onUploaded?.([newId]);
+}
 
             setYtUrl('');
             setYtTitle('');
@@ -253,33 +284,48 @@ export default function MediaBankBrowser({
     const isDoc = (m: MediaItem) => m.kind === 'file' && !isImage(m);
 
     const cardThumb = (m: MediaItem) => {
-        if (isYoutube(m)) return m.thumbnail || '';
-        if (isImage(m)) return m.url || '';
+        if (isYoutube(m)) {
+return m.thumbnail || '';
+}
+
+        if (isImage(m)) {
+return m.url || '';
+}
+
         return '';
     };
 
     const openItem = (m: MediaItem) => {
-        if (onOpenItem) return onOpenItem(m);
+        if (onOpenItem) {
+return onOpenItem(m);
+}
 
         if (isYoutube(m) && m.external_id) {
             window.open(
                 `https://www.youtube.com/watch?v=${m.external_id}`,
                 '_blank',
             );
+
             return;
         }
-        if (m.url) window.open(m.url, '_blank');
+
+        if (m.url) {
+window.open(m.url, '_blank');
+}
     };
 
     // Toggle select (multi)
     const toggleSelect = (id: number) => {
-        if (!selectable) return;
+        if (!selectable) {
+return;
+}
 
         const item = items.find((m) => m.id === id);
 
         if (!multiple) {
             setSelected([id]);
             setSelectedMap(item ? { [id]: item } : { [id]: { id } as any });
+
             return;
         }
 
@@ -288,8 +334,13 @@ export default function MediaBankBrowser({
 
             setSelectedMap((prevMap) => {
                 const next = { ...prevMap };
-                if (exists) delete next[id];
-                else next[id] = item ? item : ({ id } as any);
+
+                if (exists) {
+delete next[id];
+} else {
+next[id] = item ? item : ({ id } as any);
+}
+
                 return next;
             });
 
@@ -298,8 +349,13 @@ export default function MediaBankBrowser({
     };
 
     const confirmSelect = async () => {
-        if (!onConfirmSelect) return;
-        if (selected.length === 0) return;
+        if (!onConfirmSelect) {
+return;
+}
+
+        if (selected.length === 0) {
+return;
+}
 
         const ids = multiple ? selected : [selected[0]];
         const selectedItems = ids
@@ -313,6 +369,7 @@ export default function MediaBankBrowser({
     const handleCardClick = async (e: React.MouseEvent, m: MediaItem) => {
         if (!selectable) {
             openItem(m);
+
             return;
         }
 
@@ -321,12 +378,14 @@ export default function MediaBankBrowser({
         // Multi mode + modifier => toggle only (stay open)
         if (multiple && isMultiModifier) {
             toggleSelect(m.id);
+
             return;
         }
 
         // Otherwise => instant pick one (close handled by modal parent)
         if (instantPick && onConfirmSelect) {
             await onConfirmSelect([m.id], [m]);
+
             return;
         }
 
@@ -335,9 +394,16 @@ export default function MediaBankBrowser({
     };
 
     const prettySize = (bytes?: number) => {
-        if (!bytes) return '';
+        if (!bytes) {
+return '';
+}
+
         const kb = bytes / 1024;
-        if (kb < 1024) return `${kb.toFixed(1)} KB`;
+
+        if (kb < 1024) {
+return `${kb.toFixed(1)} KB`;
+}
+
         return `${(kb / 1024).toFixed(1)} MB`;
     };
 
@@ -355,7 +421,9 @@ export default function MediaBankBrowser({
     };
 
     const doDelete = async () => {
-        if (!deleteId) return;
+        if (!deleteId) {
+return;
+}
 
         setDeleting(true);
         setDeleteError(null);
@@ -692,6 +760,7 @@ export default function MediaBankBrowser({
                                                         f.type.startsWith(
                                                             'image/',
                                                         );
+
                                                     return (
                                                         <tr key={key}>
                                                             <td>

@@ -1,5 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { FormEvent, useMemo, useState } from 'react';
+import type { FormEvent} from 'react';
+import { useMemo, useState } from 'react';
 import {
     Alert,
     Badge,
@@ -94,6 +95,7 @@ function PurchasesEdit() {
 
         for (const item of purchase.items) {
             const productId = String(item.product_id);
+
             if (!grouped[productId]) {
                 grouped[productId] = {
                     product_id: productId,
@@ -102,6 +104,7 @@ function PurchasesEdit() {
                     variantQtys: {},
                 };
             }
+
             grouped[productId].variantQtys[String(item.product_variant_id)] =
                 item.qty;
         }
@@ -139,6 +142,7 @@ function PurchasesEdit() {
         for (const row of formData.productRows) {
             for (const [variantId, qty] of Object.entries(row.variantQtys)) {
                 const qtyNum = Number(qty);
+
                 if (qtyNum > 0) {
                     const product = products.find(
                         (p) => String(p.id) === row.product_id,
@@ -175,9 +179,16 @@ function PurchasesEdit() {
 
     const filteredProducts = useMemo(() => {
         const term = productSearch.trim().toLowerCase();
+
         return products.filter((p) => {
-            if (selectedProductIds.has(String(p.id))) return false;
-            if (!term) return true;
+            if (selectedProductIds.has(String(p.id))) {
+return false;
+}
+
+            if (!term) {
+return true;
+}
+
             return p.name.toLowerCase().includes(term);
         });
     }, [products, selectedProductIds, productSearch]);
@@ -185,6 +196,7 @@ function PurchasesEdit() {
     const addProduct = (product: Product) => {
         const defaultSalePrice = product.variants[0]?.sale_price_usd ?? '0';
         const variantQtys: Record<string, string> = {};
+
         for (const v of product.variants) {
             variantQtys[String(v.id)] = '0';
         }
@@ -277,6 +289,7 @@ function PurchasesEdit() {
         if (variant.color && variant.size) {
             return `${variant.color} / ${variant.size}`;
         }
+
         return variant.size || variant.color || variant.sku;
     };
 
@@ -550,7 +563,11 @@ function PurchasesEdit() {
                                                     unknown
                                                 >
                                             ).items;
-                                            if (!itemsError) return null;
+
+                                            if (!itemsError) {
+return null;
+}
+
                                             return (
                                                 <Alert
                                                     variant="danger"

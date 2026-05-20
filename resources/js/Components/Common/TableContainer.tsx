@@ -1,11 +1,10 @@
-import React, { Fragment, useEffect, useState } from 'react';
-import { Button, Card, Col, Row, Table } from 'react-bootstrap';
-
-import {
+import { rankItem } from '@tanstack/match-sorter-utils';
+import type {
     Column,
     Table as ReactTable,
     ColumnFiltersState,
-    FilterFn,
+    FilterFn} from '@tanstack/react-table';
+import {
     useReactTable,
     getCoreRowModel,
     getFilteredRowModel,
@@ -13,8 +12,10 @@ import {
     getSortedRowModel,
     flexRender,
 } from '@tanstack/react-table';
+import React, { Fragment, useEffect, useState } from 'react';
+import { Button, Card, Col, Row, Table } from 'react-bootstrap';
 
-import { rankItem } from '@tanstack/match-sorter-utils';
+
 
 import {
     ProductsGlobalFilter,
@@ -150,6 +151,7 @@ const TableContainer = ({
         addMeta({
             itemRank,
         });
+
         return itemRank.passed;
     };
 

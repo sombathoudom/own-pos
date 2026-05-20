@@ -73,6 +73,7 @@ function PosIndex() {
     const { data, setData, post, processing, errors } = useForm({
         customer_id: createdCustomer?.id ?? null,
         print_receipt: true,
+        from_pos: true,
         source_page: 'Walk-in',
         delivery_company_id: null as number | null,
         sale_date: getCurrentDate(),
@@ -111,6 +112,7 @@ function PosIndex() {
             }
         };
         window.addEventListener('keydown', handleKeyDown);
+
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
@@ -125,6 +127,7 @@ function PosIndex() {
                 activeCategory === 'all' ||
                 v.product.category_id === activeCategory;
             const matchesSize = activeSize === 'all' || v.size === activeSize;
+
             return matchesSearch && matchesCategory && matchesSize;
         });
     }, [variants, search, activeCategory, activeSize]);
@@ -143,8 +146,12 @@ function PosIndex() {
         const existing = data.items.find(
             (i) => i.product_variant_id === variant.id,
         );
+
         if (existing) {
-            if (existing.qty >= variant.stock_on_hand) return;
+            if (existing.qty >= variant.stock_on_hand) {
+                return;
+            }
+
             setData(
                 'items',
                 data.items.map((i) =>
@@ -154,7 +161,10 @@ function PosIndex() {
                 ),
             );
         } else {
-            if (variant.stock_on_hand <= 0) return;
+            if (variant.stock_on_hand <= 0) {
+                return;
+            }
+
             setData('items', [
                 ...data.items,
                 {
@@ -169,15 +179,28 @@ function PosIndex() {
 
     const updateQty = (variantId: number, delta: number) => {
         const variant = variants.find((v) => v.id === variantId);
-        if (!variant) return;
+
+        if (!variant) {
+            return;
+        }
 
         setData(
             'items',
             data.items.map((i) => {
-                if (i.product_variant_id !== variantId) return i;
+                if (i.product_variant_id !== variantId) {
+                    return i;
+                }
+
                 const newQty = i.qty + delta;
-                if (newQty <= 0) return i;
-                if (newQty > variant.stock_on_hand) return i;
+
+                if (newQty <= 0) {
+                    return i;
+                }
+
+                if (newQty > variant.stock_on_hand) {
+                    return i;
+                }
+
                 return { ...i, qty: newQty };
             }),
         );
@@ -185,7 +208,11 @@ function PosIndex() {
 
     const setQty = (variantId: number, qty: number) => {
         const variant = variants.find((v) => v.id === variantId);
-        if (!variant) return;
+
+        if (!variant) {
+            return;
+        }
+
         const newQty = Math.max(1, Math.min(qty, variant.stock_on_hand));
         setData(
             'items',
@@ -229,6 +256,7 @@ function PosIndex() {
     const cartTotal = data.items.reduce((sum, item) => {
         const price = Number(item.unit_price_usd) || 0;
         const discount = Number(item.discount_usd) || 0;
+
         return sum + (item.qty * price - discount);
     }, 0);
 
@@ -284,7 +312,10 @@ function PosIndex() {
     };
 
     const handleCompleteSale = () => {
-        if (data.items.length === 0) return;
+        if (data.items.length === 0) {
+            return;
+        }
+
         setShowPreviewModal(true);
     };
 
@@ -336,6 +367,7 @@ function PosIndex() {
                                                 ref={searchRef}
                                                 type="text"
                                                 placeholder="Search by name, SKU, color, size... (Press F2)"
+                                                disabled={processing}
                                                 value={search}
                                                 onChange={(e) =>
                                                     setSearch(e.target.value)
@@ -355,6 +387,7 @@ function PosIndex() {
                                                         : 'outline-primary'
                                                 }
                                                 size="sm"
+                                                disabled={processing}
                                                 onClick={() =>
                                                     setActiveCategory('all')
                                                 }
@@ -372,6 +405,7 @@ function PosIndex() {
                                                                 : 'outline-primary'
                                                         }
                                                         size="sm"
+                                                        disabled={processing}
                                                         onClick={() =>
                                                             setActiveCategory(
                                                                 Number(id),
@@ -393,6 +427,7 @@ function PosIndex() {
                                                         : 'outline-secondary'
                                                 }
                                                 size="sm"
+                                                disabled={processing}
                                                 onClick={() =>
                                                     setActiveSize('all')
                                                 }
@@ -408,6 +443,7 @@ function PosIndex() {
                                                             : 'outline-secondary'
                                                     }
                                                     size="sm"
+                                                    disabled={processing}
                                                     onClick={() =>
                                                         setActiveSize(size)
                                                     }
@@ -441,17 +477,20 @@ function PosIndex() {
                                                             xl={3}
                                                         >
                                                             <Card
-                                                                className={`h-100 cursor-pointer transition-all ${outOfStock ? 'opacity-50' : ''} ${inCart ? 'border-2 border-primary shadow' : 'hover-shadow'}`}
+                                                                className={`h-100 cursor-pointer transition-all ${outOfStock || processing ? 'opacity-50' : ''} ${inCart ? 'border-2 border-primary shadow' : 'hover-shadow'}`}
                                                                 onClick={() =>
                                                                     !outOfStock &&
+                                                                    !processing &&
                                                                     addToCart(
                                                                         variant,
                                                                     )
                                                                 }
                                                                 style={{
-                                                                    cursor: outOfStock
-                                                                        ? 'not-allowed'
-                                                                        : 'pointer',
+                                                                    cursor:
+                                                                        outOfStock ||
+                                                                        processing
+                                                                            ? 'not-allowed'
+                                                                            : 'pointer',
                                                                     transform:
                                                                         inCart
                                                                             ? 'scale(1.02)'
@@ -559,7 +598,7 @@ function PosIndex() {
                                                                         className="fw-bold text-truncate mb-1"
                                                                         style={{
                                                                             fontSize:
-                                                                                '0.9rem',
+                                                                                '1rem',
                                                                         }}
                                                                         title={
                                                                             variant
@@ -580,7 +619,7 @@ function PosIndex() {
                                                                             className="font-monospace"
                                                                             style={{
                                                                                 fontSize:
-                                                                                    '0.7rem',
+                                                                                    '0.75rem',
                                                                             }}
                                                                         >
                                                                             {
@@ -590,10 +629,10 @@ function PosIndex() {
                                                                     </div>
                                                                     {/* Color & Size */}
                                                                     <div
-                                                                        className="small d-flex align-items-center mb-2 gap-1 text-muted"
+                                                                        className="d-flex align-items-center mb-2 gap-1 text-muted"
                                                                         style={{
                                                                             fontSize:
-                                                                                '0.75rem',
+                                                                                '0.85rem',
                                                                         }}
                                                                     >
                                                                         {variant.color && (
@@ -601,8 +640,8 @@ function PosIndex() {
                                                                                 <span
                                                                                     className="d-inline-block rounded-circle"
                                                                                     style={{
-                                                                                        width: 10,
-                                                                                        height: 10,
+                                                                                        width: 12,
+                                                                                        height: 12,
                                                                                         backgroundColor:
                                                                                             variant.color,
                                                                                         border: '1px solid #dee2e6',
@@ -618,7 +657,7 @@ function PosIndex() {
                                                                                 </span>
                                                                             </>
                                                                         )}
-                                                                        <span className="fw-semibold">
+                                                                        <span className="fw-bold text-dark">
                                                                             {
                                                                                 variant.size
                                                                             }
@@ -672,6 +711,7 @@ function PosIndex() {
                                                 <Button
                                                     variant="outline-primary"
                                                     size="sm"
+                                                    disabled={processing}
                                                     onClick={() =>
                                                         setDisplayLimit(
                                                             (prev) => prev + 30,
@@ -700,11 +740,21 @@ function PosIndex() {
                             {/* Cart Panel */}
                             <Col xl={4} lg={4} md={5}>
                                 <Card
-                                    className="sticky-top mb-3"
-                                    style={{ top: '1rem', zIndex: 1020 }}
+                                    className="sticky-top d-flex flex-column mb-3"
+                                    style={{
+                                        top: '1rem',
+                                        zIndex: 1020,
+                                        maxHeight: 'calc(100vh - 2rem)',
+                                    }}
                                 >
-                                    <Card.Body>
-                                        <div className="d-flex align-items-center justify-content-between mb-3">
+                                    <Card.Body
+                                        className="d-flex flex-column p-3"
+                                        style={{
+                                            overflow: 'hidden',
+                                            minHeight: 0,
+                                        }}
+                                    >
+                                        <div className="d-flex align-items-center justify-content-between mb-3 flex-shrink-0">
                                             <h4 className="card-title mb-0">
                                                 <i className="ri-shopping-cart-2-line me-1"></i>
                                                 Cart ({totalQty})
@@ -714,6 +764,7 @@ function PosIndex() {
                                                     variant="link"
                                                     className="text-danger p-0"
                                                     onClick={clearCart}
+                                                    disabled={processing}
                                                 >
                                                     Clear
                                                 </Button>
@@ -721,7 +772,7 @@ function PosIndex() {
                                         </div>
 
                                         {/* Customer */}
-                                        <div className="mb-3">
+                                        <div className="mb-3 flex-shrink-0">
                                             <div className="d-flex justify-content-between align-items-center mb-2">
                                                 <div>
                                                     <span className="fw-semibold">
@@ -751,6 +802,7 @@ function PosIndex() {
                                                         }
                                                         inputId="customer_id"
                                                         placeholder="Search customer"
+                                                        disabled={processing}
                                                     />
                                                 </Col>
                                                 <Col md={4}>
@@ -760,6 +812,7 @@ function PosIndex() {
                                                                 true,
                                                             )
                                                         }
+                                                        disabled={processing}
                                                     >
                                                         Add Customer
                                                     </Button>
@@ -771,6 +824,7 @@ function PosIndex() {
                                                 </Form.Label>
                                                 <Form.Select
                                                     size="sm"
+                                                    disabled={processing}
                                                     value={data.source_page}
                                                     onChange={(e) =>
                                                         setData(
@@ -795,238 +849,254 @@ function PosIndex() {
 
                                         {/* Cart Items */}
                                         <div
-                                            className="vstack mb-3 gap-2"
-                                            style={{
-                                                maxHeight: 300,
-                                                overflowY: 'auto',
-                                            }}
+                                            className="vstack flex-grow-1 gap-2 overflow-auto"
+                                            style={{ minHeight: 0 }}
                                         >
                                             {data.items.length > 0 && (
                                                 <Accordion
                                                     className="custom-accordionwithicon custom-accordion-border accordion-border-box accordion-success"
                                                     id="cartAccordion"
                                                 >
-                                                    {data.items.map((item, index) => {
-                                                        const variant = getVariant(
-                                                            item.product_variant_id,
-                                                        );
-                                                        if (!variant) return null;
+                                                    {data.items.map(
+                                                        (item, index) => {
+                                                            const variant =
+                                                                getVariant(
+                                                                    item.product_variant_id,
+                                                                );
 
-                                                        const itemTotal =
-                                                            item.qty *
+                                                            if (!variant) {
+                                                                return null;
+                                                            }
+
+                                                            const itemTotal =
+                                                                item.qty *
+                                                                    Number(
+                                                                        item.unit_price_usd,
+                                                                    ) -
                                                                 Number(
-                                                                    item.unit_price_usd,
-                                                                ) -
-                                                            Number(
-                                                                item.discount_usd,
-                                                            );
+                                                                    item.discount_usd,
+                                                                );
 
-                                                        return (
-                                                            <Accordion.Item
-                                                                key={
-                                                                    item.product_variant_id
-                                                                }
-                                                                eventKey={String(index)}
-                                                                className="material-shadow mb-2"
-                                                            >
-                                                                <Accordion.Header>
-                                                                    <div className="d-flex justify-content-between align-items-center w-100 me-3">
-                                                                        <div className="d-flex align-items-center gap-2">
-                                                                            <span className="fw-semibold">
-                                                                                {
-                                                                                    variant
-                                                                                        .product
-                                                                                        .name
-                                                                                }
-                                                                            </span>
-                                                                            <span className="text-muted">
-                                                                                -
-                                                                            </span>
+                                                            return (
+                                                                <Accordion.Item
+                                                                    key={
+                                                                        item.product_variant_id
+                                                                    }
+                                                                    eventKey={String(
+                                                                        index,
+                                                                    )}
+                                                                    className="material-shadow mb-2"
+                                                                >
+                                                                    <Accordion.Header>
+                                                                        <div className="d-flex justify-content-between align-items-center me-3 w-100">
+                                                                            <div className="d-flex align-items-center gap-2">
+                                                                                <span className="fw-semibold">
+                                                                                    {
+                                                                                        variant
+                                                                                            .product
+                                                                                            .name
+                                                                                    }
+                                                                                </span>
+                                                                                <span className="text-muted">
+                                                                                    -
+                                                                                </span>
+                                                                                <Badge
+                                                                                    bg="secondary"
+                                                                                    className="font-monospace"
+                                                                                    style={{
+                                                                                        fontSize:
+                                                                                            '0.7rem',
+                                                                                    }}
+                                                                                >
+                                                                                    {
+                                                                                        variant.size
+                                                                                    }
+                                                                                </Badge>
+                                                                            </div>
+                                                                            <div className="d-flex align-items-center gap-2">
+                                                                                <span className="fw-bold text-success">
+                                                                                    $
+                                                                                    {itemTotal.toFixed(
+                                                                                        2,
+                                                                                    )}
+                                                                                </span>
+                                                                                <Button
+                                                                                    variant="link"
+                                                                                    className="text-danger ms-2 p-0"
+                                                                                    onClick={(
+                                                                                        e,
+                                                                                    ) => {
+                                                                                        e.stopPropagation();
+                                                                                        removeFromCart(
+                                                                                            item.product_variant_id,
+                                                                                        );
+                                                                                    }}
+                                                                                    disabled={
+                                                                                        processing
+                                                                                    }
+                                                                                >
+                                                                                    <i className="ri-delete-bin-line"></i>
+                                                                                </Button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </Accordion.Header>
+                                                                    <Accordion.Body>
+                                                                        {/* Product Info */}
+                                                                        <div className="d-flex align-items-center mb-3 gap-2">
                                                                             <Badge
                                                                                 bg="secondary"
                                                                                 className="font-monospace"
-                                                                                style={{
-                                                                                    fontSize:
-                                                                                        '0.7rem',
-                                                                                }}
                                                                             >
+                                                                                {
+                                                                                    variant.sku
+                                                                                }
+                                                                            </Badge>
+                                                                            <span className="small text-muted">
+                                                                                {
+                                                                                    variant.color
+                                                                                }{' '}
+                                                                                /{' '}
                                                                                 {
                                                                                     variant.size
                                                                                 }
-                                                                            </Badge>
-                                                                        </div>
-                                                                        <div className="d-flex align-items-center gap-2">
-                                                                            <span className="fw-bold text-success">
-                                                                                $
-                                                                                {itemTotal.toFixed(
-                                                                                    2,
-                                                                                )}
-                                                                            </span>
-                                                                            <Button
-                                                                                variant="link"
-                                                                                className="text-danger p-0 ms-2"
-                                                                                onClick={(
-                                                                                    e,
-                                                                                ) => {
-                                                                                    e.stopPropagation();
-                                                                                    removeFromCart(
-                                                                                        item.product_variant_id,
-                                                                                    );
-                                                                                }}
-                                                                            >
-                                                                                <i className="ri-delete-bin-line"></i>
-                                                                            </Button>
-                                                                        </div>
-                                                                    </div>
-                                                                </Accordion.Header>
-                                                                <Accordion.Body>
-                                                                    {/* Product Info */}
-                                                                    <div className="d-flex align-items-center gap-2 mb-3">
-                                                                        <Badge
-                                                                            bg="secondary"
-                                                                            className="font-monospace"
-                                                                        >
-                                                                            {
-                                                                                variant.sku
-                                                                            }
-                                                                        </Badge>
-                                                                        <span className="small text-muted">
-                                                                            {
-                                                                                variant.color
-                                                                            }{' '}
-                                                                            /{' '}
-                                                                            {
-                                                                                variant.size
-                                                                            }
-                                                                        </span>
-                                                                    </div>
-
-                                                                    {/* Quantity Controls */}
-                                                                    <div className="mb-3">
-                                                                        <div className="small fw-semibold mb-1 text-muted">
-                                                                            QUANTITY
-                                                                        </div>
-                                                                        <div className="d-flex align-items-center gap-2">
-                                                                            <Button
-                                                                                variant="primary"
-                                                                                size="sm"
-                                                                                className="px-3"
-                                                                                onClick={() =>
-                                                                                    updateQty(
-                                                                                        item.product_variant_id,
-                                                                                        -1,
-                                                                                    )
-                                                                                }
-                                                                                disabled={
-                                                                                    item.qty <=
-                                                                                    1
-                                                                                }
-                                                                            >
-                                                                                <i className="ri-subtract-line"></i>
-                                                                            </Button>
-                                                                            <div
-                                                                                className="flex-grow-1 rounded border border-primary bg-white py-1 text-center"
-                                                                                style={{
-                                                                                    fontSize:
-                                                                                        '1.25rem',
-                                                                                    fontWeight:
-                                                                                        'bold',
-                                                                                    color: '#0d6efd',
-                                                                                }}
-                                                                            >
-                                                                                {
-                                                                                    item.qty
-                                                                                }
-                                                                            </div>
-                                                                            <Button
-                                                                                variant="primary"
-                                                                                size="sm"
-                                                                                className="px-3"
-                                                                                onClick={() =>
-                                                                                    updateQty(
-                                                                                        item.product_variant_id,
-                                                                                        1,
-                                                                                    )
-                                                                                }
-                                                                                disabled={
-                                                                                    item.qty >=
-                                                                                    variant.stock_on_hand
-                                                                                }
-                                                                            >
-                                                                                <i className="ri-add-line"></i>
-                                                                            </Button>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Price & Discount */}
-                                                                    <div className="row g-2">
-                                                                        <div className="col-6">
-                                                                            <div className="small mb-1 text-muted">
-                                                                                Unit
-                                                                                Price
-                                                                            </div>
-                                                                            <Form.Control
-                                                                                type="number"
-                                                                                step="0.01"
-                                                                                value={
-                                                                                    item.unit_price_usd
-                                                                                }
-                                                                                onChange={(
-                                                                                    e,
-                                                                                ) =>
-                                                                                    updateCartPrice(
-                                                                                        item.product_variant_id,
-                                                                                        e
-                                                                                            .target
-                                                                                            .value,
-                                                                                    )
-                                                                                }
-                                                                            />
-                                                                        </div>
-                                                                        <div className="col-6">
-                                                                            <div className="small mb-1 text-muted">
-                                                                                Discount
-                                                                            </div>
-                                                                            <Form.Control
-                                                                                type="number"
-                                                                                step="0.01"
-                                                                                min="0"
-                                                                                value={
-                                                                                    item.discount_usd
-                                                                                }
-                                                                                onChange={(
-                                                                                    e,
-                                                                                ) =>
-                                                                                    updateCartDiscount(
-                                                                                        item.product_variant_id,
-                                                                                        e
-                                                                                            .target
-                                                                                            .value,
-                                                                                    )
-                                                                                }
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Item Total */}
-                                                                    <div className="border-top mt-3 pt-2">
-                                                                        <div className="d-flex justify-content-between align-items-center">
-                                                                            <span className="text-muted">
-                                                                                Item
-                                                                                Total
-                                                                            </span>
-                                                                            <span className="fw-bold text-success">
-                                                                                $
-                                                                                {itemTotal.toFixed(
-                                                                                    2,
-                                                                                )}
                                                                             </span>
                                                                         </div>
-                                                                    </div>
-                                                                </Accordion.Body>
-                                                            </Accordion.Item>
-                                                        );
-                                                    })}
+
+                                                                        {/* Quantity Controls */}
+                                                                        <div className="mb-3">
+                                                                            <div className="small fw-semibold mb-1 text-muted">
+                                                                                QUANTITY
+                                                                            </div>
+                                                                            <div className="d-flex align-items-center gap-2">
+                                                                                <Button
+                                                                                    variant="primary"
+                                                                                    size="sm"
+                                                                                    className="px-3"
+                                                                                    onClick={() =>
+                                                                                        updateQty(
+                                                                                            item.product_variant_id,
+                                                                                            -1,
+                                                                                        )
+                                                                                    }
+                                                                                    disabled={
+                                                                                        processing ||
+                                                                                        item.qty <=
+                                                                                            1
+                                                                                    }
+                                                                                >
+                                                                                    <i className="ri-subtract-line"></i>
+                                                                                </Button>
+                                                                                <div
+                                                                                    className="flex-grow-1 rounded border border-primary bg-white py-1 text-center"
+                                                                                    style={{
+                                                                                        fontSize:
+                                                                                            '1.25rem',
+                                                                                        fontWeight:
+                                                                                            'bold',
+                                                                                        color: '#0d6efd',
+                                                                                    }}
+                                                                                >
+                                                                                    {
+                                                                                        item.qty
+                                                                                    }
+                                                                                </div>
+                                                                                <Button
+                                                                                    variant="primary"
+                                                                                    size="sm"
+                                                                                    className="px-3"
+                                                                                    onClick={() =>
+                                                                                        updateQty(
+                                                                                            item.product_variant_id,
+                                                                                            1,
+                                                                                        )
+                                                                                    }
+                                                                                    disabled={
+                                                                                        processing ||
+                                                                                        item.qty >=
+                                                                                            variant.stock_on_hand
+                                                                                    }
+                                                                                >
+                                                                                    <i className="ri-add-line"></i>
+                                                                                </Button>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Price & Discount */}
+                                                                        <div className="row g-2">
+                                                                            <div className="col-6">
+                                                                                <div className="small mb-1 text-muted">
+                                                                                    Unit
+                                                                                    Price
+                                                                                </div>
+                                                                                <Form.Control
+                                                                                    type="number"
+                                                                                    step="0.01"
+                                                                                    value={
+                                                                                        item.unit_price_usd
+                                                                                    }
+                                                                                    onChange={(
+                                                                                        e,
+                                                                                    ) =>
+                                                                                        updateCartPrice(
+                                                                                            item.product_variant_id,
+                                                                                            e
+                                                                                                .target
+                                                                                                .value,
+                                                                                        )
+                                                                                    }
+                                                                                    disabled={
+                                                                                        processing
+                                                                                    }
+                                                                                />
+                                                                            </div>
+                                                                            <div className="col-6">
+                                                                                <div className="small mb-1 text-muted">
+                                                                                    Discount
+                                                                                </div>
+                                                                                <Form.Control
+                                                                                    type="number"
+                                                                                    step="0.01"
+                                                                                    min="0"
+                                                                                    disabled={
+                                                                                        processing
+                                                                                    }
+                                                                                    value={
+                                                                                        item.discount_usd
+                                                                                    }
+                                                                                    onChange={(
+                                                                                        e,
+                                                                                    ) =>
+                                                                                        updateCartDiscount(
+                                                                                            item.product_variant_id,
+                                                                                            e
+                                                                                                .target
+                                                                                                .value,
+                                                                                        )
+                                                                                    }
+                                                                                />
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Item Total */}
+                                                                        <div className="border-top mt-3 pt-2">
+                                                                            <div className="d-flex justify-content-between align-items-center">
+                                                                                <span className="text-muted">
+                                                                                    Item
+                                                                                    Total
+                                                                                </span>
+                                                                                <span className="fw-bold text-success">
+                                                                                    $
+                                                                                    {itemTotal.toFixed(
+                                                                                        2,
+                                                                                    )}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </Accordion.Body>
+                                                                </Accordion.Item>
+                                                            );
+                                                        },
+                                                    )}
                                                 </Accordion>
                                             )}
                                             {data.items.length === 0 && (
@@ -1038,7 +1108,7 @@ function PosIndex() {
                                         </div>
 
                                         {/* Totals */}
-                                        <div className="vstack mb-3 gap-2">
+                                        <div className="vstack mb-3 flex-shrink-0 gap-2">
                                             <div className="d-flex justify-content-between">
                                                 <span className="text-muted">
                                                     Subtotal
@@ -1057,6 +1127,7 @@ function PosIndex() {
                                                     type="number"
                                                     step="0.01"
                                                     min="0"
+                                                    disabled={processing}
                                                     value={data.discount_usd}
                                                     onChange={(e) =>
                                                         setData(
@@ -1079,16 +1150,19 @@ function PosIndex() {
                                                     selectedId={
                                                         data.delivery_company_id
                                                     }
+                                                    disabled={processing}
                                                     onChange={(company) => {
                                                         setData(
                                                             'delivery_company_id',
                                                             company?.id ?? null,
                                                         );
+
                                                         if (company) {
                                                             setData(
                                                                 'actual_delivery_cost_usd',
                                                                 company.delivery_cost_usd,
                                                             );
+
                                                             if (
                                                                 !data.customer_delivery_fee_usd ||
                                                                 data.customer_delivery_fee_usd ===
@@ -1110,14 +1184,20 @@ function PosIndex() {
                                             </div>
 
                                             <div className="d-flex justify-content-between align-items-center">
-                                                <span className="text-muted">
-                                                    Delivery
+                                                <span
+                                                    className="fw-semibold"
+                                                    style={{
+                                                        fontSize: '0.95rem',
+                                                    }}
+                                                >
+                                                    Delivery Fee
                                                 </span>
                                                 <Form.Control
                                                     size="sm"
                                                     type="number"
                                                     step="0.01"
                                                     min="0"
+                                                    disabled={processing}
                                                     value={
                                                         data.customer_delivery_fee_usd
                                                     }
@@ -1140,6 +1220,7 @@ function PosIndex() {
                                                     type="number"
                                                     step="0.01"
                                                     min="0"
+                                                    disabled={processing}
                                                     value={
                                                         data.actual_delivery_cost_usd
                                                     }
@@ -1173,6 +1254,7 @@ function PosIndex() {
                                                     type="number"
                                                     step="0.01"
                                                     min="0"
+                                                    disabled={processing}
                                                     value={data.paid_usd}
                                                     onChange={(e) =>
                                                         setData(
@@ -1210,13 +1292,13 @@ function PosIndex() {
                                         {firstError && (
                                             <Alert
                                                 variant="danger"
-                                                className="small py-2"
+                                                className="small flex-shrink-0 py-2"
                                             >
                                                 {firstError}
                                             </Alert>
                                         )}
 
-                                        <div className="d-grid gap-2">
+                                        <div className="d-grid flex-shrink-0 gap-2">
                                             <Button
                                                 type="button"
                                                 variant="success"
@@ -1280,11 +1362,15 @@ function PosIndex() {
                 <Offcanvas.Body className="d-flex flex-column">
                     <div
                         className="flex-grow-1 overflow-auto"
-                        style={{ maxHeight: '60vh' }}
+                        style={{ minHeight: 0 }}
                     >
                         {data.items.map((item) => {
                             const variant = getVariant(item.product_variant_id);
-                            if (!variant) return null;
+
+                            if (!variant) {
+                                return null;
+                            }
+
                             return (
                                 <div
                                     key={item.product_variant_id}
@@ -1312,6 +1398,7 @@ function PosIndex() {
                                                         -1,
                                                     )
                                                 }
+                                                disabled={processing}
                                             >
                                                 -
                                             </Button>
@@ -1320,6 +1407,7 @@ function PosIndex() {
                                                 type="number"
                                                 min={1}
                                                 max={variant.stock_on_hand}
+                                                disabled={processing}
                                                 value={item.qty}
                                                 onChange={(e) =>
                                                     setQty(
@@ -1342,6 +1430,7 @@ function PosIndex() {
                                                         1,
                                                     )
                                                 }
+                                                disabled={processing}
                                             >
                                                 +
                                             </Button>
@@ -1358,6 +1447,7 @@ function PosIndex() {
                                                     size="sm"
                                                     type="number"
                                                     step="0.01"
+                                                    disabled={processing}
                                                     value={item.unit_price_usd}
                                                     onChange={(e) =>
                                                         updateCartPrice(
@@ -1382,6 +1472,7 @@ function PosIndex() {
                                                     type="number"
                                                     step="0.01"
                                                     min="0"
+                                                    disabled={processing}
                                                     value={item.discount_usd}
                                                     onChange={(e) =>
                                                         updateCartDiscount(
@@ -1412,6 +1503,7 @@ function PosIndex() {
                                             variant="link"
                                             className="text-danger p-0"
                                             size="sm"
+                                            disabled={processing}
                                             onClick={() =>
                                                 removeFromCart(
                                                     item.product_variant_id,
@@ -1447,6 +1539,7 @@ function PosIndex() {
                                     type="number"
                                     step="0.01"
                                     min="0"
+                                    disabled={processing}
                                     value={data.discount_usd}
                                     onChange={(e) =>
                                         setData('discount_usd', e.target.value)
@@ -1461,11 +1554,13 @@ function PosIndex() {
                                 <DeliveryCompanyPicker
                                     companies={deliveryCompanies}
                                     selectedId={data.delivery_company_id}
+                                    disabled={processing}
                                     onChange={(company) => {
                                         setData(
                                             'delivery_company_id',
                                             company?.id ?? null,
                                         );
+
                                         if (company) {
                                             setData(
                                                 'actual_delivery_cost_usd',
@@ -1481,12 +1576,18 @@ function PosIndex() {
                                 />
                             </div>
                             <div className="d-flex justify-content-between align-items-center">
-                                <span className="text-muted">Delivery</span>
+                                <span
+                                    className="fw-semibold"
+                                    style={{ fontSize: '0.95rem' }}
+                                >
+                                    Delivery Fee
+                                </span>
                                 <Form.Control
                                     size="sm"
                                     type="number"
                                     step="0.01"
                                     min="0"
+                                    disabled={processing}
                                     value={data.customer_delivery_fee_usd}
                                     onChange={(e) =>
                                         setData(
@@ -1504,6 +1605,7 @@ function PosIndex() {
                                     type="number"
                                     step="0.01"
                                     min="0"
+                                    disabled={processing}
                                     value={data.actual_delivery_cost_usd}
                                     onChange={(e) =>
                                         setData(
@@ -1528,6 +1630,7 @@ function PosIndex() {
                                     type="number"
                                     step="0.01"
                                     min="0"
+                                    disabled={processing}
                                     value={data.paid_usd}
                                     onChange={(e) =>
                                         setData('paid_usd', e.target.value)
@@ -1726,7 +1829,10 @@ function PosIndex() {
                                 const variant = getVariant(
                                     item.product_variant_id,
                                 );
-                                if (!variant) return null;
+
+                                if (!variant) {
+                                    return null;
+                                }
 
                                 const itemSubtotal =
                                     item.qty * Number(item.unit_price_usd);
@@ -1857,7 +1963,12 @@ function PosIndex() {
                         )}
                         {deliveryFee > 0 && (
                             <div className="d-flex justify-content-between mb-2">
-                                <span className="text-muted">Delivery Fee</span>
+                                <span
+                                    className="fw-semibold"
+                                    style={{ fontSize: '0.95rem' }}
+                                >
+                                    Delivery Fee
+                                </span>
                                 <span>${deliveryFee.toFixed(2)}</span>
                             </div>
                         )}

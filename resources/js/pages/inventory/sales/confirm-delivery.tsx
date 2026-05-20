@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { type ReactNode } from 'react';
+import type {ReactNode} from 'react';
 import {
     Alert,
     Button,
@@ -13,8 +13,8 @@ import {
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
-import { store as storeConfirmDelivery } from '@/routes/sales/confirm-delivery';
 import { show as showSale } from '@/routes/sales';
+import { store as storeConfirmDelivery } from '@/routes/sales/confirm-delivery';
 import { getCurrentDate } from '@/utils/dateTime';
 
 type VariantOption = {

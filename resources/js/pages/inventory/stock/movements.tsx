@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { type ReactNode, useEffect, useState } from 'react';
+import {  useEffect, useState } from 'react';
+import type {ReactNode} from 'react';
 import { Badge, Button, Card, Container, Form, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
@@ -88,6 +89,7 @@ function StockMovements() {
         }
 
         const { type: refType, label } = movement.reference;
+
         if (!label) {
             return '—';
         }

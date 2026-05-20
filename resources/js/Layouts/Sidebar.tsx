@@ -1,12 +1,12 @@
+import { Link } from '@inertiajs/react';
 import React, { useEffect } from 'react';
-import SimpleBar from 'simplebar-react';
 
 //Import Components
-import VerticalLayout from './VerticalLayouts';
 import { Container } from 'react-bootstrap';
-import { Link } from '@inertiajs/react';
+import SimpleBar from 'simplebar-react';
 import HorizontalLayout from './HorizontalLayout';
 import TwoColumnLayout from './TwoColumnLayout';
+import VerticalLayout from './VerticalLayouts';
 
 const Sidebar = ({ layoutType }: any) => {
     useEffect(() => {
@@ -49,6 +49,7 @@ const Sidebar = ({ layoutType }: any) => {
             );
         }
     };
+
     return (
         <React.Fragment>
             <div className="app-menu navbar-menu">

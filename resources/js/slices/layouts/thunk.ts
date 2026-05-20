@@ -1,5 +1,5 @@
-import { changeHTMLAttribute } from './utils';
 import { updateLayoutState } from '@/stores/layout-store';
+import { changeHTMLAttribute } from './utils';
 
 /**
  * Changes the layout type

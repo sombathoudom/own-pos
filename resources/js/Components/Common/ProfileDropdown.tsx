@@ -1,6 +1,6 @@
+import { Link, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
 import { Dropdown } from 'react-bootstrap';
-import { Link, usePage } from '@inertiajs/react';
 //import images
 import avatar1 from '../../../images/users/avatar-1.jpg';
 
@@ -12,6 +12,7 @@ const ProfileDropdown = () => {
     const toggleProfileDropdown = () => {
         setIsProfileDropdown(!isProfileDropdown);
     };
+
     return (
         <React.Fragment>
             <Dropdown

@@ -1,5 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { type FormEvent, type ReactNode, useState } from 'react';
+import {   useState } from 'react';
+import type {FormEvent, ReactNode} from 'react';
 import { Badge, Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
@@ -823,6 +824,7 @@ function SummaryCard({
 
 function money(value: string | number): string {
     const n = Number(value || 0);
+
     return n === 0 ? '-' : `$${n.toFixed(2)}`;
 }
 

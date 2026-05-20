@@ -98,7 +98,8 @@
 <body>
     <div class="print-actions">
         <button type="button" onclick="window.print()">Print</button>
-        <a href="{{ route('sales.show', $sale['id']) }}">Back</a>
+        
+        <a href="{{ session('from_pos') ? route('pos') : route('sales.show', $sale['id']) }}">Back</a>
     </div>
 
     <div class="receipt">

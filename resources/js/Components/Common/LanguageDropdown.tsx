@@ -1,12 +1,12 @@
+import { router } from '@inertiajs/react';
+import { get } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { Dropdown } from 'react-bootstrap';
-import { get } from 'lodash';
 
-import { router } from '@inertiajs/react';
 
 //i18n
-import i18n from '../../i18n';
 import languages from '../../common/languages';
+import i18n from '../../i18n';
 
 const LanguageDropdown = () => {
     // Declare a new state variable, which we'll call "menu"
@@ -63,6 +63,7 @@ const LanguageDropdown = () => {
     const toggleLanguageDropdown = () => {
         setIsLanguageDropdown(!isLanguageDropdown);
     };
+
     return (
         <React.Fragment>
             <Dropdown

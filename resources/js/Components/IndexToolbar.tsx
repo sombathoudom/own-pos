@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
+import React, { useEffect, useState } from 'react';
 
 export type IndexFilters = {
     search?: string;

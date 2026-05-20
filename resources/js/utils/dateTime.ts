@@ -18,10 +18,15 @@ export function formatDate(
     date: string | Date | null | undefined,
     format: 'short' | 'long' | 'full' = 'short',
 ): string {
-    if (!date) return '';
+    if (!date) {
+return '';
+}
 
     const d = new Date(date);
-    if (isNaN(d.getTime())) return '';
+
+    if (isNaN(d.getTime())) {
+return '';
+}
 
     // Convert to Phnom Penh timezone
     const options: Intl.DateTimeFormatOptions = {
@@ -67,10 +72,15 @@ export function formatDateTime(
     datetime: string | Date | null | undefined,
     includeSeconds = false,
 ): string {
-    if (!datetime) return '';
+    if (!datetime) {
+return '';
+}
 
     const d = new Date(datetime);
-    if (isNaN(d.getTime())) return '';
+
+    if (isNaN(d.getTime())) {
+return '';
+}
 
     const dateStr = formatDate(d, 'short');
     const timeStr = d.toLocaleTimeString('en-US', {
@@ -92,10 +102,15 @@ export function formatTime(
     datetime: string | Date | null | undefined,
     includeSeconds = false,
 ): string {
-    if (!datetime) return '';
+    if (!datetime) {
+return '';
+}
 
     const d = new Date(datetime);
-    if (isNaN(d.getTime())) return '';
+
+    if (isNaN(d.getTime())) {
+return '';
+}
 
     return d.toLocaleTimeString('en-US', {
         timeZone: APP_TIMEZONE,
@@ -111,6 +126,7 @@ export function formatTime(
  */
 export function getCurrentDate(): string {
     const now = new Date();
+
     return now.toLocaleDateString('en-CA', {
         timeZone: APP_TIMEZONE,
         year: 'numeric',
@@ -136,6 +152,7 @@ export function getCurrentDateTime(): string {
         minute: '2-digit',
         hour12: false,
     });
+
     return `${date}T${time}`;
 }
 
@@ -143,10 +160,15 @@ export function getCurrentDateTime(): string {
  * Format date for HTML input (YYYY-MM-DD)
  */
 export function toInputDate(date: string | Date | null | undefined): string {
-    if (!date) return '';
+    if (!date) {
+return '';
+}
 
     const d = new Date(date);
-    if (isNaN(d.getTime())) return '';
+
+    if (isNaN(d.getTime())) {
+return '';
+}
 
     return d.toLocaleDateString('en-CA', {
         timeZone: APP_TIMEZONE,
@@ -162,10 +184,15 @@ export function toInputDate(date: string | Date | null | undefined): string {
 export function toInputDateTime(
     datetime: string | Date | null | undefined,
 ): string {
-    if (!datetime) return '';
+    if (!datetime) {
+return '';
+}
 
     const d = new Date(datetime);
-    if (isNaN(d.getTime())) return '';
+
+    if (isNaN(d.getTime())) {
+return '';
+}
 
     const date = d.toLocaleDateString('en-CA', {
         timeZone: APP_TIMEZONE,
@@ -179,6 +206,7 @@ export function toInputDateTime(
         minute: '2-digit',
         hour12: false,
     });
+
     return `${date}T${time}`;
 }
 
@@ -188,10 +216,15 @@ export function toInputDateTime(
 export function formatDateForReport(
     date: string | Date | null | undefined,
 ): string {
-    if (!date) return '';
+    if (!date) {
+return '';
+}
 
     const d = new Date(date);
-    if (isNaN(d.getTime())) return '';
+
+    if (isNaN(d.getTime())) {
+return '';
+}
 
     const day = d
         .toLocaleDateString('en-US', {
@@ -219,10 +252,15 @@ export function formatDateForReport(
 export function formatDateTimeForReport(
     datetime: string | Date | null | undefined,
 ): string {
-    if (!datetime) return '';
+    if (!datetime) {
+return '';
+}
 
     const d = new Date(datetime);
-    if (isNaN(d.getTime())) return '';
+
+    if (isNaN(d.getTime())) {
+return '';
+}
 
     const dateStr = formatDateForReport(d);
     const timeStr = d.toLocaleTimeString('en-US', {
@@ -241,10 +279,15 @@ export function formatDateTimeForReport(
 export function getRelativeTime(
     date: string | Date | null | undefined,
 ): string {
-    if (!date) return '';
+    if (!date) {
+return '';
+}
 
     const d = new Date(date);
-    if (isNaN(d.getTime())) return '';
+
+    if (isNaN(d.getTime())) {
+return '';
+}
 
     const now = new Date();
     const diffMs = now.getTime() - d.getTime();
@@ -253,14 +296,29 @@ export function getRelativeTime(
     const diffHour = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHour / 24);
 
-    if (diffSec < 60) return 'just now';
-    if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
-    if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
-    if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
-    if (diffDay < 30)
-        return `${Math.floor(diffDay / 7)} week${Math.floor(diffDay / 7) > 1 ? 's' : ''} ago`;
-    if (diffDay < 365)
-        return `${Math.floor(diffDay / 30)} month${Math.floor(diffDay / 30) > 1 ? 's' : ''} ago`;
+    if (diffSec < 60) {
+return 'just now';
+}
+
+    if (diffMin < 60) {
+return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+}
+
+    if (diffHour < 24) {
+return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+}
+
+    if (diffDay < 7) {
+return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+}
+
+    if (diffDay < 30) {
+return `${Math.floor(diffDay / 7)} week${Math.floor(diffDay / 7) > 1 ? 's' : ''} ago`;
+}
+
+    if (diffDay < 365) {
+return `${Math.floor(diffDay / 30)} month${Math.floor(diffDay / 30) > 1 ? 's' : ''} ago`;
+}
 
     return `${Math.floor(diffDay / 365)} year${Math.floor(diffDay / 365) > 1 ? 's' : ''} ago`;
 }
@@ -269,10 +327,15 @@ export function getRelativeTime(
  * Check if date is today
  */
 export function isToday(date: string | Date | null | undefined): boolean {
-    if (!date) return false;
+    if (!date) {
+return false;
+}
 
     const d = new Date(date);
-    if (isNaN(d.getTime())) return false;
+
+    if (isNaN(d.getTime())) {
+return false;
+}
 
     const today = getCurrentDate();
     const checkDate = toInputDate(d);
@@ -284,10 +347,15 @@ export function isToday(date: string | Date | null | undefined): boolean {
  * Check if date is in the past
  */
 export function isPast(date: string | Date | null | undefined): boolean {
-    if (!date) return false;
+    if (!date) {
+return false;
+}
 
     const d = new Date(date);
-    if (isNaN(d.getTime())) return false;
+
+    if (isNaN(d.getTime())) {
+return false;
+}
 
     return d.getTime() < new Date().getTime();
 }
@@ -296,10 +364,15 @@ export function isPast(date: string | Date | null | undefined): boolean {
  * Check if date is in the future
  */
 export function isFuture(date: string | Date | null | undefined): boolean {
-    if (!date) return false;
+    if (!date) {
+return false;
+}
 
     const d = new Date(date);
-    if (isNaN(d.getTime())) return false;
+
+    if (isNaN(d.getTime())) {
+return false;
+}
 
     return d.getTime() > new Date().getTime();
 }

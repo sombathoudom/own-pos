@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import { Modal } from 'react-bootstrap';
 
-import MediaBankBrowser, { type MediaItem } from './MediaBankBrowser';
 import { flashToast } from '../../utils/flashToast';
+import MediaBankBrowser from './MediaBankBrowser';
+import type {MediaItem} from './MediaBankBrowser';
 
 type Props = {
     show: boolean;
@@ -44,7 +45,10 @@ export default function MediaPickerModal({
     const [useAfterUpload, setUseAfterUpload] = useState(true);
 
     useEffect(() => {
-        if (!show) return;
+        if (!show) {
+return;
+}
+
         setUseAfterUpload(true);
     }, [show]);
 
@@ -78,6 +82,7 @@ export default function MediaPickerModal({
                 'Added to pending media (will attach after save)',
             );
             onHide();
+
             return;
         }
 
@@ -100,17 +105,26 @@ export default function MediaPickerModal({
     };
 
     const fetchByIds = async (ids: number[]): Promise<MediaItem[]> => {
-        if (!ids.length) return [];
+        if (!ids.length) {
+return [];
+}
+
         const { data } = await axios.get(route('media.byIds'), {
             headers: { Accept: 'application/json' },
             params: { ids: ids.join(',') },
         });
+
         return (data?.items || []) as MediaItem[];
     };
 
     const handleUploaded = async (uploadedIds: number[]) => {
-        if (!uploadedIds?.length) return;
-        if (!useAfterUpload) return;
+        if (!uploadedIds?.length) {
+return;
+}
+
+        if (!useAfterUpload) {
+return;
+}
 
         // edit mode => auto attach
         if (attachOnConfirm) {
@@ -131,6 +145,7 @@ export default function MediaPickerModal({
                     `Auto-attach failed (HTTP ${status ?? '?'})`;
                 flashToast('error', msg);
             }
+
             return;
         }
 

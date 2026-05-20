@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
 import Prism from 'prismjs';
+import React, { useEffect, useRef } from 'react';
 
 const PrismCode = (props: any) => {
     const ref: any = useRef(null);
@@ -15,6 +15,7 @@ const PrismCode = (props: any) => {
     };
 
     const { code, language } = props;
+
     return (
         <React.Fragment>
             <pre className="line-numbers">

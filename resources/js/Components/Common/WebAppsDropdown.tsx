@@ -1,20 +1,21 @@
+import { Link } from '@inertiajs/react';
 import React, { useState } from 'react';
 import { Button, Col, Dropdown, Row } from 'react-bootstrap';
 
 //import images
-import github from '../../../images/brands/github.png';
 import bitbucket from '../../../images/brands/bitbucket.png';
 import dribbble from '../../../images/brands/dribbble.png';
 import dropbox from '../../../images/brands/dropbox.png';
+import github from '../../../images/brands/github.png';
 import mail_chimp from '../../../images/brands/mail_chimp.png';
 import slack from '../../../images/brands/slack.png';
-import { Link } from '@inertiajs/react';
 
 const WebAppsDropdown = () => {
     const [isWebAppDropdown, setIsWebAppDropdown] = useState<boolean>(false);
     const toggleWebAppDropdown = () => {
         setIsWebAppDropdown(!isWebAppDropdown);
     };
+
     return (
         <React.Fragment>
             <Dropdown

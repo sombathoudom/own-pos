@@ -1,5 +1,6 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { type ReactNode, useState } from 'react';
+import {  useState } from 'react';
+import type {ReactNode} from 'react';
 import { Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
@@ -31,10 +32,21 @@ function StockCountsCreate() {
 
     const addItem = () => {
         const variantId = parseInt(selectedVariant);
-        if (!variantId) return;
-        if (data.items.find((i) => i.product_variant_id === variantId)) return;
+
+        if (!variantId) {
+return;
+}
+
+        if (data.items.find((i) => i.product_variant_id === variantId)) {
+return;
+}
+
         const variant = variants.find((v) => v.id === variantId);
-        if (!variant) return;
+
+        if (!variant) {
+return;
+}
+
         setData('items', [
             ...data.items,
             {
@@ -161,6 +173,7 @@ function StockCountsCreate() {
                                                                         v.id ===
                                                                         item.product_variant_id,
                                                                 );
+
                                                             return (
                                                                 <tr
                                                                     key={

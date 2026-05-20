@@ -1,15 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
-import { Button } from 'react-bootstrap';
 
 import {
     DndContext,
     closestCenter,
     PointerSensor,
     useSensor,
-    useSensors,
-    type DragEndEvent,
+    useSensors
+    
 } from '@dnd-kit/core';
+import type {DragEndEvent} from '@dnd-kit/core';
 import {
     SortableContext,
     useSortable,
@@ -17,6 +15,9 @@ import {
     rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import axios from 'axios';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Button } from 'react-bootstrap';
 
 type MediaItem = {
     id: number;
@@ -101,8 +102,10 @@ export default function PendingMediaPanel({
         const run = async () => {
             if (!ids.length) {
                 setItems([]);
+
                 return;
             }
+
             const { data } = await axios.get(route('media.byIds'), {
                 headers: { Accept: 'application/json' },
                 params: { ids: ids.join(',') },
@@ -133,40 +136,65 @@ export default function PendingMediaPanel({
                 `https://www.youtube.com/watch?v=${m.external_id}`,
                 '_blank',
             );
+
             return;
         }
-        if (m.url) window.open(m.url, '_blank');
+
+        if (m.url) {
+window.open(m.url, '_blank');
+}
     };
 
     const thumb = (m: MediaItem) => {
         // external (youtube)
-        if (m.kind === 'external') return m.thumbnail || null;
+        if (m.kind === 'external') {
+return m.thumbnail || null;
+}
 
         const url = m.url || null;
 
         // file image by mime
         const mime = (m.mime || '').toLowerCase();
         const isImage = mime.startsWith('image/');
-        if (isImage) return url;
+
+        if (isImage) {
+return url;
+}
 
         // ✅ fallback when mime is missing: detect by file extension
-        if (url && /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url)) return url;
+        if (url && /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url)) {
+return url;
+}
 
         // optional: backend can provide thumbnail for files too
-        if (m.thumbnail) return m.thumbnail;
+        if (m.thumbnail) {
+return m.thumbnail;
+}
 
         return null;
     };
 
     const onDragEnd = (event: DragEndEvent) => {
-        if (!sortable) return;
+        if (!sortable) {
+return;
+}
+
         const { active, over } = event;
-        if (!over) return;
-        if (active.id === over.id) return;
+
+        if (!over) {
+return;
+}
+
+        if (active.id === over.id) {
+return;
+}
 
         const oldIndex = ids.findIndex((x) => x === active.id);
         const newIndex = ids.findIndex((x) => x === over.id);
-        if (oldIndex < 0 || newIndex < 0) return;
+
+        if (oldIndex < 0 || newIndex < 0) {
+return;
+}
 
         const nextIds = arrayMove(ids, oldIndex, newIndex);
         onReorder?.(nextIds);

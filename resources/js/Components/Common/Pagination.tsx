@@ -12,15 +12,17 @@ const Pagination = ({
     };
 
     const pageNumbers = [];
+
     for (let i = 1; i <= Math.ceil(data?.length / perPageData); i++) {
         pageNumbers.push(i);
     }
+
     const handleprevPage = () => {
-        let prevPage = currentPage - 1;
+        const prevPage = currentPage - 1;
         setCurrentPage(prevPage);
     };
     const handlenextPage = () => {
-        let nextPage = currentPage + 1;
+        const nextPage = currentPage + 1;
         setCurrentPage(nextPage);
     };
 
@@ -29,6 +31,7 @@ const Pagination = ({
             setCurrentPage(pageNumbers.length);
         }
     }, [pageNumbers.length, currentPage, setCurrentPage]);
+
     return (
         <React.Fragment>
             <Row className="g-0 justify-content-end mb-4">

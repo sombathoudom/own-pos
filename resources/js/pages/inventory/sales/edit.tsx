@@ -103,7 +103,7 @@ function SalesEdit() {
 
     const initialItems: CartItem[] = useMemo(() => {
         return sale.items.map((item) => ({
-            product_variant_id: item.product_variant_id,
+            product_variant_id: Number(item.product_variant_id),
             qty: String(item.qty),
             unit_price_usd: item.unit_price_usd,
             discount_usd: item.discount_usd,
@@ -111,8 +111,12 @@ function SalesEdit() {
     }, [sale.items]);
 
     const { data, setData, put, processing, errors } = useForm<FormData>({
-        customer_id: sale.customer_id,
-        delivery_company_id: sale.delivery_company_id,
+        customer_id:
+            sale.customer_id !== null ? Number(sale.customer_id) : null,
+        delivery_company_id:
+            sale.delivery_company_id !== null
+                ? Number(sale.delivery_company_id)
+                : null,
         source_page: sale.source_page ?? 'Other',
         sale_date: sale.sale_date,
         currency: sale.currency,
@@ -130,10 +134,15 @@ function SalesEdit() {
 
     const filteredVariants = useMemo(() => {
         const term = search.trim().toLowerCase();
-        if (!term) return variants.slice(0, 20);
+
+        if (!term) {
+return variants.slice(0, 20);
+}
+
         return variants.filter((v) => {
             const text =
                 `${v.sku} ${v.product.name} ${v.color ?? ''} ${v.size} ${v.style_name ?? ''}`.toLowerCase();
+
             return text.includes(term);
         });
     }, [variants, search]);
@@ -144,7 +153,9 @@ function SalesEdit() {
     );
 
     const addVariant = (variant: Variant) => {
-        if (selectedVariantIds.has(variant.id)) return;
+        if (selectedVariantIds.has(variant.id)) {
+return;
+}
 
         setData('items', [
             ...data.items,
@@ -184,6 +195,7 @@ function SalesEdit() {
         const qty = Number(item.qty) || 0;
         const price = Number(item.unit_price_usd) || 0;
         const discount = Number(item.discount_usd) || 0;
+
         return Math.max(0, qty * price - discount);
     };
 
@@ -195,7 +207,9 @@ function SalesEdit() {
     const due = Math.max(0, total - paid);
 
     const selectedCustomer = useMemo(
-        () => customers.find((customer) => customer.id === data.customer_id) ?? null,
+        () =>
+            customers.find((customer) => customer.id === data.customer_id) ??
+            null,
         [customers, data.customer_id],
     );
 
@@ -216,6 +230,7 @@ function SalesEdit() {
             variant.size,
             variant.style_name,
         ].filter(Boolean);
+
         return parts.join(' / ');
     };
 
@@ -241,16 +256,25 @@ function SalesEdit() {
                                         <Row>
                                             <Col lg={8}>
                                                 <div className="mb-3">
-                                                    <Form.Label>Customer</Form.Label>
+                                                    <Form.Label>
+                                                        Customer
+                                                    </Form.Label>
                                                     <CustomerSelect
                                                         customers={customers}
                                                         value={data.customer_id}
-                                                        onChange={(customerId) => setData('customer_id', customerId)}
+                                                        onChange={(
+                                                            customerId,
+                                                        ) =>
+                                                            setData(
+                                                                'customer_id',
+                                                                customerId,
+                                                            )
+                                                        }
                                                         inputId="customer_id"
                                                         placeholder="Search and select a customer"
                                                     />
                                                     {errors.customer_id && (
-                                                        <div className="mt-1 d-block small text-danger">
+                                                        <div className="d-block small text-danger mt-1">
                                                             {errors.customer_id}
                                                         </div>
                                                     )}
@@ -258,18 +282,24 @@ function SalesEdit() {
                                             </Col>
                                             <Col lg={4}>
                                                 <div className="mb-3">
-                                                    <Form.Label>Selected Customer</Form.Label>
-                                                    <div className="rounded border bg-light-subtle p-3 small">
+                                                    <Form.Label>
+                                                        Selected Customer
+                                                    </Form.Label>
+                                                    <div className="bg-light-subtle small rounded border p-3">
                                                         {selectedCustomer ? (
                                                             <>
                                                                 <div className="fw-medium">
-                                                                    {selectedCustomer.name}
+                                                                    {
+                                                                        selectedCustomer.name
+                                                                    }
                                                                 </div>
                                                                 <div className="text-muted">
-                                                                    {selectedCustomer.phone || 'No phone'}
+                                                                    {selectedCustomer.phone ||
+                                                                        'No phone'}
                                                                 </div>
                                                                 <div className="text-muted">
-                                                                    {selectedCustomer.address || 'No address'}
+                                                                    {selectedCustomer.address ||
+                                                                        'No address'}
                                                                 </div>
                                                             </>
                                                         ) : (
@@ -313,14 +343,21 @@ function SalesEdit() {
                                                         Delivery Company
                                                     </Form.Label>
                                                     <Form.Select
-                                                        value={data.delivery_company_id ?? ''}
+                                                        value={
+                                                            data.delivery_company_id ??
+                                                            ''
+                                                        }
                                                         onChange={(e) =>
                                                             setData(
                                                                 'delivery_company_id',
-                                                                e.target.value === ''
+                                                                e.target
+                                                                    .value ===
+                                                                    ''
                                                                     ? null
                                                                     : Number(
-                                                                          e.target.value,
+                                                                          e
+                                                                              .target
+                                                                              .value,
                                                                       ),
                                                             )
                                                         }
@@ -334,10 +371,16 @@ function SalesEdit() {
                                                         {deliveryCompanies.map(
                                                             (company) => (
                                                                 <option
-                                                                    key={company.id}
-                                                                    value={company.id}
+                                                                    key={
+                                                                        company.id
+                                                                    }
+                                                                    value={
+                                                                        company.id
+                                                                    }
                                                                 >
-                                                                    {company.name}
+                                                                    {
+                                                                        company.name
+                                                                    }
                                                                 </option>
                                                             ),
                                                         )}
@@ -525,7 +568,11 @@ function SalesEdit() {
                                                     unknown
                                                 >
                                             ).items;
-                                            if (!itemsError) return null;
+
+                                            if (!itemsError) {
+return null;
+}
+
                                             return (
                                                 <Alert
                                                     variant="danger"
@@ -570,6 +617,7 @@ function SalesEdit() {
                                                                     selectedVariantIds.has(
                                                                         v.id,
                                                                     );
+
                                                                 return (
                                                                     <button
                                                                         key={
@@ -593,6 +641,7 @@ function SalesEdit() {
                                                                             e,
                                                                         ) => {
                                                                             e.preventDefault();
+
                                                                             if (
                                                                                 !isSelected
                                                                             ) {
@@ -671,7 +720,10 @@ function SalesEdit() {
                                                 const variant = getVariant(
                                                     item.product_variant_id,
                                                 );
-                                                if (!variant) return null;
+
+                                                if (!variant) {
+return null;
+}
 
                                                 return (
                                                     <Card

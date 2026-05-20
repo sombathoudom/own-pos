@@ -1,8 +1,8 @@
+import { useFormik } from 'formik';
 import React, { useEffect, useState } from 'react';
 import { Form, Modal } from 'react-bootstrap';
 
 import { useDispatch } from 'react-redux';
-import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
 import dummy from '../../../images/users/user-dummy-img.jpg';
@@ -115,6 +115,7 @@ const AddEditJobCandidateList = ({
                     onSubmit={(e: any) => {
                         e.preventDefault();
                         validation.handleSubmit();
+
                         return false;
                     }}
                 >

@@ -1,5 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { type ReactNode, useEffect, useState } from 'react';
+import {  useEffect, useState } from 'react';
+import type {ReactNode} from 'react';
 import { Badge, Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';

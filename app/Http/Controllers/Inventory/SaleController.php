@@ -46,6 +46,8 @@ class SaleController extends Controller
                 'id' => $sale->id,
                 'invoice_no' => $sale->invoice_no,
                 'customer_id' => $sale->customer_id,
+                'customer_name' => $sale->customer?->name,
+                'customer_phone' => $sale->customer?->phone,
                 'customer' => $sale->customer ? [
                     'id' => $sale->customer->id,
                     'name' => $sale->customer->name,
@@ -219,7 +221,12 @@ class SaleController extends Controller
             return back()->withErrors(['items' => $e->getMessage()]);
         }
 
+       
         if ($request->boolean('print_receipt')) {
+            if ($request->boolean('from_pos')) {
+                session()->flash('from_pos', true);
+            }
+
             if ($request->header('X-Inertia')) {
                 return Inertia::location(route('sales.receipt', $sale));
             }
@@ -694,7 +701,7 @@ class SaleController extends Controller
             'sale' => [
                 'id' => $sale->id,
                 'invoice_no' => $sale->invoice_no,
-                'customer_id' => $sale->customer_id,
+                'customer_id' => $sale->customer_id !== null ? (int) $sale->customer_id : null,
                 'customer_name' => $sale->customer?->name,
                 'customer_phone' => $sale->customer?->phone,
                 'customer_address' => $sale->customer?->address,
@@ -711,7 +718,7 @@ class SaleController extends Controller
                 'note' => $sale->note,
                 'items' => $sale->items->map(fn ($item) => [
                     'id' => $item->id,
-                    'product_variant_id' => $item->product_variant_id,
+                    'product_variant_id' => (int) $item->product_variant_id,
                     'qty' => $item->qty,
                     'unit_price_usd' => $item->unit_price_usd,
                     'discount_usd' => $item->discount_usd,
@@ -740,7 +747,7 @@ class SaleController extends Controller
                 ],
             ]),
             'sourcePageOptions' => ['DL', 'DC', 'Walk-in', 'Other'],
-            'customers' => $this->customerOptions(),
+            'customers' => $this->customerOptionsWithSaleCustomer($sale),
             'deliveryCompanies' => DeliveryCompany::where('status', 'active')->orderBy('name')->get(['id', 'name', 'delivery_cost_usd']),
         ]);
     }
@@ -828,6 +835,26 @@ class SaleController extends Controller
                 'status' => $customer->status,
             ])
             ->all();
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string, phone: string|null, address: string|null, status: string}>
+     */
+    private function customerOptionsWithSaleCustomer(Sale $sale): array
+    {
+        $customers = $this->customerOptions();
+
+        if ($sale->customer && ! in_array($sale->customer->id, array_column($customers, 'id'), true)) {
+            $customers[] = [
+                'id' => (int) $sale->customer->id,
+                'name' => $sale->customer->name,
+                'phone' => $sale->customer->phone,
+                'address' => $sale->customer->address,
+                'status' => $sale->customer->status,
+            ];
+        }
+
+        return $customers;
     }
 
     /**

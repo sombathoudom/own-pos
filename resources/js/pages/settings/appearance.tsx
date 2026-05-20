@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
 import { Card, Col, Container, Row } from 'react-bootstrap';
 
-import SettingsNav from '@/Components/SettingsNav';
 import BreadCrumb from '@/Components/Common/BreadCrumb';
-import Layout from '@/Layouts';
+import SettingsNav from '@/Components/SettingsNav';
 import { useAppearance } from '@/hooks/use-appearance';
+import Layout from '@/Layouts';
 
 const options = [
     {

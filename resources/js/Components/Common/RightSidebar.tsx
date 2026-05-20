@@ -1,7 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { Offcanvas, Collapse, Form } from 'react-bootstrap';
 
 //redux
+
+//import Constant
+
+//SimpleBar
+import classnames from 'classnames';
+import React, { useEffect, useState } from 'react';
+import { Offcanvas, Collapse, Form } from 'react-bootstrap';
+import SimpleBar from 'simplebar-react';
+import { useShallow } from 'zustand/react/shallow';
+
+//import Images
+import img01 from '../../scss/images/sidebar/img-1.jpg';
+import img02 from '../../scss/images/sidebar/img-2.jpg';
+import img03 from '../../scss/images/sidebar/img-3.jpg';
+import img04 from '../../scss/images/sidebar/img-4.jpg';
 import {
     changeLayout,
     changeSidebarTheme,
@@ -16,8 +29,7 @@ import {
     changeSidebarVisibility,
     // resetValue
 } from '../../slices/thunk';
-
-//import Constant
+import { useLayoutStore } from '../../stores/layout-store';
 import {
     LAYOUT_TYPES,
     LAYOUT_SIDEBAR_TYPES,
@@ -31,18 +43,6 @@ import {
     PERLOADER_TYPES,
     SIDEBAR_VISIBILITY_TYPES,
 } from '../constants/layout';
-
-//SimpleBar
-import SimpleBar from 'simplebar-react';
-import classnames from 'classnames';
-import { useShallow } from 'zustand/react/shallow';
-
-//import Images
-import img01 from '../../scss/images/sidebar/img-1.jpg';
-import img02 from '../../scss/images/sidebar/img-2.jpg';
-import img03 from '../../scss/images/sidebar/img-3.jpg';
-import img04 from '../../scss/images/sidebar/img-4.jpg';
-import { useLayoutStore } from '../../stores/layout-store';
 
 const RightSidebar = (props: any) => {
     const dispatch = (action: unknown) => action;
@@ -104,6 +104,7 @@ const RightSidebar = (props: any) => {
 
     const scrollFunction = () => {
         const element = document.getElementById('back-to-top');
+
         if (element) {
             if (
                 document.body.scrollTop > 100 ||
@@ -1360,6 +1361,7 @@ const RightSidebar = (props: any) => {
                                                             }
                                                             onChange={(e) => {
                                                                 setShow(false);
+
                                                                 if (
                                                                     e.target
                                                                         .checked
@@ -1416,6 +1418,7 @@ const RightSidebar = (props: any) => {
                                                             }
                                                             onChange={(e) => {
                                                                 setShow(false);
+
                                                                 if (
                                                                     e.target
                                                                         .checked

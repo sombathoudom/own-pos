@@ -1,25 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import { Link } from '@inertiajs/react';
 import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
 import { Col, Collapse, Row } from 'react-bootstrap';
 
 // Import Data
+import { withTranslation } from 'react-i18next';
 import navdata from '../LayoutMenuData';
 //i18n
-import { withTranslation } from 'react-i18next';
-import { Link } from '@inertiajs/react';
 
 const HorizontalLayout = (props: any) => {
     const [isMoreMenu, setIsMoreMenu] = useState<boolean>(false);
     const navData = navdata().props.children;
-    let menuItems: any = [];
-    let splitMenuItems: Array<any> = [];
+    const menuItems: any = [];
+    const splitMenuItems: Array<any> = [];
     let menuSplitContainer = 6;
     navData.forEach(function (value: any, key: number) {
         if (value['isHeader']) {
             menuSplitContainer++;
         }
+
         if (key >= menuSplitContainer) {
-            let val = value;
+            const val = value;
             val.childItems = value.subItems;
             val.isChildItem = value.subItems ? true : false;
             delete val.subItems;
@@ -49,11 +50,12 @@ const HorizontalLayout = (props: any) => {
             const pathName = path;
             const ul = document.getElementById('navbar-nav') as HTMLElement;
             const items: any = ul.getElementsByTagName('a');
-            let itemsArray = [...items]; // converts NodeList to Array
+            const itemsArray = [...items]; // converts NodeList to Array
             removeActivation(itemsArray);
-            let matchingMenuItem = itemsArray.find((x) => {
+            const matchingMenuItem = itemsArray.find((x) => {
                 return x.pathname === pathName;
             });
+
             if (matchingMenuItem) {
                 activateParentDropdown(matchingMenuItem);
             }
@@ -63,7 +65,7 @@ const HorizontalLayout = (props: any) => {
 
     function activateParentDropdown(item: any) {
         item.classList.add('active');
-        let parentCollapseDiv = item.closest('.collapse.menu-dropdown');
+        const parentCollapseDiv = item.closest('.collapse.menu-dropdown');
 
         if (parentCollapseDiv) {
             // to set aria expand true remaining
@@ -73,6 +75,7 @@ const HorizontalLayout = (props: any) => {
                 'aria-expanded',
                 'true',
             );
+
             if (
                 parentCollapseDiv.parentElement.closest(
                     '.collapse.menu-dropdown',
@@ -81,30 +84,37 @@ const HorizontalLayout = (props: any) => {
                 parentCollapseDiv.parentElement
                     .closest('.collapse')
                     .classList.add('show');
-                var parentElementDiv =
+                const parentElementDiv =
                     parentCollapseDiv.parentElement.closest(
                         '.collapse',
                     ).previousElementSibling;
-                if (parentElementDiv)
-                    if (parentElementDiv.closest('.collapse'))
-                        parentElementDiv
+
+                if (parentElementDiv) {
+if (parentElementDiv.closest('.collapse')) {
+parentElementDiv
                             .closest('.collapse')
                             .classList.add('show');
+}
+}
+
                 parentElementDiv.classList.add('active');
-                var parentElementSibling =
+                const parentElementSibling =
                     parentElementDiv.parentElement.parentElement.parentElement
                         .previousElementSibling;
+
                 if (parentElementSibling) {
                     parentElementSibling.classList.add('active');
                 }
             }
+
             return false;
         }
+
         return false;
     }
 
     const removeActivation = (items: any) => {
-        let actiItems = items.filter((x: any) =>
+        const actiItems = items.filter((x: any) =>
             x.classList.contains('active'),
         );
 
@@ -113,19 +123,24 @@ const HorizontalLayout = (props: any) => {
                 if (!item.classList.contains('active')) {
                     item.setAttribute('aria-expanded', false);
                 }
+
                 if (item.nextElementSibling) {
                     item.nextElementSibling.classList.remove('show');
                 }
             }
+
             if (item.classList.contains('nav-link')) {
                 if (item.nextElementSibling) {
                     item.nextElementSibling.classList.remove('show');
                 }
+
                 item.setAttribute('aria-expanded', false);
             }
+
             item.classList.remove('active');
         });
     };
+
     return (
         <React.Fragment>
             {(menuItems || []).map((item: any, key: number) => {

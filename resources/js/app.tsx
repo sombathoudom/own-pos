@@ -4,8 +4,8 @@ import './scss/themes.scss';
 import 'simplebar-react/dist/simplebar.min.css';
 
 import { createInertiaApp } from '@inertiajs/react';
-import { initializeTheme } from '@/hooks/use-appearance';
 import { createRoot } from 'react-dom/client';
+import { initializeTheme } from '@/hooks/use-appearance';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 const pages = import.meta.glob('./pages/**/*.tsx');

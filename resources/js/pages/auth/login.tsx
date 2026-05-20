@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
 
 import GuestLayout from '@/Layouts/GuestLayout';

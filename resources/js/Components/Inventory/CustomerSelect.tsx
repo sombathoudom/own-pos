@@ -11,6 +11,7 @@ type CustomerSelectProps = {
     inputId?: string;
     placeholder?: string;
     isClearable?: boolean;
+    disabled?: boolean;
 };
 
 type CustomerOption = {
@@ -34,6 +35,7 @@ export default function CustomerSelect({
     inputId,
     placeholder = 'Search customer...',
     isClearable = true,
+    disabled = false,
 }: CustomerSelectProps) {
     const defaultOptions = useMemo(() => customers.map(toOption), [customers]);
     const selectedOption = useMemo(
@@ -41,7 +43,9 @@ export default function CustomerSelect({
         [defaultOptions, value],
     );
 
-    const loadOptions = async (inputValue: string): Promise<CustomerOption[]> => {
+    const loadOptions = async (
+        inputValue: string,
+    ): Promise<CustomerOption[]> => {
         const response = await fetch(
             customersSearch.url({ query: { search: inputValue || undefined } }),
             {
@@ -82,11 +86,10 @@ export default function CustomerSelect({
             onChange={(option) => onChange(option?.value ?? null)}
             placeholder={placeholder}
             isClearable={isClearable}
+            isDisabled={disabled}
             noOptionsMessage={() => 'No customers found'}
             loadingMessage={() => 'Searching customers...'}
-            formatOptionLabel={(option) => (
-                <span>{option.label}</span>
-            )}
+            formatOptionLabel={(option) => <span>{option.label}</span>}
             styles={{
                 control: (base) => ({
                     ...base,

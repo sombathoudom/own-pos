@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { type ReactNode, useEffect, useState } from 'react';
+import {  useEffect, useState } from 'react';
+import type {ReactNode} from 'react';
 import {
     Alert,
     Badge,
@@ -15,7 +16,6 @@ import {
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Pagination from '@/Components/Pagination';
 import Layout from '@/Layouts';
-import { store as storeConfirmDelivery } from '@/routes/sales/confirm-delivery';
 import {
     bulkDeliveredAll as salesBulkDeliveredAll,
     edit as salesEdit,
@@ -24,6 +24,7 @@ import {
     show as salesShow,
     index as salesIndex,
 } from '@/routes/sales';
+import { store as storeConfirmDelivery } from '@/routes/sales/confirm-delivery';
 import type { SaleIndexPageProps } from '@/types';
 import { getCurrentDate } from '@/utils/dateTime';
 

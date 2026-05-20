@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { LAYOUT_TYPES } from '@/Components/constants/layout';
-import { initialState, type LayoutState } from '@/slices/layouts/reducer';
+import { initialState  } from '@/slices/layouts/reducer';
+import type {LayoutState} from '@/slices/layouts/reducer';
 
 const layoutStorageKey = 'velzon-layout-settings';
 
