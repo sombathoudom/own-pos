@@ -117,25 +117,29 @@ function ReportsDaily() {
                                 <Col lg={4}>
                                     <Form
                                         onSubmit={submit}
-                                        className="d-flex gap-2 align-items-center"
+                                        className="d-flex flex-wrap gap-2 align-items-center"
                                     >
-                                        <Form.Control
-                                            type="date"
-                                            value={dateFrom}
-                                            onChange={(e) =>
-                                                setDateFrom(e.target.value)
-                                            }
-                                            style={{ width: 140 }}
-                                        />
+                                        <div style={{ minWidth: 150 }}>
+                                            <Form.Control
+                                                type="date"
+                                                id="dateFrom"
+                                                value={dateFrom}
+                                                onChange={(e) =>
+                                                    setDateFrom(e.target.value)
+                                                }
+                                            />
+                                        </div>
                                         <span className="text-muted">to</span>
-                                        <Form.Control
-                                            type="date"
-                                            value={dateTo}
-                                            onChange={(e) =>
-                                                setDateTo(e.target.value)
-                                            }
-                                            style={{ width: 140 }}
-                                        />
+                                        <div style={{ minWidth: 150 }}>
+                                            <Form.Control
+                                                type="date"
+                                                id="dateTo"
+                                                value={dateTo}
+                                                onChange={(e) =>
+                                                    setDateTo(e.target.value)
+                                                }
+                                            />
+                                        </div>
                                         <button
                                             type="submit"
                                             className="btn btn-primary"
@@ -512,7 +516,7 @@ function ReportsDaily() {
                     </Card>
 
                     {/* Bottom breakdowns */}
-                    <Row className="g-4">
+                    <Row className="g-4 mb-4">
                         {/* Source breakdown */}
                         <Col xl={4}>
                             <Card className="h-100 border-0 shadow-sm">

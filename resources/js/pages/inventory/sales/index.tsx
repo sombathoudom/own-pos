@@ -31,6 +31,9 @@ import { getCurrentDate } from '@/utils/dateTime';
 function SalesIndex() {
     const { sales, filters, toast } = usePage<SaleIndexPageProps>().props;
     const [search, setSearch] = useState(filters.search ?? '');
+    const [dateFrom, setDateFrom] = useState(filters.date_from ?? '');
+    const [dateTo, setDateTo] = useState(filters.date_to ?? '');
+    const [paymentStatus, setPaymentStatus] = useState(filters.payment_status ?? '');
     const [confirmingSaleId, setConfirmingSaleId] = useState<number | null>(
         null,
     );
@@ -38,16 +41,41 @@ function SalesIndex() {
 
     useEffect(() => {
         setSearch(filters.search ?? '');
-    }, [filters.search]);
+        setDateFrom(filters.date_from ?? '');
+        setDateTo(filters.date_to ?? '');
+        setPaymentStatus(filters.payment_status ?? '');
+    }, [filters.search, filters.date_from, filters.date_to, filters.payment_status]);
 
     const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         router.get(
             salesIndex.url(),
-            { search: search || undefined },
+            { 
+                search: search || undefined,
+                date_from: dateFrom || undefined,
+                date_to: dateTo || undefined,
+                payment_status: paymentStatus || undefined,
+            },
             { preserveState: true, preserveScroll: true },
         );
     };
+
+    const clearFilters = () => {
+        setSearch('');
+        setDateFrom('');
+        setDateTo('');
+        setPaymentStatus('');
+        router.get(
+            salesIndex.url(),
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+            },
+        );
+    };
+
+    const hasActiveFilters = search || dateFrom || dateTo || paymentStatus;
 
     const paymentBadge = (status: string) => {
         switch (status) {
@@ -193,49 +221,6 @@ function SalesIndex() {
                                                         Delivered Selected ({selectedSaleIds.length})
                                                     </Button>
                                                 )}
-                                                <Form
-                                                    onSubmit={handleSearch}
-                                                    className="d-flex gap-2"
-                                                >
-                                                    <Form.Control
-                                                        type="search"
-                                                        placeholder="Search invoice or customer..."
-                                                        value={search}
-                                                        onChange={(e) =>
-                                                            setSearch(
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        style={{
-                                                            minWidth: 220,
-                                                        }}
-                                                    />
-                                                    <Button
-                                                        type="submit"
-                                                        variant="light"
-                                                    >
-                                                        Search
-                                                    </Button>
-                                                    {search && (
-                                                        <Button
-                                                            type="button"
-                                                            variant="light"
-                                                            onClick={() => {
-                                                                setSearch('');
-                                                                router.get(
-                                                                    salesIndex.url(),
-                                                                    {},
-                                                                    {
-                                                                        preserveScroll: true,
-                                                                        preserveState: true,
-                                                                    },
-                                                                );
-                                                            }}
-                                                        >
-                                                            Clear
-                                                        </Button>
-                                                    )}
-                                                </Form>
                                                 <Link
                                                     className="btn btn-success"
                                                     href={salesCreate.url()}
@@ -244,6 +229,84 @@ function SalesIndex() {
                                                 </Link>
                                             </div>
                                         </div>
+                                    </Row>
+                                    
+                                    {/* Filters */}
+                                    <Row className="mt-3">
+                                        <Col>
+                                            <Form
+                                                onSubmit={handleSearch}
+                                                className="d-flex flex-wrap gap-2 align-items-end"
+                                            >
+                                                <div>
+                                                    <Form.Label className="small mb-1">Search</Form.Label>
+                                                    <Form.Control
+                                                        type="search"
+                                                        placeholder="Invoice or customer..."
+                                                        value={search}
+                                                        onChange={(e) =>
+                                                            setSearch(
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        style={{
+                                                            minWidth: 200,
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div style={{ minWidth: 150 }}>
+                                                    <Form.Label className="small mb-1">Date From</Form.Label>
+                                                    <Form.Control
+                                                        type="date"
+                                                        id="dateFrom"
+                                                        value={dateFrom}
+                                                        onChange={(e) =>
+                                                            setDateFrom(e.target.value)
+                                                        }
+                                                    />
+                                                </div>
+                                                <div style={{ minWidth: 150 }}>
+                                                    <Form.Label className="small mb-1">Date To</Form.Label>
+                                                    <Form.Control
+                                                        type="date"
+                                                        id="dateTo"
+                                                        value={dateTo}
+                                                        onChange={(e) =>
+                                                            setDateTo(e.target.value)
+                                                        }
+                                                    />
+                                                </div>
+                                                <div style={{ minWidth: 140 }}>
+                                                    <Form.Label className="small mb-1">Payment Status</Form.Label>
+                                                    <Form.Select
+                                                        value={paymentStatus}
+                                                        onChange={(e) =>
+                                                            setPaymentStatus(e.target.value)
+                                                        }
+                                                    >
+                                                        <option value="">All</option>
+                                                        <option value="paid">Paid</option>
+                                                        <option value="partial">Partial</option>
+                                                        <option value="unpaid">Unpaid</option>
+                                                    </Form.Select>
+                                                </div>
+                                                <Button
+                                                    type="submit"
+                                                    variant="primary"
+                                                >
+                                                    Filter
+                                                </Button>
+                                                {hasActiveFilters && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="light"
+                                                        onClick={clearFilters}
+                                                    >
+                                                        Clear All
+                                                    </Button>
+                                                )}
+                                            </Form>
+                                        </Col>
                                     </Row>
                                 </Card.Header>
 

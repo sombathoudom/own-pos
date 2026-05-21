@@ -36,6 +36,7 @@ export type DashboardSummary = {
 export type DashboardPaymentBreakdown = {
     status: string;
     total: number;
+    amount_usd: string;
 };
 
 export type DashboardSalesTrendPoint = {

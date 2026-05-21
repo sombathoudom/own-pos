@@ -5,6 +5,9 @@ export type InventoryFilters = {
     product_variant_id?: string;
     type?: string;
     category_id?: string;
+    date_from?: string;
+    date_to?: string;
+    payment_status?: string;
 };
 
 export type InventoryCategory = {

@@ -11,7 +11,6 @@ use App\Models\SaleItem;
 use App\Models\SaleReturn;
 use App\Models\StockBalance;
 use Carbon\CarbonInterface;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -127,7 +126,9 @@ class DashboardController extends Controller
     private function paymentBreakdown(): array
     {
         return Sale::query()
-            ->select('payment_status', DB::raw('COUNT(*) as total'))
+            ->select('payment_status')
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(total_usd) as amount_usd')
             ->where('order_status', '!=', 'cancelled')
             ->groupBy('payment_status')
             ->orderByRaw("CASE payment_status WHEN 'paid' THEN 1 WHEN 'partial' THEN 2 ELSE 3 END")
@@ -135,6 +136,7 @@ class DashboardController extends Controller
             ->map(fn (Sale $sale) => [
                 'status' => $sale->payment_status,
                 'total' => (int) $sale->total,
+                'amount_usd' => $this->formatMoney((float) $sale->amount_usd),
             ])
             ->all();
     }
@@ -144,20 +146,21 @@ class DashboardController extends Controller
      */
     private function topProducts(): array
     {
+        $today = now()->toDateString();
+
         return SaleItem::query()
             ->selectRaw('product_variants.id as variant_id')
             ->selectRaw('products.name as product_name')
             ->selectRaw('product_variants.sku, product_variants.color, product_variants.size')
             ->selectRaw('COALESCE(stock_balances.qty_on_hand, 0) as stock_on_hand')
-            ->selectRaw('SUM(sale_items.final_qty) as qty_sold')
+            ->selectRaw('SUM(sale_items.qty) as qty_sold')
             ->selectRaw('SUM(sale_items.total_usd) as revenue_usd')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
             ->join('product_variants', 'product_variants.id', '=', 'sale_items.product_variant_id')
             ->join('products', 'products.id', '=', 'product_variants.product_id')
             ->leftJoin('stock_balances', 'stock_balances.product_variant_id', '=', 'product_variants.id')
-            ->whereNotNull('sales.delivery_completed_date')
+            ->whereDate('sales.sale_date', $today)
             ->where('sales.order_status', '!=', 'cancelled')
-            ->where('sale_items.final_qty', '>', 0)
             ->groupBy('product_variants.id', 'products.name', 'product_variants.sku', 'product_variants.color', 'product_variants.size', 'stock_balances.qty_on_hand')
             ->orderByDesc('qty_sold')
             ->orderByDesc('revenue_usd')

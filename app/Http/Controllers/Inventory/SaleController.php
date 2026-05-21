@@ -31,12 +31,18 @@ class SaleController extends Controller
     public function index(Request $request): Response
     {
         $search = $request->string('search')->toString();
+        $dateFrom = $request->string('date_from')->toString();
+        $dateTo = $request->string('date_to')->toString();
+        $paymentStatus = $request->string('payment_status')->toString();
 
         $sales = Sale::query()
             ->with(['items.productVariant.product', 'deliveryCompany', 'customer'])
             ->when($search !== '', fn ($query) => $query->where('invoice_no', 'like', "%{$search}%")
                 ->orWhereHas('customer', fn ($q) => $q->where('name', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")))
+            ->when($dateFrom !== '', fn ($query) => $query->whereDate('sale_date', '>=', $dateFrom))
+            ->when($dateTo !== '', fn ($query) => $query->whereDate('sale_date', '<=', $dateTo))
+            ->when($paymentStatus !== '', fn ($query) => $query->where('payment_status', $paymentStatus))
             ->orderByDesc('sale_date')
             ->paginate(20)
             ->withQueryString();
@@ -104,6 +110,9 @@ class SaleController extends Controller
             ]),
             'filters' => [
                 'search' => $search,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'payment_status' => $paymentStatus,
             ],
         ]);
     }

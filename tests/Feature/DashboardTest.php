@@ -249,9 +249,9 @@ test('dashboard shows key sales, stock, and payment metrics', function () {
             ->where('sales_trend.6.expenses_usd', '12.00')
             ->where('payment_breakdown.0.status', 'paid')
             ->where('payment_breakdown.0.total', 2)
+            ->has('top_products', 1)
             ->where('top_products.0.product_name', 'Ocean Shirt')
             ->where('top_products.0.qty_sold', 5)
-            ->where('top_products.1.product_name', 'Sunset Shirt')
             ->where('recent_sales.0.invoice_no', 'SAL-001')
             ->where('low_stock_watchlist.0.qty_on_hand', 0)
         );
