@@ -311,7 +311,10 @@ function SalesIndex() {
                                                         {sale.items.reduce(
                                                             (sum, item) =>
                                                                 sum +
-                                                                (item.qty || 0),
+                                                                Number(
+                                                                    item.qty ||
+                                                                        0,
+                                                                ),
                                                             0,
                                                         )}
                                                     </td>

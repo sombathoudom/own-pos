@@ -112,7 +112,7 @@ function SalesShow() {
         sale.returns.forEach((ret) => {
             ret.items.forEach((item) => {
                 map[item.sale_item_id] =
-                    (map[item.sale_item_id] ?? 0) + item.qty;
+                    (map[item.sale_item_id] ?? 0) + Number(item.qty);
             });
         });
 
@@ -124,7 +124,8 @@ function SalesShow() {
         sale.exchanges.forEach((exchange) => {
             exchange.items.forEach((item) => {
                 map[item.sale_item_id] =
-                    (map[item.sale_item_id] ?? 0) + item.qty_returned;
+                    (map[item.sale_item_id] ?? 0) +
+                    Number(item.qty_returned);
             });
         });
 

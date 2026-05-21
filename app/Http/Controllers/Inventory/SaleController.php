@@ -197,7 +197,8 @@ class SaleController extends Controller
         $validated = $request->validated();
 
         try {
-            DailyClosingLock::ensureNotLocked($validated['sale_date'], 'This day has been closed. New sales cannot be added.');
+            $today = now()->toDateString();
+            DailyClosingLock::ensureNotLocked($today, 'This day has been closed. New sales cannot be added.');
 
             $sale = $createSale->handle(
                 saleData: [
@@ -205,7 +206,7 @@ class SaleController extends Controller
                     'customer_id' => $validated['customer_id'] ?? null,
                     'source_page' => $validated['source_page'] ?? null,
                     'delivery_company_id' => $validated['delivery_company_id'] ?? null,
-                    'sale_date' => $validated['sale_date'],
+                    'sale_date' => $today,
                     'currency' => $validated['currency'] ?? 'USD',
                     'exchange_rate' => $validated['exchange_rate'] ?? 4100,
                     'discount_usd' => $validated['discount_usd'] ?? 0,
@@ -221,7 +222,6 @@ class SaleController extends Controller
             return back()->withErrors(['items' => $e->getMessage()]);
         }
 
-       
         if ($request->boolean('print_receipt')) {
             if ($request->boolean('from_pos')) {
                 session()->flash('from_pos', true);
