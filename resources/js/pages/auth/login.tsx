@@ -33,57 +33,102 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
     return (
         <GuestLayout>
-            <Head title="Sign In" />
+            <Head title="Sign In — Doly Outfits" />
 
             <div className="auth-page-content mt-lg-5">
                 <Container>
                     <Row>
                         <Col lg={12}>
                             <div className="mt-sm-5 text-white-50 mb-4 text-center">
-                                <Link
-                                    href={loginPage()}
-                                    className="d-inline-block auth-logo"
-                                >
-                                    <span className="fs-3 fw-semibold text-white">
-                                        Wifey POS
+                                <div className="mb-3">
+                                    <span
+                                        className="fs-1 fw-bold text-white d-block"
+                                        style={{ letterSpacing: 2 }}
+                                    >
+                                        DOLY OUTFITS
                                     </span>
-                                </Link>
-                                <p className="fs-15 fw-medium mt-3">
-                                    Minimal admin experience powered by Velzon
+                                    <span
+                                        className="text-white-50"
+                                        style={{
+                                            fontSize: '0.85rem',
+                                            letterSpacing: 4,
+                                            textTransform: 'uppercase',
+                                        }}
+                                    >
+                                        Point of Sale System
+                                    </span>
+                                </div>
+                                <p
+                                    className="fs-15 fw-medium mt-3"
+                                    style={{ maxWidth: 400, margin: '0 auto' }}
+                                >
+                                    Welcome back. Sign in to manage your boutique
+                                    sales, inventory, and daily operations.
                                 </p>
                             </div>
                         </Col>
                     </Row>
 
                     <Row className="justify-content-center">
-                        <Col md={8} lg={6} xl={5}>
-                            <Card className="mt-4">
-                                <Card.Body className="p-4">
-                                    <div className="mt-2 text-center">
-                                        <h5 className="text-primary">
-                                            Welcome back
+                        <Col md={8} lg={5} xl={4}>
+                            <Card
+                                className="mt-4 border-0 shadow-lg"
+                                style={{
+                                    background:
+                                        'rgba(255, 255, 255, 0.97)',
+                                    backdropFilter: 'blur(10px)',
+                                }}
+                            >
+                                <Card.Body className="p-4 p-md-5">
+                                    <div className="text-center mb-4">
+                                        <div
+                                            className="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                                            style={{
+                                                width: 56,
+                                                height: 56,
+                                                background:
+                                                    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                            }}
+                                        >
+                                            <i className="ri-store-2-line fs-3 text-white"></i>
+                                        </div>
+                                        <h5
+                                            className="mb-1"
+                                            style={{
+                                                fontWeight: 700,
+                                                color: '#2d3748',
+                                            }}
+                                        >
+                                            Staff Sign In
                                         </h5>
-                                        <p className="text-muted">
-                                            Sign in to continue to your
-                                            workspace.
+                                        <p
+                                            className="text-muted mb-0"
+                                            style={{ fontSize: '0.85rem' }}
+                                        >
+                                            Enter your credentials to access the
+                                            POS.
                                         </p>
                                     </div>
 
                                     {status && (
-                                        <div className="alert alert-success mt-4 mb-0">
+                                        <div className="alert alert-success alert-dismissible fade show mt-3 mb-0 py-2">
+                                            <i className="ri-checkbox-circle-line me-1"></i>
                                             {status}
                                         </div>
                                     )}
 
-                                    <div className="mt-4 p-2">
-                                        <Form onSubmit={submit}>
-                                            <div className="mb-3">
-                                                <Form.Label
-                                                    htmlFor="email"
-                                                    className="form-label"
-                                                >
-                                                    Email
-                                                </Form.Label>
+                                    <Form onSubmit={submit} className="mt-4">
+                                        <div className="mb-3">
+                                            <Form.Label
+                                                htmlFor="email"
+                                                className="small fw-semibold text-muted"
+                                            >
+                                                Email address
+                                            </Form.Label>
+                                            <div className="input-group">
+                                                <span className="input-group-text bg-light border-end-0">
+                                                    <i className="ri-mail-line text-muted"></i>
+                                                </span>
                                                 <Form.Control
                                                     id="email"
                                                     type="email"
@@ -94,90 +139,92 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                                             event.target.value,
                                                         )
                                                     }
-                                                    className={
-                                                        errors.email
-                                                            ? 'is-invalid'
-                                                            : ''
-                                                    }
+                                                    className={`border-start-0 ${errors.email ? 'is-invalid' : ''}`}
+                                                    placeholder="you@dolyoutfits.com"
                                                     autoComplete="username"
                                                     autoFocus
                                                     required
                                                 />
-                                                <Form.Control.Feedback
-                                                    type="invalid"
-                                                    className="d-block"
-                                                >
-                                                    {errors.email}
-                                                </Form.Control.Feedback>
                                             </div>
+                                            <Form.Control.Feedback
+                                                type="invalid"
+                                                className="d-block"
+                                            >
+                                                {errors.email}
+                                            </Form.Control.Feedback>
+                                        </div>
 
-                                            <div className="mb-3">
-                                                <div className="float-end">
-                                                    {canResetPassword && (
-                                                        <Link
-                                                            href={forgotPassword()}
-                                                            className="text-muted"
-                                                        >
-                                                            Forgot password?
-                                                        </Link>
-                                                    )}
-                                                </div>
-
+                                        <div className="mb-3">
+                                            <div className="d-flex justify-content-between align-items-center mb-1">
                                                 <Form.Label
                                                     htmlFor="password"
-                                                    className="form-label"
+                                                    className="small fw-semibold text-muted mb-0"
                                                 >
                                                     Password
                                                 </Form.Label>
-                                                <div className="position-relative auth-pass-inputgroup mb-3">
-                                                    <Form.Control
-                                                        id="password"
-                                                        type={
-                                                            passwordShown
-                                                                ? 'text'
-                                                                : 'password'
-                                                        }
-                                                        value={data.password}
-                                                        onChange={(event) =>
-                                                            setData(
-                                                                'password',
-                                                                event.target
-                                                                    .value,
-                                                            )
-                                                        }
-                                                        className={
-                                                            errors.password
-                                                                ? 'is-invalid'
-                                                                : ''
-                                                        }
-                                                        autoComplete="current-password"
-                                                        required
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-link position-absolute text-decoration-none end-0 top-0 text-muted"
-                                                        onClick={() =>
-                                                            setPasswordShown(
-                                                                (shown) =>
-                                                                    !shown,
-                                                            )
-                                                        }
+                                                {canResetPassword && (
+                                                    <Link
+                                                        href={forgotPassword()}
+                                                        className="small text-decoration-none"
+                                                        style={{
+                                                            color: '#667eea',
+                                                        }}
                                                     >
-                                                        <i className="ri-eye-fill align-middle"></i>
-                                                    </button>
-                                                    <Form.Control.Feedback
-                                                        type="invalid"
-                                                        className="d-block"
-                                                    >
-                                                        {errors.password}
-                                                    </Form.Control.Feedback>
-                                                </div>
+                                                        Forgot password?
+                                                    </Link>
+                                                )}
                                             </div>
+                                            <div className="input-group">
+                                                <span className="input-group-text bg-light border-end-0">
+                                                    <i className="ri-lock-password-line text-muted"></i>
+                                                </span>
+                                                <Form.Control
+                                                    id="password"
+                                                    type={
+                                                        passwordShown
+                                                            ? 'text'
+                                                            : 'password'
+                                                    }
+                                                    value={data.password}
+                                                    onChange={(event) =>
+                                                        setData(
+                                                            'password',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    className={`border-start-0 ${errors.password ? 'is-invalid' : ''}`}
+                                                    placeholder="Enter your password"
+                                                    autoComplete="current-password"
+                                                    required
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-link position-absolute text-decoration-none end-0 top-0 text-muted"
+                                                    style={{ zIndex: 5 }}
+                                                    onClick={() =>
+                                                        setPasswordShown(
+                                                            (shown) => !shown,
+                                                        )
+                                                    }
+                                                >
+                                                    <i
+                                                        className={`ri-${passwordShown ? 'eye-off' : 'eye'}-line align-middle`}
+                                                    ></i>
+                                                </button>
+                                            </div>
+                                            <Form.Control.Feedback
+                                                type="invalid"
+                                                className="d-block"
+                                            >
+                                                {errors.password}
+                                            </Form.Control.Feedback>
+                                        </div>
 
+                                        <div className="d-flex justify-content-between align-items-center mb-4">
                                             <Form.Check
                                                 id="remember"
-                                                className="mb-4"
-                                                label="Remember me"
+                                                className="small"
+                                                label="Keep me signed in"
                                                 checked={data.remember}
                                                 onChange={(event) =>
                                                     setData(
@@ -186,20 +233,45 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                                     )
                                                 }
                                             />
+                                        </div>
 
-                                            <Button
-                                                type="submit"
-                                                className="btn btn-success w-100"
-                                                disabled={processing}
-                                            >
-                                                {processing
-                                                    ? 'Signing in...'
-                                                    : 'Sign in'}
-                                            </Button>
-                                        </Form>
-                                    </div>
+                                        <Button
+                                            type="submit"
+                                            className="w-100 py-2"
+                                            disabled={processing}
+                                            style={{
+                                                background:
+                                                    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                border: 'none',
+                                                fontWeight: 600,
+                                            }}
+                                        >
+                                            {processing ? (
+                                                <>
+                                                    <span
+                                                        className="spinner-border spinner-border-sm me-2"
+                                                        role="status"
+                                                        aria-hidden="true"
+                                                    ></span>
+                                                    Signing in...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="ri-login-box-line me-2"></i>
+                                                    Sign In
+                                                </>
+                                            )}
+                                        </Button>
+                                    </Form>
                                 </Card.Body>
                             </Card>
+
+                            <div className="mt-4 text-center">
+                                <p className="mb-0 text-white-50">
+                                    <i className="ri-shield-check-line me-1"></i>
+                                    Secure staff-only access
+                                </p>
+                            </div>
                         </Col>
                     </Row>
                 </Container>
