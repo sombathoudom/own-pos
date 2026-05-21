@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
 
 import GuestLayout from '@/Layouts/GuestLayout';
-import { login as loginPage, register as registerPage } from '@/routes';
+import { login as loginPage } from '@/routes';
 import { store as loginStore } from '@/routes/login';
 import { request as forgotPassword } from '@/routes/password';
 
@@ -200,18 +200,6 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     </div>
                                 </Card.Body>
                             </Card>
-
-                            <div className="mt-4 text-center">
-                                <p className="mb-0">
-                                    Don&apos;t have an account?{' '}
-                                    <Link
-                                        href={registerPage()}
-                                        className="fw-semibold text-decoration-underline text-primary"
-                                    >
-                                        Sign up
-                                    </Link>
-                                </p>
-                            </div>
                         </Col>
                     </Row>
                 </Container>

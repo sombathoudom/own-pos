@@ -2,7 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { Badge, Button, Card, Col, Container, Row } from 'react-bootstrap';
 
 import GuestLayout from '@/Layouts/GuestLayout';
-import { home, login, register } from '@/routes';
+import { home, login } from '@/routes';
 
 type WelcomeProps = {
     canRegister: boolean;
