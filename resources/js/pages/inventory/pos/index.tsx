@@ -20,6 +20,8 @@ import CustomerSelect from '@/Components/Inventory/CustomerSelect';
 import DeliveryCompanyPicker from '@/Components/Inventory/DeliveryCompanyPicker';
 import type { DeliveryCompanyOption } from '@/Components/Inventory/DeliveryCompanyPicker';
 import Layout from '@/Layouts';
+import { printerService } from '@/services/PrinterService';
+import type { ReceiptData } from '@/services/PrinterService';
 import { store as customersStore } from '@/routes/customers';
 import { store as salesStore } from '@/routes/sales';
 import type { InventoryCustomer } from '@/types';
@@ -101,7 +103,11 @@ function PosIndex() {
     const [showCustomerModal, setShowCustomerModal] = useState(false);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
     const [showCartMobile, setShowCartMobile] = useState(false);
+    const [showPrinterModal, setShowPrinterModal] = useState(false);
     const [displayLimit, setDisplayLimit] = useState(30);
+    const [printStatus, setPrintStatus] = useState<string | null>(null);
+    const [printerConfig, setPrinterConfig] = useState(printerService.getConfig());
+    const [testingPrinter, setTestingPrinter] = useState(false);
     const searchRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -295,7 +301,46 @@ function PosIndex() {
 
     const submitForm = () => {
         post(salesStore.url(), {
-            onSuccess: () => {
+            onSuccess: (page) => {
+                // Auto-print receipt if printer is enabled
+                if (printerService.isEnabled()) {
+                    setPrintStatus('Printing...');
+                    
+                    // Prepare receipt data from the completed sale
+                    const receiptData: ReceiptData = {
+                        invoice_no: data.items.length > 0 ? 'INV-' + Date.now() : 'UNKNOWN',
+                        date: new Date().toLocaleString(),
+                        customer_name: selectedCustomer?.name || 'Walk-in Customer',
+                        phone: selectedCustomer?.phone || '',
+                        location: selectedCustomer?.address || '',
+                        delivery: deliveryCompanies.find(d => d.id === data.delivery_company_id)?.name || '',
+                        items: data.items.map(item => {
+                            const variant = getVariant(item.product_variant_id);
+                            return {
+                                product: variant ? `${variant.product.name} / ${variant.size}` : 'Product',
+                                qty: item.qty,
+                                total: parseFloat(item.unit_price_usd) * item.qty - parseFloat(item.discount_usd),
+                            };
+                        }),
+                        discount: parseFloat(data.discount_usd),
+                        delivery_fee: parseFloat(data.customer_delivery_fee_usd),
+                        total: total,
+                        paid: paid,
+                        remaining: due,
+                        status: due > 0 ? 'UNPAID' : paid > total ? 'PAID' : 'PARTIAL',
+                        footer: 'Thank you for supporting us <3',
+                    };
+
+                    printerService.printReceipt(receiptData).then(result => {
+                        if (result.success) {
+                            setPrintStatus('✅ Printed successfully');
+                        } else {
+                            setPrintStatus('❌ Print failed: ' + result.message);
+                        }
+                        setTimeout(() => setPrintStatus(null), 3000);
+                    });
+                }
+
                 setShowCartMobile(false);
                 setShowPreviewModal(false);
             },
@@ -342,7 +387,23 @@ function PosIndex() {
 
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb title="POS" pageTitle="Sales" />
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <BreadCrumb title="POS" pageTitle="Sales" />
+                        <Button
+                            variant={printerConfig.enabled ? 'success' : 'outline-secondary'}
+                            size="sm"
+                            onClick={() => setShowPrinterModal(true)}
+                        >
+                            <i className="ri-printer-line me-1"></i>
+                            Printer: {printerConfig.enabled ? '✅ ON' : '❌ OFF'}
+                        </Button>
+                    </div>
+
+                    {printStatus && (
+                        <Alert variant={printStatus.includes('✅') ? 'success' : 'warning'} className="mb-3">
+                            {printStatus}
+                        </Alert>
+                    )}
 
                     <Form onSubmit={submit}>
                         <input
@@ -1975,6 +2036,173 @@ function PosIndex() {
                                 Confirm & Complete Sale
                             </>
                         )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Printer Settings Modal */}
+            <Modal
+                show={showPrinterModal}
+                onHide={() => setShowPrinterModal(false)}
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <i className="ri-printer-line me-2"></i>
+                        Printer Settings
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Printer Server URL</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={printerConfig.serverUrl}
+                            onChange={(e) =>
+                                setPrinterConfig({
+                                    ...printerConfig,
+                                    serverUrl: e.target.value,
+                                })
+                            }
+                            placeholder="ws://192.168.1.100:1945"
+                        />
+                        <Form.Text className="text-muted">
+                            WebSocket URL of your printer server (must be on same network)
+                        </Form.Text>
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                        <Form.Label>Printer Name (Full Path)</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={printerConfig.printerName}
+                            onChange={(e) =>
+                                setPrinterConfig({
+                                    ...printerConfig,
+                                    printerName: e.target.value,
+                                })
+                            }
+                            placeholder="smb://localhost/XP-80C"
+                        />
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                        <Form.Label>Printer Name (Short)</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={printerConfig.printerNameShort}
+                            onChange={(e) =>
+                                setPrinterConfig({
+                                    ...printerConfig,
+                                    printerNameShort: e.target.value,
+                                })
+                            }
+                            placeholder="XP-80C"
+                        />
+                    </Form.Group>
+
+                    <Form.Check
+                        type="switch"
+                        id="enable-auto-print"
+                        label="Enable Auto-Print After Sale"
+                        checked={printerConfig.enabled}
+                        onChange={(e) =>
+                            setPrinterConfig({
+                                ...printerConfig,
+                                enabled: e.target.checked,
+                            })
+                        }
+                        className="mb-3"
+                    />
+
+                    <Form.Check
+                        type="switch"
+                        id="cash-drawer"
+                        label="Open Cash Drawer After Print"
+                        checked={printerConfig.pullCashDrawer}
+                        onChange={(e) =>
+                            setPrinterConfig({
+                                ...printerConfig,
+                                pullCashDrawer: e.target.checked,
+                            })
+                        }
+                        className="mb-3"
+                    />
+
+                    {printStatus && (
+                        <Alert
+                            variant={
+                                printStatus.includes('✅')
+                                    ? 'success'
+                                    : 'warning'
+                            }
+                        >
+                            {printStatus}
+                        </Alert>
+                    )}
+
+                    <div className="d-grid gap-2">
+                        <Button
+                            variant="outline-primary"
+                            onClick={async () => {
+                                setTestingPrinter(true);
+                                setPrintStatus('Testing connection...');
+                                const success =
+                                    await printerService.testConnection();
+                                setPrintStatus(
+                                    success
+                                        ? '✅ Connection successful!'
+                                        : '❌ Connection failed! Check server URL and network.',
+                                );
+                                setTestingPrinter(false);
+                            }}
+                            disabled={testingPrinter}
+                        >
+                            {testingPrinter ? (
+                                <>
+                                    <span
+                                        className="spinner-border spinner-border-sm me-2"
+                                        role="status"
+                                    ></span>
+                                    Testing...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="ri-wifi-line me-2"></i>
+                                    Test Connection
+                                </>
+                            )}
+                        </Button>
+                    </div>
+
+                    <Alert variant="info" className="mt-3 mb-0">
+                        <small>
+                            <strong>Note:</strong> This device must be on the
+                            same WiFi network as the printer computer.
+                        </small>
+                    </Alert>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowPrinterModal(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            printerService.saveConfig(printerConfig);
+                            setPrintStatus('✅ Settings saved!');
+                            setTimeout(() => {
+                                setShowPrinterModal(false);
+                                setPrintStatus(null);
+                                window.location.reload();
+                            }, 1000);
+                        }}
+                    >
+                        <i className="ri-save-line me-2"></i>
+                        Save Settings
                     </Button>
                 </Modal.Footer>
             </Modal>

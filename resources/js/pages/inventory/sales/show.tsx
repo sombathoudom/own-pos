@@ -16,6 +16,8 @@ import {
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import CustomerSelect from '@/Components/Inventory/CustomerSelect';
 import Layout from '@/Layouts';
+import { printerService } from '@/services/PrinterService';
+import type { ReceiptData } from '@/services/PrinterService';
 import {
     cancel as saleCancel,
     confirmDelivery,
@@ -57,6 +59,41 @@ function SalesShow() {
     const [paymentNote, setPaymentNote] = useState('');
     const [updatingPayment, setUpdatingPayment] = useState(false);
     const [confirmingAll, setConfirmingAll] = useState(false);
+    const [printing, setPrinting] = useState(false);
+    const [printMessage, setPrintMessage] = useState<string | null>(null);
+
+    const handlePrintReceipt = async () => {
+        setPrinting(true);
+        setPrintMessage(null);
+
+        const receiptData: ReceiptData = {
+            invoice_no: sale.invoice_no,
+            date: sale.sale_date || new Date().toLocaleDateString(),
+            customer_name: sale.customer?.name || 'Walk-in Customer',
+            phone: sale.customer?.phone || '',
+            location: sale.customer?.address || '',
+            delivery: sale.delivery_company?.name || '',
+            items: sale.items.map((item) => ({
+                product: `${item.product_variant?.product_name || 'Product'} / ${item.product_variant?.size || ''}`,
+                qty: item.qty,
+                total: parseFloat(item.total_usd),
+            })),
+            discount: parseFloat(sale.discount_usd),
+            delivery_fee: parseFloat(sale.customer_delivery_fee_usd || '0'),
+            total: parseFloat(sale.total_usd),
+            paid: parseFloat(sale.paid_usd),
+            remaining: parseFloat(sale.total_usd) - parseFloat(sale.paid_usd),
+            status: sale.payment_status.toUpperCase(),
+            footer: 'Thank you for supporting us <3',
+        };
+
+        const result = await printerService.printReceipt(receiptData);
+        setPrintMessage(result.message);
+        setPrinting(false);
+
+        setTimeout(() => setPrintMessage(null), 3000);
+    };
+
     const exchangeForm = useForm<{
         exchange_date: string;
         items: ExchangeItemForm[];
@@ -342,10 +379,42 @@ function SalesShow() {
 
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb
-                        title={`Sale ${sale.invoice_no}`}
-                        pageTitle="Sales"
-                    />
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <BreadCrumb
+                            title={`Sale ${sale.invoice_no}`}
+                            pageTitle="Sales"
+                        />
+                        <Button
+                            variant="primary"
+                            onClick={handlePrintReceipt}
+                            disabled={printing || !printerService.isEnabled()}
+                        >
+                            {printing ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2"></span>
+                                    Printing...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="ri-printer-line me-2"></i>
+                                    Print Receipt
+                                </>
+                            )}
+                        </Button>
+                    </div>
+
+                    {printMessage && (
+                        <div className={`alert ${printMessage.includes('✅') ? 'alert-success' : 'alert-danger'} mb-3`}>
+                            {printMessage}
+                        </div>
+                    )}
+
+                    {!printerService.isEnabled() && (
+                        <div className="alert alert-warning mb-3">
+                            <i className="ri-alert-line me-2"></i>
+                            Printer is disabled. Enable it in POS settings to print receipts.
+                        </div>
+                    )}
 
                     <Row>
                         <Col xl={8}>

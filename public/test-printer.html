@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+<head>
+    <title>Test Printer Connection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .config {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #log {
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            min-height: 200px;
+            white-space: pre-wrap;
+        }
+        .success { color: #4CAF50; font-weight: bold; }
+        .error { color: #f44336; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🖨️ Printer Connection Test</h1>
+    
+    <div class="config">
+        <h3>Printer Configuration</h3>
+        <label>Printer Server URL:</label>
+        <input type="text" id="serverUrl" value="ws://192.168.110.176:1945" placeholder="ws://192.168.1.100:1945">
+        
+        <label>Printer Name (Full):</label>
+        <input type="text" id="printerName" value="smb://localhost/XP-80C" placeholder="smb://localhost/XP-80C">
+        
+        <label>Printer Name (Short):</label>
+        <input type="text" id="printerNameShort" value="XP-80C" placeholder="XP-80C">
+    </div>
+
+    <button onclick="testConnection()" id="testBtn">1. Test Connection</button>
+    <button onclick="testPrint()" id="printBtn">2. Test Print Receipt</button>
+    <button onclick="clearLog()">Clear Log</button>
+
+    <h3>Log:</h3>
+    <div id="log"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+            logEl.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function testConnection() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            log('🔌 Testing connection to: ' + serverUrl);
+
+            const ws = new WebSocket(serverUrl);
+
+            ws.onopen = () => {
+                log('✅ CONNECTION SUCCESSFUL!', 'success');
+                log('Printer server is reachable');
+                ws.close();
+            };
+
+            ws.onerror = () => {
+                log('❌ CONNECTION FAILED!', 'error');
+                log('Make sure:');
+                log('1. ESC/POS Printer Server is running');
+                log('2. You are on the same network');
+                log('3. IP address is correct');
+                log('4. Port 1945 is not blocked by firewall');
+            };
+
+            ws.onclose = (event) => {
+                if (event.code !== 1000) {
+                    log('Connection closed with code: ' + event.code, 'error');
+                }
+            };
+        }
+
+        function testPrint() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const printerName = document.getElementById('printerName').value;
+            const printerNameShort = document.getElementById('printerNameShort').value;
+
+            log('📄 Sending test receipt...');
+
+            const ws = new WebSocket(serverUrl);
+
+            ws.onopen = () => {
+                log('✅ Connected to printer server');
+
+                const payload = {
+                    from: 'posclient',
+                    printer_name: printerName,
+                    printer_settings: {
+                        interface: 'windows-usb',
+                        printer_name: printerNameShort,
+                        template: 'custom_invoice_image',
+                        pull_cash_drawer: false,
+                        more_new_line: 3,
+                    },
+                    receipt_data: {
+                        invoice_no: 'TEST-' + Date.now(),
+                        date: new Date().toLocaleString(),
+                        customer_name: 'Test Customer',
+                        phone: '066472015',
+                        location: 'Phnom Penh, Cambodia',
+                        delivery: 'Test Delivery',
+                        items: [
+                            { product: 'Test Product 1 / M', qty: 2, total: 10 },
+                            { product: 'Test Product 2 / L', qty: 1, total: 15 },
+                        ],
+                        discount: 0,
+                        delivery_fee: 2,
+                        total: 27,
+                        paid: 30,
+                        remaining: 0,
+                        status: 'PAID',
+                        footer: 'Thank you for testing! <3',
+                    },
+                };
+
+                ws.send(JSON.stringify(payload));
+                log('📨 Receipt data sent to printer');
+            };
+
+            ws.onmessage = (event) => {
+                log('📬 Server response: ' + event.data, 'success');
+                log('✅ PRINT SUCCESSFUL!', 'success');
+                log('Check your printer for the test receipt');
+            };
+
+            ws.onerror = () => {
+                log('❌ PRINT FAILED!', 'error');
+                log('Connection error occurred');
+            };
+
+            ws.onclose = (event) => {
+                if (event.code !== 1000) {
+                    log('Connection closed unexpectedly: ' + event.code, 'error');
+                }
+            };
+        }
+
+        // Auto-test on load
+        window.onload = () => {
+            log('🚀 Printer Test Tool Ready');
+            log('Step 1: Click "Test Connection" to verify server is reachable');
+            log('Step 2: Click "Test Print Receipt" to print a test receipt');
+            log('');
+        };
+    </script>
+</body>
+</html>
