@@ -120,6 +120,7 @@
             @if ($sale['delivery_company_name'])
                 <div class="meta-line customer-line"><strong>Delivery:</strong> {{ $sale['delivery_company_name'] }}</div>
             @endif
+             <div class="meta-line"><strong>អ្នកផ្ញើ:</strong> 066470215</div>
         </div>
 
         <div class="divider"></div>

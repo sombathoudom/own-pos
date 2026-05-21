@@ -40,20 +40,23 @@ export default function DeliveryCompanyPicker({
     return (
         <div>
             {/* Box grid */}
-            <div className="d-flex mb-2 flex-wrap gap-2">
+            <div
+                className="d-flex mb-1 gap-1 flex-nowrap overflow-x-auto"
+                style={{ scrollbarWidth: 'thin' }}
+            >
                 {/* None option */}
                 <button
                     type="button"
                     onClick={() => onChange(null)}
                     disabled={disabled}
-                    className={`btn btn-sm px-3 py-2 ${
+                    className={`btn btn-sm px-2 py-1 ${
                         selectedId === null
                             ? 'btn-secondary'
                             : 'btn-outline-secondary'
                     }`}
-                    style={{ minWidth: 64 }}
+                    style={{ minWidth: 52, fontSize: '0.8rem' }}
                 >
-                    <i className="ri-close-line me-1"></i>
+                    <i className="ri-close-line me-1" style={{ fontSize: '0.75rem' }}></i>
                     None
                 </button>
 
@@ -66,16 +69,16 @@ export default function DeliveryCompanyPicker({
                             type="button"
                             onClick={() => onChange(company)}
                             disabled={disabled}
-                            className={`btn btn-sm d-flex flex-column align-items-center gap-1 px-3 py-2 ${
+                            className={`btn btn-sm d-flex flex-column align-items-center gap-0 px-2 py-1 ${
                                 isSelected
                                     ? 'btn-primary shadow'
                                     : 'btn-outline-primary'
                             }`}
-                            style={{ minWidth: 72 }}
+                            style={{ minWidth: 60, fontSize: '0.8rem' }}
                         >
                             <span className="fw-bold">{company.name}</span>
                             <span
-                                style={{ fontSize: '0.7rem' }}
+                                style={{ fontSize: '0.65rem' }}
                                 className={
                                     isSelected ? 'text-white' : 'text-muted'
                                 }
@@ -89,19 +92,16 @@ export default function DeliveryCompanyPicker({
 
             {/* Profit hint */}
             {selected && deliveryProfit !== null && (
-                <div className="small">
-                    <span className="me-1 text-muted">Delivery profit:</span>
+                <div style={{ fontSize: '0.75rem' }}>
+                    <span className="me-1 text-muted">Profit:</span>
                     <Badge
                         bg={deliveryProfit >= 0 ? 'success' : 'danger'}
                         className="fw-normal"
+                        style={{ fontSize: '0.7rem' }}
                     >
                         {deliveryProfit >= 0 ? '+' : ''}$
                         {deliveryProfit.toFixed(2)}
                     </Badge>
-                    <span className="ms-2 text-muted">
-                        (${customerDeliveryFee.toFixed(2)} charged − $
-                        {Number(selected.delivery_cost_usd).toFixed(2)} cost)
-                    </span>
                 </div>
             )}
         </div>
