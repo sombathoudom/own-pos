@@ -10,8 +10,10 @@ use App\Models\StockBalance;
 use App\Models\StockLayer;
 use App\Models\StockMovement;
 use App\Models\User;
+use Carbon\Carbon;
 
 beforeEach(function () {
+    Carbon::setTestNow('2026-05-13');
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 
@@ -153,6 +155,7 @@ test('delivery confirmation finalizes accepted changed and added items', functio
     expect($sale->subtotal_usd)->toBe('26.0000');
     expect($sale->total_usd)->toBe('28.0000');
     expect($sale->order_status)->toBe('completed');
+    // Sale was unpaid; delivery success marks it as paid on delivery day
     expect($sale->paid_usd)->toBe('28.0000');
     expect($sale->payment_status)->toBe('paid');
     expect($sale->payment_received_date?->toDateString())->toBe('2026-05-14');
@@ -281,6 +284,7 @@ test('delivery confirmation accepts unchanged delivered order', function () {
     $saleItem->refresh();
 
     expect($sale->order_status)->toBe('completed');
+    // Sale was unpaid; delivery success marks it as paid on delivery day
     expect($sale->paid_usd)->toBe('14.0000');
     expect($sale->payment_status)->toBe('paid');
     expect($sale->payment_received_date?->toDateString())->toBe('2026-05-14');

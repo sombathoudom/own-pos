@@ -98,7 +98,7 @@ final class CreateSale
             ];
 
             if ($paymentStatus === 'paid') {
-                $updateData['payment_received_date'] = now()->toDateString();
+                $updateData['payment_received_date'] = $sale->sale_date->toDateString();
             }
 
             $sale->update($updateData);

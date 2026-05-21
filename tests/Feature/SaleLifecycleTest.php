@@ -12,8 +12,10 @@ use App\Models\StockBalance;
 use App\Models\StockLayer;
 use App\Models\StockMovement;
 use App\Models\User;
+use Carbon\Carbon;
 
 beforeEach(function () {
+    Carbon::setTestNow('2026-05-13');
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 
@@ -147,7 +149,7 @@ function createLifecycleSale(object $testCase, array $overrides = []): Sale
 }
 
 test('partial return reduces paid_usd and total_usd and sets payment_received_date', function () {
-    $sale = createLifecycleSale($this);
+    $sale = createLifecycleSale($this, ['paid_usd' => 14]);
     $saleItem = $sale->items()->first();
     $originalTotal = $sale->total_usd;
     $originalPaid = $sale->paid_usd;
@@ -178,7 +180,7 @@ test('partial return reduces paid_usd and total_usd and sets payment_received_da
 });
 
 test('full return leaves only delivery fee in total and keeps payment correct', function () {
-    $sale = createLifecycleSale($this);
+    $sale = createLifecycleSale($this, ['paid_usd' => 14]);
     $saleItem = $sale->items()->first();
 
     $this->post(route('sales.return', $sale), [
@@ -200,7 +202,7 @@ test('full return leaves only delivery fee in total and keeps payment correct', 
 });
 
 test('return after exchange reduces totals correctly', function () {
-    $sale = createLifecycleSale($this);
+    $sale = createLifecycleSale($this, ['paid_usd' => 14]);
     $saleItem = $sale->items()->first();
 
     $this->post(route('sales.exchange', $sale), [
@@ -283,7 +285,7 @@ test('exchange after partial return works correctly', function () {
 });
 
 test('report shows return entries with negative amounts on receipt date', function () {
-    $sale = createLifecycleSale($this);
+    $sale = createLifecycleSale($this, ['paid_usd' => 14]);
     $saleItem = $sale->items()->first();
 
     $this->post(route('sales.return', $sale), [
@@ -308,7 +310,7 @@ test('report shows return entries with negative amounts on receipt date', functi
 });
 
 test('monthly report subtracts return refunds from total revenue', function () {
-    $sale = createLifecycleSale($this);
+    $sale = createLifecycleSale($this, ['paid_usd' => 14]);
     $saleItem = $sale->items()->first();
 
     $this->post(route('sales.return', $sale), [

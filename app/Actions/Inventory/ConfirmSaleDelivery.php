@@ -208,15 +208,6 @@ final class ConfirmSaleDelivery
             $finalTotal = bcadd(bcsub($finalSubtotal, (string) $sale->discount_usd, 4), $finalDeliveryFeeUsd, 4);
             $deliveryProfit = bcsub($finalDeliveryFeeUsd, $actualDeliveryCostUsd, 4);
             $deliveryStatus = $this->mapDeliveryStatus($status, $finalSubtotal);
-            $isSuccessfulDelivery = in_array($deliveryStatus, ['delivered', 'partially_delivered'], true);
-
-            $paidUsd = $isSuccessfulDelivery ? $finalTotal : '0.0000';
-            $paymentStatus = 'unpaid';
-            if ($isSuccessfulDelivery && bccomp($paidUsd, $finalTotal, 4) >= 0) {
-                $paymentStatus = 'paid';
-            } elseif (bccomp($paidUsd, '0', 4) > 0) {
-                $paymentStatus = 'partial';
-            }
 
             $saleUpdateData = [
                 'subtotal_usd' => $finalSubtotal,
@@ -224,15 +215,15 @@ final class ConfirmSaleDelivery
                 'actual_delivery_cost_usd' => $actualDeliveryCostUsd,
                 'delivery_profit_usd' => $deliveryProfit,
                 'total_usd' => $finalTotal,
-                'paid_usd' => $paidUsd,
-                'payment_status' => $paymentStatus,
                 'order_status' => $this->mapSaleOrderStatus($status, $finalSubtotal),
                 'delivery_completed_date' => $confirmationDate,
             ];
 
-            if ($isSuccessfulDelivery) {
-                $saleUpdateData['payment_received_date'] = $confirmationDate;
-            } elseif ($paymentStatus === 'paid' && ! $sale->payment_received_date) {
+            // Only mark as paid on successful delivery if the customer hasn't already paid
+            $isSuccessfulDelivery = in_array($deliveryStatus, ['delivered', 'partially_delivered'], true);
+            if ($isSuccessfulDelivery && $sale->payment_received_date === null) {
+                $saleUpdateData['paid_usd'] = $finalTotal;
+                $saleUpdateData['payment_status'] = 'paid';
                 $saleUpdateData['payment_received_date'] = $confirmationDate;
             }
 

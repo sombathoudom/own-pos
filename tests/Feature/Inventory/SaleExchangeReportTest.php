@@ -11,9 +11,11 @@ use App\Models\StockBalance;
 use App\Models\StockLayer;
 use App\Models\StockMovement;
 use App\Models\User;
+use Carbon\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
+    Carbon::setTestNow('2026-05-13');
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 
@@ -108,9 +110,9 @@ beforeEach(function () {
     });
 });
 
-function createDeliveredSale(object $testCase): Sale
+function createDeliveredSale(object $testCase, array $overrides = []): Sale
 {
-    $testCase->post(route('sales.store'), [
+    $testCase->post(route('sales.store'), array_merge([
         'sale_date' => '2026-05-13',
         'customer_delivery_fee_usd' => 2,
         'actual_delivery_cost_usd' => 1,
@@ -121,7 +123,7 @@ function createDeliveredSale(object $testCase): Sale
                 'unit_price_usd' => 6.00,
             ],
         ],
-    ])->assertRedirect();
+    ], $overrides))->assertRedirect();
 
     $sale = Sale::first();
     $saleItem = $sale->items()->first();
@@ -145,7 +147,7 @@ function createDeliveredSale(object $testCase): Sale
 }
 
 test('size change after successful delivery keeps original receipt date and records later delivery fee receipt', function () {
-    $sale = createDeliveredSale($this);
+    $sale = createDeliveredSale($this, ['paid_usd' => 14]);
     $saleItem = $sale->items()->first();
 
     $this->post(route('sales.exchange', $sale), [
@@ -167,10 +169,11 @@ test('size change after successful delivery keeps original receipt date and reco
 
     expect($exchange->payment_received_date?->toDateString())->toBe('2026-05-16');
     expect($exchange->total_additional_amount_usd)->toBe('2.0000');
+    // Original paid 14 + exchange additional 2 = 16
     expect($sale->paid_usd)->toBe('16.0000');
     expect($sale->payment_status)->toBe('paid');
 
-    $this->get(route('reports.daily', ['from' => '2026-05-14', 'to' => '2026-05-14']))
+    $this->get(route('reports.daily', ['from' => '2026-05-13', 'to' => '2026-05-13']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('inventory/reports/daily')
@@ -196,7 +199,7 @@ test('size change after successful delivery keeps original receipt date and reco
 });
 
 test('size change with extra item after successful delivery counts only extra later receipt in reports', function () {
-    $sale = createDeliveredSale($this);
+    $sale = createDeliveredSale($this, ['paid_usd' => 14]);
     $saleItem = $sale->items()->first();
 
     $this->post(route('sales.exchange', $sale), [
@@ -226,6 +229,7 @@ test('size change with extra item after successful delivery counts only extra la
     expect($exchange->total_additional_amount_usd)->toBe('10.0000');
     expect($exchange->new_items_subtotal_usd)->toBe('8.0000');
     expect($exchange->additional_qty_sold)->toBe(1);
+    // Original paid 14 + exchange additional 10 = 24
     expect($sale->paid_usd)->toBe('24.0000');
     expect($sale->payment_status)->toBe('paid');
 
