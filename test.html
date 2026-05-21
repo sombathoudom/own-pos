@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <button onclick="testPrint()" style="font-size:24px;padding:16px;">
+    Test Print
+  </button>
+
+  <pre id="log"></pre>
+
+  <script>
+    function log(message) {
+      document.getElementById("log").textContent += message + "\n";
+    }
+
+    function testPrint() {
+      const ws = new WebSocket("ws://192.168.110.176:1945");
+
+      ws.onopen = () => {
+        log("Connected to EPS ✅");
+
+        const payload = {
+          from: "posclient",
+
+          printer_name: "YOUR_WINDOWS_PRINTER_NAME",
+
+          printer_settings: {
+            interface: "windows-usb",
+            template: "epson",
+            pull_cash_drawer: false,
+            line_feed_each_in_items: 1,
+            more_new_line: 3,
+            custom_print_header: [
+              "MY SHOP",
+              "Phnom Penh",
+              "Tel: 012 345 678"
+            ],
+            custom_print_footer: [
+              "Thank you!"
+            ]
+          },
+
+          receipt_data: {
+            app_name: "MY SHOP",
+            store_address: "Phnom Penh",
+            full_name: "Cashier",
+
+            transaction: {
+              date_transaction: "2026-05-21",
+              transaction: "TEST-001",
+              customer_name: "Walk-in Customer",
+              total_transaction: 12.5,
+              paid: 12.5,
+              paid_return: 0,
+              payment: "Cash"
+            },
+
+            cart: [
+              {
+                item_name: "Hawai Shirt XL",
+                price: 6.5,
+                qty: 1,
+                sub_total: 6.5
+              }
+            ],
+
+            promo: []
+          }
+        };
+
+        ws.send(JSON.stringify(payload));
+        log("Print payload sent ✅");
+
+        setTimeout(() => ws.close(), 1500);
+      };
+
+      ws.onerror = (event) => {
+        log("WebSocket error ❌");
+        console.error(event);
+      };
+
+      ws.onclose = (event) => {
+        log("Closed. Code: " + event.code);
+      };
+    }
+  </script>
+</body>
+</html>

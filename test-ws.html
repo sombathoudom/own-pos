@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <button onclick="testWS()" style="font-size:24px;padding:16px;">
+    Test WebSocket
+  </button>
+
+  <pre id="log"></pre>
+
+  <script>
+    function log(message) {
+      document.getElementById("log").textContent += message + "\n";
+    }
+
+    function testWS() {
+      const urls = [
+        "ws://127.0.0.1:1945",
+        "ws://127.0.0.1:1945/",
+        "ws://localhost:1945",
+        "ws://localhost:1945/"
+      ];
+
+      let index = 0;
+
+      function tryNext() {
+        if (index >= urls.length) {
+          log("All WebSocket URLs failed ❌");
+          return;
+        }
+
+        const url = urls[index++];
+        log("Trying " + url);
+
+        const ws = new WebSocket(url);
+
+        ws.onopen = () => {
+          log("Connected ✅ " + url);
+          ws.close();
+        };
+
+        ws.onerror = () => {
+          log("Error ❌ " + url);
+        };
+
+        ws.onclose = (event) => {
+          log("Closed " + url + " Code: " + event.code);
+
+          if (event.code !== 1000) {
+            setTimeout(tryNext, 500);
+          }
+        };
+      }
+
+      tryNext();
+    }
+  </script>
+</body>
+</html>

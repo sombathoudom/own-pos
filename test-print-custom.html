@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+    <body>
+        <button onclick="testPrint()" style="font-size: 24px; padding: 16px">
+            Test Print
+        </button>
+
+        <pre id="log"></pre>
+
+        <script>
+            function log(message) {
+                document.getElementById('log').textContent += message + '\n';
+            }
+
+            function testPrint() {
+                const ws = new WebSocket('ws://192.168.110.176:1945');
+
+                ws.onopen = () => {
+                    log('Connected ✅');
+
+                    const payload = {
+                        from: 'posclient',
+
+                        printer_name: 'smb://localhost/XP-80C',
+
+                        printer_settings: {
+                            interface: 'windows-usb',
+                            printer_name: 'XP-80C',
+                            template: 'custom_invoice_image',
+                            pull_cash_drawer: false,
+                            more_new_line: 3,
+                        },
+
+                        receipt_data: {
+                            invoice_no: 'INV-20260519-S7TO',
+                            date: '2026-05-19 00:00',
+                            customer_name: 'Customer Name',
+                            phone: '066472015',
+                            location: 'Phnom Penh',
+                            delivery: 'Pa Cheata',
+                            items: [
+                                { product: 'kaset-sor / XL', qty: 1, total: 6 },
+                                { product: 'kaset-sor / L', qty: 1, total: 6 },
+                                { product: 'kaset-sor / M', qty: 1, total: 6 },
+                                {
+                                    product: 'kaset-sor / 3XL',
+                                    qty: 1,
+                                    total: 6,
+                                },
+                                {
+                                    product: 'kaset-sor / 2XL',
+                                    qty: 1,
+                                    total: 6,
+                                },
+                            ],
+                            discount: 0,
+                            delivery_fee: 0,
+                            total: 30,
+                            paid: 30,
+                            remaining: 0,
+                            status: 'PAID',
+                            footer: 'Thank you for supporting us <3',
+                        },
+                    };
+
+                    ws.send(JSON.stringify(payload));
+                    log('Payload sent ✅');
+                };
+
+                ws.onmessage = (event) => {
+                    log('Server: ' + event.data);
+                };
+
+                ws.onerror = () => {
+                    log('WebSocket error ❌');
+                };
+
+                ws.onclose = (event) => {
+                    log('Closed code: ' + event.code);
+                };
+            }
+        </script>
+    </body>
+</html>
