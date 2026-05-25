@@ -7,7 +7,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import { initializeTheme } from '@/hooks/use-appearance';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'POS';
 const pages = import.meta.glob('./pages/**/*.tsx');
 
 createInertiaApp({
@@ -22,6 +22,9 @@ createInertiaApp({
         return page() as never;
     },
     setup({ el, App, props }) {
+        // Initialize theme before rendering (client-side only)
+        initializeTheme();
+        
         createRoot(el as HTMLElement).render(<App {...props} />);
     },
     strictMode: true,
@@ -29,6 +32,3 @@ createInertiaApp({
         color: '#4B5563',
     },
 });
-
-// This will set light / dark mode on load...
-initializeTheme();
