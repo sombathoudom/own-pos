@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import { Card, Col, Container, Form, Row } from 'react-bootstrap';
+import { Alert, Card, Col, Container, Form, Row } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
@@ -24,15 +24,15 @@ function ExpensesCreate() {
     };
 
     const categories = [
-        'ads',
-        'delivery',
-        'packaging',
-        'staff',
-        'rent',
-        'transport',
-        'phone',
-        'internet',
-        'other',
+        { value: 'ads', label: 'Ads' },
+        { value: 'delivery', label: 'Delivery' },
+        { value: 'packaging', label: 'Packaging' },
+        { value: 'staff', label: 'Staff' },
+        { value: 'rent', label: 'Rent' },
+        { value: 'transport', label: 'Transport' },
+        { value: 'phone', label: 'Phone' },
+        { value: 'internet', label: 'Internet' },
+        { value: 'other', label: 'Other' },
     ];
 
     return (
@@ -46,6 +46,14 @@ function ExpensesCreate() {
                             <Card>
                                 <Card.Body>
                                     <Form onSubmit={submit}>
+                                        {(errors as Record<string, string | undefined>).general && (
+                                            <Alert
+                                                variant="danger"
+                                                className="mb-3"
+                                            >
+                                                {(errors as Record<string, string | undefined>).general}
+                                            </Alert>
+                                        )}
                                         <Form.Group className="mb-3">
                                             <Form.Label>Date</Form.Label>
                                             <Form.Control
@@ -78,8 +86,11 @@ function ExpensesCreate() {
                                                 isInvalid={!!errors.category}
                                             >
                                                 {categories.map((c) => (
-                                                    <option key={c} value={c}>
-                                                        {c}
+                                                    <option
+                                                        key={c.value}
+                                                        value={c.value}
+                                                    >
+                                                        {c.label}
                                                     </option>
                                                 ))}
                                             </Form.Select>

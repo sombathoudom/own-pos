@@ -8,26 +8,53 @@ import Pagination from '@/Components/Pagination';
 import Layout from '@/Layouts';
 import {
     create as expensesCreate,
+    destroy as expensesDestroy,
+    edit as expensesEdit,
     index as expensesIndex,
 } from '@/routes/expenses';
 import type { ExpenseIndexPageProps } from '@/types';
+import { formatDate } from '@/utils/dateTime';
 
 function ExpensesIndex() {
     const { expenses, filters, toast } = usePage<ExpenseIndexPageProps>().props;
     const [search, setSearch] = useState(filters.search ?? '');
+    const [from, setFrom] = useState(filters.from ?? '');
+    const [to, setTo] = useState(filters.to ?? '');
 
     useEffect(() => {
         setSearch(filters.search ?? '');
-    }, [filters.search]);
+        setFrom(filters.from ?? '');
+        setTo(filters.to ?? '');
+    }, [filters.search, filters.from, filters.to]);
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         router.get(
             expensesIndex.url(),
-            { search: search || undefined },
+            {
+                search: search || undefined,
+                from: from || undefined,
+                to: to || undefined,
+            },
             { preserveScroll: true, preserveState: true },
         );
     };
+
+    const clearFilters = () => {
+        setSearch('');
+        setFrom('');
+        setTo('');
+        router.get(
+            expensesIndex.url(),
+            {},
+            { preserveScroll: true, preserveState: true },
+        );
+    };
+
+    const hasFilters = search || from || to;
+
+    const categoryLabel = (cat: string) =>
+        cat.charAt(0).toUpperCase() + cat.slice(1);
 
     return (
         <>
@@ -51,14 +78,14 @@ function ExpensesIndex() {
                             )}
                             <Card>
                                 <Card.Body>
-                                    <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3 gap-3">
+                                    <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between mb-3 gap-3">
                                         <h4 className="card-title mb-0">
                                             Expenses
                                         </h4>
-                                        <div className="d-flex flex-wrap gap-2">
+                                        <div className="d-flex flex-wrap gap-2 align-items-start">
                                             <Form
                                                 onSubmit={submit}
-                                                className="d-flex gap-2"
+                                                className="d-flex flex-wrap gap-2"
                                             >
                                                 <Form.Control
                                                     type="search"
@@ -69,30 +96,40 @@ function ExpensesIndex() {
                                                             e.target.value,
                                                         )
                                                     }
-                                                    style={{ minWidth: 220 }}
+                                                    style={{ width: 180 }}
+                                                />
+                                                <Form.Control
+                                                    type="date"
+                                                    value={from}
+                                                    onChange={(e) =>
+                                                        setFrom(e.target.value)
+                                                    }
+                                                    title="From date"
+                                                    style={{ width: 150 }}
+                                                />
+                                                <Form.Control
+                                                    type="date"
+                                                    value={to}
+                                                    onChange={(e) =>
+                                                        setTo(e.target.value)
+                                                    }
+                                                    title="To date"
+                                                    style={{ width: 150 }}
                                                 />
                                                 <button
                                                     type="submit"
-                                                    className="btn btn-light"
+                                                    className="btn btn-primary"
                                                 >
-                                                    Search
+                                                    <i className="ri-filter-search-line me-1"></i>
+                                                    Filter
                                                 </button>
-                                                {search && (
+                                                {hasFilters && (
                                                     <button
                                                         type="button"
                                                         className="btn btn-light"
-                                                        onClick={() => {
-                                                            setSearch('');
-                                                            router.get(
-                                                                expensesIndex.url(),
-                                                                {},
-                                                                {
-                                                                    preserveScroll: true,
-                                                                    preserveState: true,
-                                                                },
-                                                            );
-                                                        }}
+                                                        onClick={clearFilters}
                                                     >
+                                                        <i className="ri-close-circle-line me-1"></i>
                                                         Clear
                                                     </button>
                                                 )}
@@ -101,7 +138,7 @@ function ExpensesIndex() {
                                                 href={expensesCreate.url()}
                                                 className="btn btn-success"
                                             >
-                                                <i className="ri-add-line me-1 align-bottom"></i>{' '}
+                                                <i className="ri-add-line me-1 align-bottom"></i>
                                                 Add Expense
                                             </Link>
                                         </div>
@@ -111,36 +148,65 @@ function ExpensesIndex() {
                                             <tr>
                                                 <th>Date</th>
                                                 <th>Category</th>
-                                                <th>Amount (USD)</th>
+                                                <th className="text-end">
+                                                    Amount (USD)
+                                                </th>
+                                                <th className="text-end">
+                                                    Amount (KHR)
+                                                </th>
                                                 <th>Currency</th>
                                                 <th>Note</th>
-                                                <th>Actions</th>
+                                                <th className="text-end">
+                                                    Actions
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {expenses.data.map((expense) => (
                                                 <tr key={expense.id}>
                                                     <td>
-                                                        {expense.expense_date}
+                                                        {formatDate(
+                                                            expense.expense_date,
+                                                            'long',
+                                                        )}
                                                     </td>
-                                                    <td>{expense.category}</td>
                                                     <td>
+                                                        {categoryLabel(
+                                                            expense.category,
+                                                        )}
+                                                    </td>
+                                                    <td className="text-end">
                                                         ${expense.amount_usd}
                                                     </td>
-                                                    <td>{expense.currency}</td>
+                                                    <td className="text-end">
+                                                        {expense.amount_khr
+                                                            ? `${expense.amount_khr} ៛`
+                                                            : '-'}
+                                                    </td>
+                                                    <td>
+                                                        <span
+                                                            className={`badge bg-${expense.currency === 'USD' ? 'primary' : 'info'}`}
+                                                        >
+                                                            {expense.currency}
+                                                        </span>
+                                                    </td>
                                                     <td>
                                                         {expense.note ?? '-'}
                                                     </td>
-                                                    <td>
-                                                        <div className="d-flex gap-1">
+                                                    <td className="text-end">
+                                                        <div className="d-flex gap-1 justify-content-end">
                                                             <Link
-                                                                href={`/expenses/${expense.id}/edit`}
+                                                                href={expensesEdit.url(
+                                                                    expense.id,
+                                                                )}
                                                                 className="btn btn-sm btn-soft-primary"
                                                             >
                                                                 <i className="ri-pencil-line"></i>
                                                             </Link>
                                                             <Link
-                                                                href={`/expenses/${expense.id}`}
+                                                                href={expensesDestroy.url(
+                                                                    expense.id,
+                                                                )}
                                                                 method="delete"
                                                                 as="button"
                                                                 className="btn btn-sm btn-soft-danger"
@@ -159,9 +225,10 @@ function ExpensesIndex() {
                                             {expenses.data.length === 0 && (
                                                 <tr>
                                                     <td
-                                                        colSpan={6}
+                                                        colSpan={7}
                                                         className="py-4 text-center text-muted"
                                                     >
+                                                        <i className="ri-inbox-line fs-2 d-block mb-2" />
                                                         No expenses found.
                                                     </td>
                                                 </tr>

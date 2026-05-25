@@ -1,16 +1,20 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
-import { Card, Col, Container, Form, Row } from 'react-bootstrap';
+import { Alert, Card, Col, Container, Form, Row } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
-import { index as expensesIndex } from '@/routes/expenses';
+import {
+    index as expensesIndex,
+    update as expensesUpdate,
+} from '@/routes/expenses';
 import type { InventoryExpense } from '@/types';
+import { toInputDate } from '@/utils/dateTime';
 
 function ExpensesEdit() {
     const { expense } = usePage<{ expense: InventoryExpense }>().props;
     const { data, setData, put, processing, errors } = useForm({
-        expense_date: expense.expense_date,
+        expense_date: toInputDate(expense.expense_date),
         category: expense.category,
         amount_usd: expense.amount_usd,
         amount_khr: expense.amount_khr,
@@ -21,19 +25,19 @@ function ExpensesEdit() {
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        put(`/expenses/${expense.id}`);
+        put(expensesUpdate.url(expense.id));
     };
 
     const categories = [
-        'ads',
-        'delivery',
-        'packaging',
-        'staff',
-        'rent',
-        'transport',
-        'phone',
-        'internet',
-        'other',
+        { value: 'ads', label: 'Ads' },
+        { value: 'delivery', label: 'Delivery' },
+        { value: 'packaging', label: 'Packaging' },
+        { value: 'staff', label: 'Staff' },
+        { value: 'rent', label: 'Rent' },
+        { value: 'transport', label: 'Transport' },
+        { value: 'phone', label: 'Phone' },
+        { value: 'internet', label: 'Internet' },
+        { value: 'other', label: 'Other' },
     ];
 
     return (
@@ -47,6 +51,14 @@ function ExpensesEdit() {
                             <Card>
                                 <Card.Body>
                                     <Form onSubmit={submit}>
+                                        {(errors as Record<string, string | undefined>).general && (
+                                            <Alert
+                                                variant="danger"
+                                                className="mb-3"
+                                            >
+                                                {(errors as Record<string, string | undefined>).general}
+                                            </Alert>
+                                        )}
                                         <Form.Group className="mb-3">
                                             <Form.Label>Date</Form.Label>
                                             <Form.Control
@@ -79,8 +91,11 @@ function ExpensesEdit() {
                                                 isInvalid={!!errors.category}
                                             >
                                                 {categories.map((c) => (
-                                                    <option key={c} value={c}>
-                                                        {c}
+                                                    <option
+                                                        key={c.value}
+                                                        value={c.value}
+                                                    >
+                                                        {c.label}
                                                     </option>
                                                 ))}
                                             </Form.Select>

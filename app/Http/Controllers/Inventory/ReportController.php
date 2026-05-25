@@ -133,7 +133,7 @@ class ReportController extends Controller
             4,
         );
         $grossProfit = $this->decimalize($entries->sum('profit_usd'));
-        $totalExpenses = (string) $expenses->sum('amount_usd');
+        $totalExpenses = (string) $expenses->sum(fn (Expense $e) => $this->expenseUsd($e));
         $netProfit = bcsub($grossProfit, $totalExpenses, 4);
         $replacementItemIds = $exchangeReceipts->flatMap(fn ($ex) => $ex->items->pluck('new_sale_item_id'))->filter()->all();
         $totalQtySold = $sales->flatMap(fn ($s) => $s->items)->whereNotIn('id', $replacementItemIds)->sum('qty')
@@ -653,11 +653,26 @@ class ReportController extends Controller
         return bcsub(bcadd($itemsCogs, $returnedCogs, 4), $exchangeCogs, 4);
     }
 
+    private function expenseUsd(Expense $expense): string
+    {
+        $usd = (string) $expense->amount_usd;
+        $khr = (string) $expense->amount_khr;
+        $rate = (string) $expense->exchange_rate;
+
+        if (bccomp($khr, '0', 4) > 0 && bccomp($rate, '0', 4) > 0) {
+            $khrUsd = bcdiv($khr, $rate, 4);
+
+            return bcadd($usd, $khrUsd, 4);
+        }
+
+        return $usd;
+    }
+
     private function buildDailySummary(Collection $entries, Collection $expenses): array
     {
         $grossProfit = (string) $entries->sum('profit_usd');
         $deliveryCost = (string) $entries->sum('delivery_cost_usd');
-        $expenseTotal = (string) $expenses->sum('amount_usd');
+        $expenseTotal = (string) $expenses->sum(fn (Expense $e) => $this->expenseUsd($e));
         $netProfit = bcsub($grossProfit, $expenseTotal, 4);
 
         return [
@@ -680,7 +695,7 @@ class ReportController extends Controller
             ->map(fn (Collection $items, string $category) => [
                 'category' => $category,
                 'count' => $items->count(),
-                'amount_usd' => $this->decimalize($items->sum('amount_usd')),
+                'amount_usd' => $this->decimalize($items->sum(fn (Expense $e) => $this->expenseUsd($e))),
             ])
             ->sortByDesc('amount_usd')
             ->values();
@@ -731,7 +746,7 @@ class ReportController extends Controller
     {
         $expenseByDate = $expenses
             ->groupBy(fn (Expense $expense) => $expense->expense_date?->toDateString())
-            ->map(fn (Collection $items) => (string) $items->sum('amount_usd'));
+            ->map(fn (Collection $items) => (string) $items->sum(fn (Expense $e) => $this->expenseUsd($e)));
 
         return $entries
             ->groupBy('receipt_date')
