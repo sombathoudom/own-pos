@@ -18,14 +18,14 @@ import { formatDate } from '@/utils/dateTime';
 function ExpensesIndex() {
     const { expenses, filters, toast } = usePage<ExpenseIndexPageProps>().props;
     const [search, setSearch] = useState(filters.search ?? '');
-    const [from, setFrom] = useState(filters.from ?? '');
-    const [to, setTo] = useState(filters.to ?? '');
+    const [from, setFrom] = useState(filters.date_from ?? '');
+    const [to, setTo] = useState(filters.date_to ?? '');
 
     useEffect(() => {
         setSearch(filters.search ?? '');
-        setFrom(filters.from ?? '');
-        setTo(filters.to ?? '');
-    }, [filters.search, filters.from, filters.to]);
+        setFrom(filters.date_from ?? '');
+        setTo(filters.date_to ?? '');
+    }, [filters.search, filters.date_from, filters.date_to]);
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -82,7 +82,7 @@ function ExpensesIndex() {
                                         <h4 className="card-title mb-0">
                                             Expenses
                                         </h4>
-                                        <div className="d-flex flex-wrap gap-2 align-items-start">
+                                        <div className="d-flex align-items-start flex-wrap gap-2">
                                             <Form
                                                 onSubmit={submit}
                                                 className="d-flex flex-wrap gap-2"
@@ -194,7 +194,7 @@ function ExpensesIndex() {
                                                         {expense.note ?? '-'}
                                                     </td>
                                                     <td className="text-end">
-                                                        <div className="d-flex gap-1 justify-content-end">
+                                                        <div className="d-flex justify-content-end gap-1">
                                                             <Link
                                                                 href={expensesEdit.url(
                                                                     expense.id,
