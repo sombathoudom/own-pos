@@ -81,15 +81,15 @@ export default function Welcome({ canRegister }: WelcomeProps) {
                                                     }}
                                                 >
                                                     Manage inventory, track
-                                                    sales, handle deliveries, and
-                                                    close daily ledgers — all in
-                                                    one place built for fashion
-                                                    retail.
+                                                    sales, handle deliveries,
+                                                    and close daily ledgers —
+                                                    all in one place built for
+                                                    fashion retail.
                                                 </p>
                                             </div>
 
                                             <div className="mt-5">
-                                                <div className="d-flex align-items-center gap-3 mb-4">
+                                                <div className="d-flex align-items-center mb-4 gap-3">
                                                     <div
                                                         className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
                                                         style={{
@@ -125,7 +125,7 @@ export default function Welcome({ canRegister }: WelcomeProps) {
                                                     </div>
                                                 </div>
 
-                                                <div className="d-flex align-items-center gap-3 mb-4">
+                                                <div className="d-flex align-items-center mb-4 gap-3">
                                                     <div
                                                         className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
                                                         style={{
@@ -202,9 +202,9 @@ export default function Welcome({ canRegister }: WelcomeProps) {
                                         {/* Right side — CTA */}
                                         <Col
                                             lg={7}
-                                            className="bg-white p-5 d-flex flex-column justify-content-center"
+                                            className="d-flex flex-column justify-content-center bg-white p-5"
                                         >
-                                            <div className="text-center mb-5">
+                                            <div className="mb-5 text-center">
                                                 <div
                                                     className="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
                                                     style={{
@@ -226,7 +226,7 @@ export default function Welcome({ canRegister }: WelcomeProps) {
                                                     Staff Access
                                                 </h2>
                                                 <p
-                                                    className="text-muted mx-auto"
+                                                    className="mx-auto text-muted"
                                                     style={{
                                                         maxWidth: 360,
                                                         fontSize: '0.95rem',
@@ -239,7 +239,13 @@ export default function Welcome({ canRegister }: WelcomeProps) {
                                                 </p>
                                             </div>
 
-                                            <div className="d-grid gap-3 mx-auto" style={{ maxWidth: 320, width: '100%' }}>
+                                            <div
+                                                className="d-grid mx-auto gap-3"
+                                                style={{
+                                                    maxWidth: 320,
+                                                    width: '100%',
+                                                }}
+                                            >
                                                 <Link
                                                     href={login()}
                                                     as={Button}
@@ -257,7 +263,7 @@ export default function Welcome({ canRegister }: WelcomeProps) {
                                                 </Link>
 
                                                 {canRegister && (
-                                                    <p className="text-center text-muted small mb-0">
+                                                    <p className="small mb-0 text-center text-muted">
                                                         New staff?{' '}
                                                         <Link
                                                             href={login()}
@@ -273,8 +279,8 @@ export default function Welcome({ canRegister }: WelcomeProps) {
                                                 )}
                                             </div>
 
-                                            <div className="mt-5 pt-4 border-top">
-                                                <Row className="text-center g-3">
+                                            <div className="border-top mt-5 pt-4">
+                                                <Row className="g-3 text-center">
                                                     <Col xs={4}>
                                                         <div
                                                             className="fw-bold"

@@ -87,8 +87,8 @@ const TwoColumnLayout = (props: any) => {
             }
 
             if (id) {
-document.body.classList.add('twocolumn-panel');
-}
+                document.body.classList.add('twocolumn-panel');
+            }
 
             activateIconSidebarActive(id);
         }
@@ -147,8 +147,8 @@ document.body.classList.add('twocolumn-panel');
             const getId = document.getElementById(id) as HTMLElement;
 
             if (getId) {
-getId.classList.remove('show');
-}
+                getId.classList.remove('show');
+            }
         });
     };
 

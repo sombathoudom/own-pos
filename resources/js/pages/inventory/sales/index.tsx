@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import {  useEffect, useState } from 'react';
-import type {ReactNode} from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
     Alert,
     Badge,
@@ -33,7 +33,9 @@ function SalesIndex() {
     const [search, setSearch] = useState(filters.search ?? '');
     const [dateFrom, setDateFrom] = useState(filters.date_from ?? '');
     const [dateTo, setDateTo] = useState(filters.date_to ?? '');
-    const [paymentStatus, setPaymentStatus] = useState(filters.payment_status ?? '');
+    const [paymentStatus, setPaymentStatus] = useState(
+        filters.payment_status ?? '',
+    );
     const [confirmingSaleId, setConfirmingSaleId] = useState<number | null>(
         null,
     );
@@ -44,13 +46,18 @@ function SalesIndex() {
         setDateFrom(filters.date_from ?? '');
         setDateTo(filters.date_to ?? '');
         setPaymentStatus(filters.payment_status ?? '');
-    }, [filters.search, filters.date_from, filters.date_to, filters.payment_status]);
+    }, [
+        filters.search,
+        filters.date_from,
+        filters.date_to,
+        filters.payment_status,
+    ]);
 
     const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         router.get(
             salesIndex.url(),
-            { 
+            {
                 search: search || undefined,
                 date_from: dateFrom || undefined,
                 date_to: dateTo || undefined,
@@ -121,6 +128,13 @@ function SalesIndex() {
             storeConfirmDelivery.url(sale.id),
             {
                 redirect_to: 'index',
+                redirect_page: sales.current_page,
+                redirect_filters: {
+                    search: filters.search,
+                    date_from: filters.date_from,
+                    date_to: filters.date_to,
+                    payment_status: filters.payment_status,
+                },
                 confirmation_date: getCurrentDate(),
                 status: 'delivered',
                 items: sale.items.map((item) => ({
@@ -134,6 +148,7 @@ function SalesIndex() {
             },
             {
                 preserveScroll: true,
+                preserveState: true,
                 onFinish: () => setConfirmingSaleId(null),
             },
         );
@@ -210,15 +225,23 @@ function SalesIndex() {
                                             </h5>
                                         </div>
                                         <div className="col-sm-auto">
-                                             <div className="d-flex flex-wrap gap-1">
-                                                {deliverableSaleIds.length > 0 && (
+                                            <div className="d-flex flex-wrap gap-1">
+                                                {deliverableSaleIds.length >
+                                                    0 && (
                                                     <Button
                                                         type="button"
                                                         variant="primary"
-                                                        disabled={selectedSaleIds.length === 0}
-                                                        onClick={handleBulkDeliveredAll}
+                                                        disabled={
+                                                            selectedSaleIds.length ===
+                                                            0
+                                                        }
+                                                        onClick={
+                                                            handleBulkDeliveredAll
+                                                        }
                                                     >
-                                                        Delivered Selected ({selectedSaleIds.length})
+                                                        Delivered Selected (
+                                                        {selectedSaleIds.length}
+                                                        )
                                                     </Button>
                                                 )}
                                                 <Link
@@ -230,16 +253,18 @@ function SalesIndex() {
                                             </div>
                                         </div>
                                     </Row>
-                                    
+
                                     {/* Filters */}
                                     <Row className="mt-3">
                                         <Col>
                                             <Form
                                                 onSubmit={handleSearch}
-                                                className="d-flex flex-wrap gap-2 align-items-end"
+                                                className="d-flex align-items-end flex-wrap gap-2"
                                             >
                                                 <div>
-                                                    <Form.Label className="small mb-1">Search</Form.Label>
+                                                    <Form.Label className="small mb-1">
+                                                        Search
+                                                    </Form.Label>
                                                     <Form.Control
                                                         type="search"
                                                         placeholder="Invoice or customer..."
@@ -255,39 +280,59 @@ function SalesIndex() {
                                                     />
                                                 </div>
                                                 <div style={{ minWidth: 150 }}>
-                                                    <Form.Label className="small mb-1">Date From</Form.Label>
+                                                    <Form.Label className="small mb-1">
+                                                        Date From
+                                                    </Form.Label>
                                                     <Form.Control
                                                         type="date"
                                                         id="dateFrom"
                                                         value={dateFrom}
                                                         onChange={(e) =>
-                                                            setDateFrom(e.target.value)
+                                                            setDateFrom(
+                                                                e.target.value,
+                                                            )
                                                         }
                                                     />
                                                 </div>
                                                 <div style={{ minWidth: 150 }}>
-                                                    <Form.Label className="small mb-1">Date To</Form.Label>
+                                                    <Form.Label className="small mb-1">
+                                                        Date To
+                                                    </Form.Label>
                                                     <Form.Control
                                                         type="date"
                                                         id="dateTo"
                                                         value={dateTo}
                                                         onChange={(e) =>
-                                                            setDateTo(e.target.value)
+                                                            setDateTo(
+                                                                e.target.value,
+                                                            )
                                                         }
                                                     />
                                                 </div>
                                                 <div style={{ minWidth: 140 }}>
-                                                    <Form.Label className="small mb-1">Payment Status</Form.Label>
+                                                    <Form.Label className="small mb-1">
+                                                        Payment Status
+                                                    </Form.Label>
                                                     <Form.Select
                                                         value={paymentStatus}
                                                         onChange={(e) =>
-                                                            setPaymentStatus(e.target.value)
+                                                            setPaymentStatus(
+                                                                e.target.value,
+                                                            )
                                                         }
                                                     >
-                                                        <option value="">All</option>
-                                                        <option value="paid">Paid</option>
-                                                        <option value="partial">Partial</option>
-                                                        <option value="unpaid">Unpaid</option>
+                                                        <option value="">
+                                                            All
+                                                        </option>
+                                                        <option value="paid">
+                                                            Paid
+                                                        </option>
+                                                        <option value="partial">
+                                                            Partial
+                                                        </option>
+                                                        <option value="unpaid">
+                                                            Unpaid
+                                                        </option>
                                                     </Form.Select>
                                                 </div>
                                                 <Button
@@ -314,12 +359,22 @@ function SalesIndex() {
                                     <Table className="table-striped" responsive>
                                         <thead>
                                             <tr>
-                                                <th className="text-center" style={{ width: 44 }}>
+                                                <th
+                                                    className="text-center"
+                                                    style={{ width: 44 }}
+                                                >
                                                     <Form.Check
                                                         type="checkbox"
-                                                        checked={allDeliverableSelected}
-                                                        onChange={toggleSelectAllDeliverable}
-                                                        disabled={deliverableSaleIds.length === 0}
+                                                        checked={
+                                                            allDeliverableSelected
+                                                        }
+                                                        onChange={
+                                                            toggleSelectAllDeliverable
+                                                        }
+                                                        disabled={
+                                                            deliverableSaleIds.length ===
+                                                            0
+                                                        }
                                                     />
                                                 </th>
                                                 <th>Invoice #</th>
@@ -341,9 +396,19 @@ function SalesIndex() {
                                                     <td className="text-center">
                                                         <Form.Check
                                                             type="checkbox"
-                                                            checked={selectedSaleIds.includes(sale.id)}
-                                                            disabled={!canConfirmDelivery(sale)}
-                                                            onChange={() => toggleSaleSelection(sale.id)}
+                                                            checked={selectedSaleIds.includes(
+                                                                sale.id,
+                                                            )}
+                                                            disabled={
+                                                                !canConfirmDelivery(
+                                                                    sale,
+                                                                )
+                                                            }
+                                                            onChange={() =>
+                                                                toggleSaleSelection(
+                                                                    sale.id,
+                                                                )
+                                                            }
                                                         />
                                                     </td>
                                                     <td className="fw-medium">

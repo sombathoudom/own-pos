@@ -67,7 +67,7 @@ function Dashboard() {
             tone: 'info',
         },
         {
-            label: 'Outstanding Due',
+            label: 'Total Unpaid',
             value: money(summary.outstanding_usd),
             note: 'Unpaid and partial balances',
             icon: 'ri-wallet-3-line',
@@ -320,12 +320,12 @@ function Dashboard() {
                             <Card className="h-100 border-0 shadow-sm">
                                 <Card.Header className="d-flex align-items-center justify-content-between bg-transparent">
                                     <div>
-                                    <h5 className="card-title mb-1">
-                                        Today's Top Products
-                                    </h5>
-                                    <p className="fs-13 mb-0 text-muted">
-                                        Best-selling items ordered today.
-                                    </p>
+                                        <h5 className="card-title mb-1">
+                                            Today's Top Products
+                                        </h5>
+                                        <p className="fs-13 mb-0 text-muted">
+                                            Best-selling items ordered today.
+                                        </p>
                                     </div>
                                     <Link
                                         href={salesIndex.url()}
@@ -669,8 +669,10 @@ function PaymentBreakdownRow({
                     </span>
                 </div>
                 <div className="text-end">
-                    <span className="fw-semibold">{money(item.amount_usd)}</span>
-                    <span className="text-muted ms-1">({item.total})</span>
+                    <span className="fw-semibold">
+                        {money(item.amount_usd)}
+                    </span>
+                    <span className="ms-1 text-muted">({item.total})</span>
                 </div>
             </div>
             <ProgressBar now={progress} variant={tone} style={{ height: 8 }} />

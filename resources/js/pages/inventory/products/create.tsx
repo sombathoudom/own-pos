@@ -1,12 +1,6 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import {
-    
-    
-    
-    useEffect,
-    useState
-} from 'react';
-import type {ChangeEvent, FormEvent, ReactNode} from 'react';
+import { useEffect, useState } from 'react';
+import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import {
     Alert,
     Button,

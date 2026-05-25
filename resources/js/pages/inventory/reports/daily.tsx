@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import {   useState } from 'react';
-import type {FormEvent, ReactNode} from 'react';
+import { useState } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { Badge, Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
@@ -88,7 +88,9 @@ function ReportsDaily() {
 
     return (
         <>
-            <Head title={`Daily Sales Report${from !== to ? ` (${from} - ${to})` : ''}`} />
+            <Head
+                title={`Daily Sales Report${from !== to ? ` (${from} - ${to})` : ''}`}
+            />
             <div className="page-content">
                 <Container fluid>
                     <BreadCrumb
@@ -117,7 +119,7 @@ function ReportsDaily() {
                                 <Col lg={4}>
                                     <Form
                                         onSubmit={submit}
-                                        className="d-flex flex-wrap gap-2 align-items-center"
+                                        className="d-flex align-items-center flex-wrap gap-2"
                                     >
                                         <div style={{ minWidth: 150 }}>
                                             <Form.Control

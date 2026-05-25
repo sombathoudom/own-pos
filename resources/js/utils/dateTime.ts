@@ -19,14 +19,14 @@ export function formatDate(
     format: 'short' | 'long' | 'full' = 'short',
 ): string {
     if (!date) {
-return '';
-}
+        return '';
+    }
 
     const d = new Date(date);
 
     if (isNaN(d.getTime())) {
-return '';
-}
+        return '';
+    }
 
     // Convert to Phnom Penh timezone
     const options: Intl.DateTimeFormatOptions = {
@@ -73,14 +73,14 @@ export function formatDateTime(
     includeSeconds = false,
 ): string {
     if (!datetime) {
-return '';
-}
+        return '';
+    }
 
     const d = new Date(datetime);
 
     if (isNaN(d.getTime())) {
-return '';
-}
+        return '';
+    }
 
     const dateStr = formatDate(d, 'short');
     const timeStr = d.toLocaleTimeString('en-US', {
@@ -103,14 +103,14 @@ export function formatTime(
     includeSeconds = false,
 ): string {
     if (!datetime) {
-return '';
-}
+        return '';
+    }
 
     const d = new Date(datetime);
 
     if (isNaN(d.getTime())) {
-return '';
-}
+        return '';
+    }
 
     return d.toLocaleTimeString('en-US', {
         timeZone: APP_TIMEZONE,
@@ -161,14 +161,14 @@ export function getCurrentDateTime(): string {
  */
 export function toInputDate(date: string | Date | null | undefined): string {
     if (!date) {
-return '';
-}
+        return '';
+    }
 
     const d = new Date(date);
 
     if (isNaN(d.getTime())) {
-return '';
-}
+        return '';
+    }
 
     return d.toLocaleDateString('en-CA', {
         timeZone: APP_TIMEZONE,
@@ -185,14 +185,14 @@ export function toInputDateTime(
     datetime: string | Date | null | undefined,
 ): string {
     if (!datetime) {
-return '';
-}
+        return '';
+    }
 
     const d = new Date(datetime);
 
     if (isNaN(d.getTime())) {
-return '';
-}
+        return '';
+    }
 
     const date = d.toLocaleDateString('en-CA', {
         timeZone: APP_TIMEZONE,
@@ -217,14 +217,14 @@ export function formatDateForReport(
     date: string | Date | null | undefined,
 ): string {
     if (!date) {
-return '';
-}
+        return '';
+    }
 
     const d = new Date(date);
 
     if (isNaN(d.getTime())) {
-return '';
-}
+        return '';
+    }
 
     const day = d
         .toLocaleDateString('en-US', {
@@ -253,14 +253,14 @@ export function formatDateTimeForReport(
     datetime: string | Date | null | undefined,
 ): string {
     if (!datetime) {
-return '';
-}
+        return '';
+    }
 
     const d = new Date(datetime);
 
     if (isNaN(d.getTime())) {
-return '';
-}
+        return '';
+    }
 
     const dateStr = formatDateForReport(d);
     const timeStr = d.toLocaleTimeString('en-US', {
@@ -280,14 +280,14 @@ export function getRelativeTime(
     date: string | Date | null | undefined,
 ): string {
     if (!date) {
-return '';
-}
+        return '';
+    }
 
     const d = new Date(date);
 
     if (isNaN(d.getTime())) {
-return '';
-}
+        return '';
+    }
 
     const now = new Date();
     const diffMs = now.getTime() - d.getTime();
@@ -297,28 +297,28 @@ return '';
     const diffDay = Math.floor(diffHour / 24);
 
     if (diffSec < 60) {
-return 'just now';
-}
+        return 'just now';
+    }
 
     if (diffMin < 60) {
-return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
-}
+        return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+    }
 
     if (diffHour < 24) {
-return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
-}
+        return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+    }
 
     if (diffDay < 7) {
-return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
-}
+        return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+    }
 
     if (diffDay < 30) {
-return `${Math.floor(diffDay / 7)} week${Math.floor(diffDay / 7) > 1 ? 's' : ''} ago`;
-}
+        return `${Math.floor(diffDay / 7)} week${Math.floor(diffDay / 7) > 1 ? 's' : ''} ago`;
+    }
 
     if (diffDay < 365) {
-return `${Math.floor(diffDay / 30)} month${Math.floor(diffDay / 30) > 1 ? 's' : ''} ago`;
-}
+        return `${Math.floor(diffDay / 30)} month${Math.floor(diffDay / 30) > 1 ? 's' : ''} ago`;
+    }
 
     return `${Math.floor(diffDay / 365)} year${Math.floor(diffDay / 365) > 1 ? 's' : ''} ago`;
 }
@@ -328,14 +328,14 @@ return `${Math.floor(diffDay / 30)} month${Math.floor(diffDay / 30) > 1 ? 's' : 
  */
 export function isToday(date: string | Date | null | undefined): boolean {
     if (!date) {
-return false;
-}
+        return false;
+    }
 
     const d = new Date(date);
 
     if (isNaN(d.getTime())) {
-return false;
-}
+        return false;
+    }
 
     const today = getCurrentDate();
     const checkDate = toInputDate(d);
@@ -348,14 +348,14 @@ return false;
  */
 export function isPast(date: string | Date | null | undefined): boolean {
     if (!date) {
-return false;
-}
+        return false;
+    }
 
     const d = new Date(date);
 
     if (isNaN(d.getTime())) {
-return false;
-}
+        return false;
+    }
 
     return d.getTime() < new Date().getTime();
 }
@@ -365,14 +365,14 @@ return false;
  */
 export function isFuture(date: string | Date | null | undefined): boolean {
     if (!date) {
-return false;
-}
+        return false;
+    }
 
     const d = new Date(date);
 
     if (isNaN(d.getTime())) {
-return false;
-}
+        return false;
+    }
 
     return d.getTime() > new Date().getTime();
 }

@@ -42,7 +42,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             <div className="mt-sm-5 text-white-50 mb-4 text-center">
                                 <div className="mb-3">
                                     <span
-                                        className="fs-1 fw-bold text-white d-block"
+                                        className="fs-1 fw-bold d-block text-white"
                                         style={{ letterSpacing: 2 }}
                                     >
                                         DOLY OUTFITS
@@ -62,8 +62,9 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     className="fs-15 fw-medium mt-3"
                                     style={{ maxWidth: 400, margin: '0 auto' }}
                                 >
-                                    Welcome back. Sign in to manage your boutique
-                                    sales, inventory, and daily operations.
+                                    Welcome back. Sign in to manage your
+                                    boutique sales, inventory, and daily
+                                    operations.
                                 </p>
                             </div>
                         </Col>
@@ -74,13 +75,12 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             <Card
                                 className="mt-4 border-0 shadow-lg"
                                 style={{
-                                    background:
-                                        'rgba(255, 255, 255, 0.97)',
+                                    background: 'rgba(255, 255, 255, 0.97)',
                                     backdropFilter: 'blur(10px)',
                                 }}
                             >
-                                <Card.Body className="p-4 p-md-5">
-                                    <div className="text-center mb-4">
+                                <Card.Body className="p-md-5 p-4">
+                                    <div className="mb-4 text-center">
                                         <div
                                             className="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
                                             style={{
@@ -102,7 +102,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                             Staff Sign In
                                         </h5>
                                         <p
-                                            className="text-muted mb-0"
+                                            className="mb-0 text-muted"
                                             style={{ fontSize: '0.85rem' }}
                                         >
                                             Enter your credentials to access the
@@ -158,7 +158,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                             <div className="d-flex justify-content-between align-items-center mb-1">
                                                 <Form.Label
                                                     htmlFor="password"
-                                                    className="small fw-semibold text-muted mb-0"
+                                                    className="small fw-semibold mb-0 text-muted"
                                                 >
                                                     Password
                                                 </Form.Label>
@@ -267,7 +267,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             </Card>
 
                             <div className="mt-4 text-center">
-                                <p className="mb-0 text-white-50">
+                                <p className="text-white-50 mb-0">
                                     <i className="ri-shield-check-line me-1"></i>
                                     Secure staff-only access
                                 </p>

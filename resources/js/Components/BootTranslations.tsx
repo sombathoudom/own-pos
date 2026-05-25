@@ -7,10 +7,10 @@ function flatten(obj: any, prefix = '', out: Record<string, any> = {}) {
         const key = prefix ? `${prefix}.${k}` : k;
 
         if (v && typeof v === 'object' && !Array.isArray(v)) {
-flatten(v, key, out);
-} else {
-out[key] = v;
-}
+            flatten(v, key, out);
+        } else {
+            out[key] = v;
+        }
     });
 
     return out;
@@ -21,8 +21,8 @@ export default function BootTranslations() {
 
     useEffect(() => {
         if (!props.laravelTranslations) {
-return;
-}
+            return;
+        }
 
         const flat = flatten(props.laravelTranslations);
 

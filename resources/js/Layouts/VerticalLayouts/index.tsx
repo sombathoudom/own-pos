@@ -171,10 +171,10 @@ const VerticalLayout = (props: any) => {
                     parentCollapseDiv.parentElement.closest('.collapse')
                         .previousElementSibling
                 ) {
-parentCollapseDiv.parentElement
+                    parentCollapseDiv.parentElement
                         .closest('.collapse')
                         .previousElementSibling.classList.add('active');
-}
+                }
 
                 if (
                     parentCollapseDiv.parentElement

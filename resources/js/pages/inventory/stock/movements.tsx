@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import {  useEffect, useState } from 'react';
-import type {ReactNode} from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Badge, Button, Card, Container, Form, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
@@ -158,9 +158,7 @@ function StockMovements() {
                                     placeholder="Search SKU, product name, color or size..."
                                     type="search"
                                     value={search}
-                                    onChange={(e) =>
-                                        setSearch(e.target.value)
-                                    }
+                                    onChange={(e) => setSearch(e.target.value)}
                                     style={{ maxWidth: 320 }}
                                 />
                                 <Form.Select
@@ -267,7 +265,8 @@ function StockMovements() {
                                                     {movement.qty_change}
                                                 </td>
                                                 <td className="text-end">
-                                                    ${Number(
+                                                    $
+                                                    {Number(
                                                         movement.unit_cost_usd,
                                                     ).toFixed(2)}
                                                 </td>

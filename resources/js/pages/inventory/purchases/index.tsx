@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import {   useEffect, useState } from 'react';
-import type {FormEvent, ReactNode} from 'react';
+import { useEffect, useState } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import {
     Alert,
     Badge,
@@ -42,20 +42,20 @@ function PurchasesIndex() {
 
     const statusBadge = (status: string) => {
         if (status === 'in_transit') {
-return <Badge bg="warning">In Transit</Badge>;
-}
+            return <Badge bg="warning">In Transit</Badge>;
+        }
 
         if (status === 'arrived') {
-return <Badge bg="success">Arrived</Badge>;
-}
+            return <Badge bg="success">Arrived</Badge>;
+        }
 
         if (status === 'draft') {
-return <Badge bg="secondary">Draft</Badge>;
-}
+            return <Badge bg="secondary">Draft</Badge>;
+        }
 
         if (status === 'confirmed') {
-return <Badge bg="success">Confirmed</Badge>;
-}
+            return <Badge bg="success">Confirmed</Badge>;
+        }
 
         return <Badge bg="secondary">{status}</Badge>;
     };

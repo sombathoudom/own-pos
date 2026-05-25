@@ -3,7 +3,8 @@ import type {
     Column,
     Table as ReactTable,
     ColumnFiltersState,
-    FilterFn} from '@tanstack/react-table';
+    FilterFn,
+} from '@tanstack/react-table';
 import {
     useReactTable,
     getCoreRowModel,
@@ -14,8 +15,6 @@ import {
 } from '@tanstack/react-table';
 import React, { Fragment, useEffect, useState } from 'react';
 import { Button, Card, Col, Row, Table } from 'react-bootstrap';
-
-
 
 import {
     ProductsGlobalFilter,

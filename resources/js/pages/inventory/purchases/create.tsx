@@ -1,7 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import {  useMemo, useState } from 'react';
-import type { FormEvent} from 'react';
-import type {ReactNode} from 'react';
+import { useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
+import type { ReactNode } from 'react';
 import {
     Alert,
     Badge,
@@ -139,12 +139,12 @@ function PurchasesCreate() {
 
         return products.filter((p) => {
             if (selectedProductIds.has(String(p.id))) {
-return false;
-}
+                return false;
+            }
 
             if (!term) {
-return true;
-}
+                return true;
+            }
 
             return p.name.toLowerCase().includes(term);
         });
@@ -224,8 +224,8 @@ return true;
         const sourceProduct = getProduct(sourceRow.product_id);
 
         if (!sourceProduct) {
-return;
-}
+            return;
+        }
 
         // Find the variant with the source size
         const sourceVariant = sourceProduct.variants.find(
@@ -233,27 +233,27 @@ return;
         );
 
         if (!sourceVariant) {
-return;
-}
+            return;
+        }
 
         const sourceQty =
             sourceRow.variantQtys[String(sourceVariant.id)] || '0';
 
         if (sourceQty === '0') {
-return;
-}
+            return;
+        }
 
         // Update all other rows with the same size
         const updatedRows = data.productRows.map((row, rowIndex) => {
             if (rowIndex === sourceRowIndex) {
-return row;
-}
+                return row;
+            }
 
             const product = getProduct(row.product_id);
 
             if (!product) {
-return row;
-}
+                return row;
+            }
 
             // Find variant with matching size
             const matchingVariant = product.variants.find(
@@ -261,8 +261,8 @@ return row;
             );
 
             if (!matchingVariant) {
-return row;
-}
+                return row;
+            }
 
             // Clone the quantity
             return {
@@ -314,8 +314,8 @@ return row;
         const qty = rowTotalQty(row);
 
         if (!qty || !totalQtyAll) {
-return 0;
-}
+            return 0;
+        }
 
         return (deliveryCost * qty) / totalQtyAll / qty;
     };
@@ -333,8 +333,8 @@ return 0;
             const product = getProduct(row.product_id);
 
             if (!product) {
-continue;
-}
+                continue;
+            }
 
             const catName = getCategoryName(product.category_id);
             map[catName] = (map[catName] || 0) + rowTotalQty(row);
@@ -648,8 +648,8 @@ continue;
                                             ).items;
 
                                             if (!itemsError) {
-return null;
-}
+                                                return null;
+                                            }
 
                                             return (
                                                 <Alert
@@ -820,8 +820,8 @@ return null;
                                                                                     if (
                                                                                         !prod
                                                                                     ) {
-return;
-}
+                                                                                        return;
+                                                                                    }
 
                                                                                     const variantQtys: Record<
                                                                                         string,

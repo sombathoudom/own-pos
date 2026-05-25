@@ -4,10 +4,9 @@ import {
     closestCenter,
     PointerSensor,
     useSensor,
-    useSensors
-    
+    useSensors,
 } from '@dnd-kit/core';
-import type {DragEndEvent} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
 import {
     SortableContext,
     useSortable,
@@ -19,7 +18,6 @@ import axios from 'axios';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { flashToast } from '../../utils/flashToast';
-
 
 type Item = {
     id: number;
@@ -133,12 +131,12 @@ export default function TargetMediaPanel({
 
             for (const c of collections) {
                 if (!c.sortable) {
-continue;
-}
+                    continue;
+                }
 
                 if (next[c.key]?.length) {
-continue;
-}
+                    continue;
+                }
 
                 const ids = list
                     .filter((it) => it.collection === c.key)
@@ -147,8 +145,8 @@ continue;
                     .map((it) => it.id);
 
                 if (ids.length) {
-next[c.key] = ids;
-}
+                    next[c.key] = ids;
+                }
             }
 
             return next;
@@ -157,8 +155,8 @@ next[c.key] = ids;
 
     useEffect(() => {
         if (!targetId) {
-return;
-}
+            return;
+        }
 
         load();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -190,8 +188,8 @@ return;
         }
 
         if (m.url) {
-window.open(m.url, '_blank');
-}
+            window.open(m.url, '_blank');
+        }
     };
 
     const thumb = (m: Item) => {
@@ -199,12 +197,12 @@ window.open(m.url, '_blank');
             m.kind === 'file' && (m.mime || '').startsWith('image/');
 
         if (m.kind === 'external') {
-return m.thumbnail;
-}
+            return m.thumbnail;
+        }
 
         if (isImage) {
-return m.url;
-}
+            return m.url;
+        }
 
         return null;
     };
@@ -229,8 +227,8 @@ return m.url;
             // Update local order
             setOrderMap((prev) => {
                 if (!prev[collection]) {
-return prev;
-}
+                    return prev;
+                }
 
                 return {
                     ...prev,
@@ -317,19 +315,19 @@ return prev;
             const { active, over } = event;
 
             if (!over) {
-return;
-}
+                return;
+            }
 
             if (active.id === over.id) {
-return;
-}
+                return;
+            }
 
             const oldIndex = list.findIndex((x) => x.id === active.id);
             const newIndex = list.findIndex((x) => x.id === over.id);
 
             if (oldIndex < 0 || newIndex < 0) {
-return;
-}
+                return;
+            }
 
             const nextList = arrayMove(list, oldIndex, newIndex);
             const orderedIds = nextList.map((x) => x.id);

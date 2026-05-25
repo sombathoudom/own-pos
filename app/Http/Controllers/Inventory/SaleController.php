@@ -395,6 +395,12 @@ class SaleController extends Controller
     {
         $validated = $request->validate([
             'redirect_to' => ['nullable', 'string', 'in:index'],
+            'redirect_page' => ['nullable', 'integer', 'min:1'],
+            'redirect_filters' => ['nullable', 'array'],
+            'redirect_filters.search' => ['nullable', 'string'],
+            'redirect_filters.date_from' => ['nullable', 'date'],
+            'redirect_filters.date_to' => ['nullable', 'date'],
+            'redirect_filters.payment_status' => ['nullable', 'string', 'in:paid,partial,unpaid'],
             'confirmation_date' => ['required', 'date'],
             'status' => ['required', 'string', 'in:delivered,partially_delivered,changed_items,added_items,cancelled_at_door,failed_delivery'],
             'items' => ['required', 'array', 'min:1'],
@@ -433,7 +439,13 @@ class SaleController extends Controller
         }
 
         if (($validated['redirect_to'] ?? null) === 'index') {
-            return to_route('sales.index')->with('toast', ['type' => 'success', 'message' => 'Delivery confirmed.']);
+            $queryParams = array_filter($validated['redirect_filters'] ?? []);
+
+            if (isset($validated['redirect_page']) && $validated['redirect_page'] > 1) {
+                $queryParams['page'] = $validated['redirect_page'];
+            }
+
+            return to_route('sales.index', $queryParams)->with('toast', ['type' => 'success', 'message' => 'Delivery confirmed.']);
         }
 
         return to_route('sales.show', $sale)->with('toast', ['type' => 'success', 'message' => 'Delivery confirmed and sale finalized.']);

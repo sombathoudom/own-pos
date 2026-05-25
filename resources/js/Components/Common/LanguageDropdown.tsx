@@ -3,7 +3,6 @@ import { get } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { Dropdown } from 'react-bootstrap';
 
-
 //i18n
 import languages from '../../common/languages';
 import i18n from '../../i18n';

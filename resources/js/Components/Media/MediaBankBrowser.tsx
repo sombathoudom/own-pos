@@ -105,8 +105,8 @@ export default function MediaBankBrowser({
             const next = { ...prev };
 
             for (const m of data.data) {
-next[m.id] = m;
-}
+                next[m.id] = m;
+            }
 
             return next;
         });
@@ -127,8 +127,8 @@ next[m.id] = m;
 
     const addToQueue = (files: FileList | null) => {
         if (!files || files.length === 0) {
-return;
-}
+            return;
+        }
 
         setUploadError(null);
 
@@ -137,12 +137,12 @@ return;
             const map = new Map<string, File>();
 
             for (const f of prev) {
-map.set(`${f.name}|${f.size}|${f.lastModified}`, f);
-}
+                map.set(`${f.name}|${f.size}|${f.lastModified}`, f);
+            }
 
             for (const f of incoming) {
-map.set(`${f.name}|${f.size}|${f.lastModified}`, f);
-}
+                map.set(`${f.name}|${f.size}|${f.lastModified}`, f);
+            }
 
             return Array.from(map.values());
         });
@@ -158,8 +158,8 @@ map.set(`${f.name}|${f.size}|${f.lastModified}`, f);
 
     const uploadQueue = async () => {
         if (queue.length === 0) {
-return;
-}
+            return;
+        }
 
         setUploading(true);
         setProgress(0);
@@ -173,8 +173,8 @@ return;
                 headers: { 'Content-Type': 'multipart/form-data' },
                 onUploadProgress: (evt) => {
                     if (!evt.total) {
-return;
-}
+                        return;
+                    }
 
                     setProgress(Math.round((evt.loaded * 100) / evt.total));
                 },
@@ -188,15 +188,15 @@ return;
             await load(1);
 
             if (uploadedIds.length) {
-onUploaded?.(uploadedIds);
-}
+                onUploaded?.(uploadedIds);
+            }
 
             // auto-select new uploads
             if (selectable && uploadedIds.length) {
                 setSelected((prev) => {
                     if (!multiple) {
-return [uploadedIds[0]];
-}
+                        return [uploadedIds[0]];
+                    }
 
                     return Array.from(new Set([...prev, ...uploadedIds]));
                 });
@@ -206,8 +206,8 @@ return [uploadedIds[0]];
 
                     for (const id of uploadedIds) {
                         if (!next[id]) {
-next[id] = { id } as any;
-}
+                            next[id] = { id } as any;
+                        }
                     }
 
                     return next;
@@ -232,8 +232,8 @@ next[id] = { id } as any;
 
     const addYoutube = async () => {
         if (!ytUrl.trim()) {
-return;
-}
+            return;
+        }
 
         setYtBusy(true);
 
@@ -256,8 +256,8 @@ return;
             }
 
             if (newId) {
-onUploaded?.([newId]);
-}
+                onUploaded?.([newId]);
+            }
 
             setYtUrl('');
             setYtTitle('');
@@ -285,20 +285,20 @@ onUploaded?.([newId]);
 
     const cardThumb = (m: MediaItem) => {
         if (isYoutube(m)) {
-return m.thumbnail || '';
-}
+            return m.thumbnail || '';
+        }
 
         if (isImage(m)) {
-return m.url || '';
-}
+            return m.url || '';
+        }
 
         return '';
     };
 
     const openItem = (m: MediaItem) => {
         if (onOpenItem) {
-return onOpenItem(m);
-}
+            return onOpenItem(m);
+        }
 
         if (isYoutube(m) && m.external_id) {
             window.open(
@@ -310,15 +310,15 @@ return onOpenItem(m);
         }
 
         if (m.url) {
-window.open(m.url, '_blank');
-}
+            window.open(m.url, '_blank');
+        }
     };
 
     // Toggle select (multi)
     const toggleSelect = (id: number) => {
         if (!selectable) {
-return;
-}
+            return;
+        }
 
         const item = items.find((m) => m.id === id);
 
@@ -336,10 +336,10 @@ return;
                 const next = { ...prevMap };
 
                 if (exists) {
-delete next[id];
-} else {
-next[id] = item ? item : ({ id } as any);
-}
+                    delete next[id];
+                } else {
+                    next[id] = item ? item : ({ id } as any);
+                }
 
                 return next;
             });
@@ -350,12 +350,12 @@ next[id] = item ? item : ({ id } as any);
 
     const confirmSelect = async () => {
         if (!onConfirmSelect) {
-return;
-}
+            return;
+        }
 
         if (selected.length === 0) {
-return;
-}
+            return;
+        }
 
         const ids = multiple ? selected : [selected[0]];
         const selectedItems = ids
@@ -395,14 +395,14 @@ return;
 
     const prettySize = (bytes?: number) => {
         if (!bytes) {
-return '';
-}
+            return '';
+        }
 
         const kb = bytes / 1024;
 
         if (kb < 1024) {
-return `${kb.toFixed(1)} KB`;
-}
+            return `${kb.toFixed(1)} KB`;
+        }
 
         return `${(kb / 1024).toFixed(1)} MB`;
     };
@@ -422,8 +422,8 @@ return `${kb.toFixed(1)} KB`;
 
     const doDelete = async () => {
         if (!deleteId) {
-return;
-}
+            return;
+        }
 
         setDeleting(true);
         setDeleteError(null);

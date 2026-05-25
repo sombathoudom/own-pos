@@ -1,13 +1,11 @@
-
 import {
     DndContext,
     closestCenter,
     PointerSensor,
     useSensor,
-    useSensors
-    
+    useSensors,
 } from '@dnd-kit/core';
-import type {DragEndEvent} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
 import {
     SortableContext,
     useSortable,
@@ -141,15 +139,15 @@ export default function PendingMediaPanel({
         }
 
         if (m.url) {
-window.open(m.url, '_blank');
-}
+            window.open(m.url, '_blank');
+        }
     };
 
     const thumb = (m: MediaItem) => {
         // external (youtube)
         if (m.kind === 'external') {
-return m.thumbnail || null;
-}
+            return m.thumbnail || null;
+        }
 
         const url = m.url || null;
 
@@ -158,43 +156,43 @@ return m.thumbnail || null;
         const isImage = mime.startsWith('image/');
 
         if (isImage) {
-return url;
-}
+            return url;
+        }
 
         // ✅ fallback when mime is missing: detect by file extension
         if (url && /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url)) {
-return url;
-}
+            return url;
+        }
 
         // optional: backend can provide thumbnail for files too
         if (m.thumbnail) {
-return m.thumbnail;
-}
+            return m.thumbnail;
+        }
 
         return null;
     };
 
     const onDragEnd = (event: DragEndEvent) => {
         if (!sortable) {
-return;
-}
+            return;
+        }
 
         const { active, over } = event;
 
         if (!over) {
-return;
-}
+            return;
+        }
 
         if (active.id === over.id) {
-return;
-}
+            return;
+        }
 
         const oldIndex = ids.findIndex((x) => x === active.id);
         const newIndex = ids.findIndex((x) => x === over.id);
 
         if (oldIndex < 0 || newIndex < 0) {
-return;
-}
+            return;
+        }
 
         const nextIds = arrayMove(ids, oldIndex, newIndex);
         onReorder?.(nextIds);

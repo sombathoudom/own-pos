@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import type {ReactNode} from 'react';
+import type { ReactNode } from 'react';
 import {
     Alert,
     Button,

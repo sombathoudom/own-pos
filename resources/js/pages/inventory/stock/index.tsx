@@ -1,12 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import {
-    
-    
-    useEffect,
-    useMemo,
-    useState
-} from 'react';
-import type {FormEvent, ReactNode} from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import {
     Badge,
     Button,
@@ -83,12 +77,12 @@ function StockIndex() {
 
     const stockBadge = (qty: number) => {
         if (qty === 0) {
-return <Badge bg="danger">Out of Stock</Badge>;
-}
+            return <Badge bg="danger">Out of Stock</Badge>;
+        }
 
         if (qty <= 5) {
-return <Badge bg="warning">Low: {qty}</Badge>;
-}
+            return <Badge bg="warning">Low: {qty}</Badge>;
+        }
 
         return <Badge bg="success">In Stock: {qty}</Badge>;
     };

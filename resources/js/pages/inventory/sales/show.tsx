@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import {  useMemo, useState } from 'react';
-import type {ReactNode} from 'react';
+import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
     Badge,
     Button,
@@ -124,8 +124,7 @@ function SalesShow() {
         sale.exchanges.forEach((exchange) => {
             exchange.items.forEach((item) => {
                 map[item.sale_item_id] =
-                    (map[item.sale_item_id] ?? 0) +
-                    Number(item.qty_returned);
+                    (map[item.sale_item_id] ?? 0) + Number(item.qty_returned);
             });
         });
 
@@ -457,7 +456,9 @@ function SalesShow() {
                                                 Source Page
                                             </div>
                                             <Form.Select
-                                                value={sale.source_page || 'Other'}
+                                                value={
+                                                    sale.source_page || 'Other'
+                                                }
                                                 onChange={(e) =>
                                                     router.patch(
                                                         updateSaleDetails.url(
@@ -501,11 +502,14 @@ function SalesShow() {
                                                         ),
                                                         {
                                                             delivery_company_id:
-                                                                e.target.value ===
+                                                                e.target
+                                                                    .value ===
                                                                 ''
                                                                     ? null
                                                                     : Number(
-                                                                          e.target.value,
+                                                                          e
+                                                                              .target
+                                                                              .value,
                                                                       ),
                                                         },
                                                     )

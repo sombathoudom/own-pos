@@ -360,7 +360,7 @@ function PosIndex() {
                                 className="d-flex flex-column"
                             >
                                 {/* Search & Filters */}
-                                <Card className="mb-3 shadow-sm border-0">
+                                <Card className="mb-3 border-0 shadow-sm">
                                     <Card.Body className="p-3">
                                         {/* Search */}
                                         <div className="mb-2">
@@ -457,7 +457,7 @@ function PosIndex() {
                                 </Card>
 
                                 {/* Products Grid */}
-                                <Card className="shadow-sm border-0 flex-grow-1">
+                                <Card className="flex-grow-1 border-0 shadow-sm">
                                     <Card.Body className="p-2">
                                         <Row className="g-2">
                                             {displayedVariants.map(
@@ -505,9 +505,10 @@ function PosIndex() {
                                                                         inCart
                                                                             ? '#f0f7ff'
                                                                             : '#ffffff',
-                                                                    boxShadow: inCart
-                                                                        ? '0 0 0 3px rgba(13, 110, 253, 0.2), 0 2px 8px rgba(0,0,0,0.12)'
-                                                                        : '0 1px 3px rgba(0,0,0,0.08)',
+                                                                    boxShadow:
+                                                                        inCart
+                                                                            ? '0 0 0 3px rgba(13, 110, 253, 0.2), 0 2px 8px rgba(0,0,0,0.12)'
+                                                                            : '0 1px 3px rgba(0,0,0,0.08)',
                                                                     transform:
                                                                         inCart
                                                                             ? 'scale(1.03)'
@@ -586,7 +587,7 @@ function PosIndex() {
                                                                     {inCart && (
                                                                         <Badge
                                                                             bg="primary"
-                                                                            className="position-absolute end-0 top-0 m-1 d-flex align-items-center justify-content-center"
+                                                                            className="position-absolute d-flex align-items-center justify-content-center end-0 top-0 m-1"
                                                                             style={{
                                                                                 width: 22,
                                                                                 height: 22,
@@ -645,7 +646,7 @@ function PosIndex() {
                                                                             )}
                                                                         </span>
                                                                     </div>
-                                                                    <div className="d-flex align-items-center gap-1 mt-1">
+                                                                    <div className="d-flex align-items-center mt-1 gap-1">
                                                                         {variant.color && (
                                                                             <span
                                                                                 className="text-muted"
@@ -678,8 +679,7 @@ function PosIndex() {
                                                     );
                                                 },
                                             )}
-                                            {displayedVariants.length ===
-                                                0 && (
+                                            {displayedVariants.length === 0 && (
                                                 <Col xs={12}>
                                                     <div className="py-5 text-center text-muted">
                                                         <i className="ri-search-line fs-1 d-block mb-2"></i>
@@ -698,8 +698,7 @@ function PosIndex() {
                                                     disabled={processing}
                                                     onClick={() =>
                                                         setDisplayLimit(
-                                                            (prev) =>
-                                                                prev + 30,
+                                                            (prev) => prev + 30,
                                                         )
                                                     }
                                                 >
@@ -730,7 +729,7 @@ function PosIndex() {
                                 className="d-none d-md-block"
                             >
                                 <Card
-                                    className="shadow border-primary border-2"
+                                    className="border-2 border-primary shadow"
                                     style={{
                                         position: 'sticky',
                                         top: '1rem',
@@ -743,7 +742,7 @@ function PosIndex() {
                                         style={{ height: '100%' }}
                                     >
                                         {/* Header */}
-                                        <div className="p-2 border-bottom bg-primary text-white flex-shrink-0">
+                                        <div className="border-bottom flex-shrink-0 bg-primary p-2 text-white">
                                             <div className="d-flex align-items-center justify-content-between">
                                                 <div className="d-flex align-items-center gap-2">
                                                     <i className="ri-shopping-cart-2-line fs-5"></i>
@@ -755,7 +754,7 @@ function PosIndex() {
                                                     <Button
                                                         variant="light"
                                                         size="sm"
-                                                        className="text-danger py-0 px-2"
+                                                        className="text-danger px-2 py-0"
                                                         onClick={clearCart}
                                                         disabled={processing}
                                                     >
@@ -766,7 +765,7 @@ function PosIndex() {
                                         </div>
 
                                         {/* Customer */}
-                                        <div className="p-2 border-bottom flex-shrink-0">
+                                        <div className="border-bottom flex-shrink-0 p-2">
                                             <Row className="g-2">
                                                 <Col xs={8}>
                                                     <CustomerSelect
@@ -802,7 +801,7 @@ function PosIndex() {
                                                     </Button>
                                                 </Col>
                                             </Row>
-                                            <div className="mt-1 d-flex justify-content-between align-items-center">
+                                            <div className="d-flex justify-content-between align-items-center mt-1">
                                                 <span
                                                     className="text-muted"
                                                     style={{
@@ -866,9 +865,9 @@ function PosIndex() {
                                                             key={
                                                                 item.product_variant_id
                                                             }
-                                                            className="d-flex align-items-center gap-2 mb-2 p-2 rounded border bg-white"
+                                                            className="d-flex align-items-center mb-2 gap-2 rounded border bg-white p-2"
                                                         >
-                                                            <div className="flex-grow-1 min-w-0">
+                                                            <div className="min-w-0 flex-grow-1">
                                                                 <div
                                                                     className="fw-semibold text-truncate"
                                                                     style={{
@@ -893,14 +892,16 @@ function PosIndex() {
                                                                         variant.sku
                                                                     }{' '}
                                                                     •{' '}
-                                                                    {variant.color}{' '}
+                                                                    {
+                                                                        variant.color
+                                                                    }{' '}
                                                                     /{' '}
                                                                     {
                                                                         variant.size
                                                                     }
                                                                 </div>
                                                             </div>
-                                                            <div className="d-flex align-items-center gap-1 flex-shrink-0">
+                                                            <div className="d-flex align-items-center flex-shrink-0 gap-1">
                                                                 <Button
                                                                     variant="outline-secondary"
                                                                     size="sm"
@@ -959,7 +960,7 @@ function PosIndex() {
                                                                 </Button>
                                                             </div>
                                                             <div
-                                                                className="text-end flex-shrink-0"
+                                                                className="flex-shrink-0 text-end"
                                                                 style={{
                                                                     minWidth: 55,
                                                                 }}
@@ -1011,7 +1012,7 @@ function PosIndex() {
 
                                         {/* Totals */}
                                         <div
-                                            className="p-2 border-top bg-light flex-shrink-0"
+                                            className="border-top bg-light flex-shrink-0 p-2"
                                             style={{
                                                 maxHeight: '200px',
                                                 overflow: 'auto',
@@ -1037,7 +1038,9 @@ function PosIndex() {
                                                         step="0.01"
                                                         min="0"
                                                         disabled={processing}
-                                                        value={data.discount_usd}
+                                                        value={
+                                                            data.discount_usd
+                                                        }
                                                         onChange={(e) =>
                                                             setData(
                                                                 'discount_usd',
@@ -1217,11 +1220,11 @@ function PosIndex() {
                                         </div>
 
                                         {/* Complete Sale Button */}
-                                        <div className="p-2 border-top flex-shrink-0">
+                                        <div className="border-top flex-shrink-0 p-2">
                                             {firstError && (
                                                 <Alert
                                                     variant="danger"
-                                                    className="small py-1 px-2 mb-2"
+                                                    className="small mb-2 px-2 py-1"
                                                 >
                                                     {firstError}
                                                 </Alert>
@@ -1233,12 +1236,9 @@ function PosIndex() {
                                                     size="lg"
                                                     disabled={
                                                         processing ||
-                                                        data.items.length ===
-                                                            0
+                                                        data.items.length === 0
                                                     }
-                                                    onClick={
-                                                        handleCompleteSale
-                                                    }
+                                                    onClick={handleCompleteSale}
                                                 >
                                                     {processing
                                                         ? 'Processing...'

@@ -136,8 +136,8 @@ function SalesEdit() {
         const term = search.trim().toLowerCase();
 
         if (!term) {
-return variants.slice(0, 20);
-}
+            return variants.slice(0, 20);
+        }
 
         return variants.filter((v) => {
             const text =
@@ -154,8 +154,8 @@ return variants.slice(0, 20);
 
     const addVariant = (variant: Variant) => {
         if (selectedVariantIds.has(variant.id)) {
-return;
-}
+            return;
+        }
 
         setData('items', [
             ...data.items,
@@ -570,8 +570,8 @@ return;
                                             ).items;
 
                                             if (!itemsError) {
-return null;
-}
+                                                return null;
+                                            }
 
                                             return (
                                                 <Alert
@@ -722,8 +722,8 @@ return null;
                                                 );
 
                                                 if (!variant) {
-return null;
-}
+                                                    return null;
+                                                }
 
                                                 return (
                                                     <Card

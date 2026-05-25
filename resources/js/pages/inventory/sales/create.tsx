@@ -92,8 +92,8 @@ function SalesCreate() {
         const term = search.trim().toLowerCase();
 
         if (!term) {
-return variants.slice(0, 20);
-}
+            return variants.slice(0, 20);
+        }
 
         return variants.filter((v) => {
             const text =
@@ -110,12 +110,12 @@ return variants.slice(0, 20);
 
     const addVariant = (variant: Variant) => {
         if (selectedVariantIds.has(variant.id)) {
-return;
-}
+            return;
+        }
 
         if (variant.stock_on_hand <= 0) {
-return;
-}
+            return;
+        }
 
         setData('items', [
             ...data.items,
@@ -172,7 +172,9 @@ return;
     );
 
     const selectedCustomer = useMemo(
-        () => customers.find((customer) => customer.id === data.customer_id) ?? null,
+        () =>
+            customers.find((customer) => customer.id === data.customer_id) ??
+            null,
         [customers, data.customer_id],
     );
 
@@ -217,12 +219,19 @@ return;
                                                     <CustomerSelect
                                                         customers={customers}
                                                         value={data.customer_id}
-                                                        onChange={(customerId) => setData('customer_id', customerId)}
+                                                        onChange={(
+                                                            customerId,
+                                                        ) =>
+                                                            setData(
+                                                                'customer_id',
+                                                                customerId,
+                                                            )
+                                                        }
                                                         inputId="customer_id"
                                                         placeholder="Search and select a customer"
                                                     />
                                                     {errors.customer_id && (
-                                                        <div className="mt-1 d-block small text-danger">
+                                                        <div className="d-block small text-danger mt-1">
                                                             {errors.customer_id}
                                                         </div>
                                                     )}
@@ -233,17 +242,21 @@ return;
                                                     <Form.Label>
                                                         Selected Customer
                                                     </Form.Label>
-                                                    <div className="rounded border bg-light-subtle p-3 small">
+                                                    <div className="bg-light-subtle small rounded border p-3">
                                                         {selectedCustomer ? (
                                                             <>
                                                                 <div className="fw-medium">
-                                                                    {selectedCustomer.name}
+                                                                    {
+                                                                        selectedCustomer.name
+                                                                    }
                                                                 </div>
                                                                 <div className="text-muted">
-                                                                    {selectedCustomer.phone || 'No phone'}
+                                                                    {selectedCustomer.phone ||
+                                                                        'No phone'}
                                                                 </div>
                                                                 <div className="text-muted">
-                                                                    {selectedCustomer.address || 'No address'}
+                                                                    {selectedCustomer.address ||
+                                                                        'No address'}
                                                                 </div>
                                                             </>
                                                         ) : (
@@ -395,8 +408,8 @@ return;
                                             ).items;
 
                                             if (!itemsErr) {
-return null;
-}
+                                                return null;
+                                            }
 
                                             return (
                                                 <Alert
@@ -504,10 +517,10 @@ return null;
                                                                                 !inCart &&
                                                                                 !outOfStock
                                                                             ) {
-addVariant(
+                                                                                addVariant(
                                                                                     variant,
                                                                                 );
-}
+                                                                            }
                                                                         }}
                                                                         disabled={
                                                                             inCart ||
@@ -623,8 +636,8 @@ addVariant(
                                                 );
 
                                                 if (!variant) {
-return null;
-}
+                                                    return null;
+                                                }
 
                                                 const qtyNum =
                                                     Number(item.qty) || 0;
@@ -926,24 +939,45 @@ return null;
                                             </div>
 
                                             <div className="mb-3">
-                                                <Form.Label className="text-muted mb-2">
+                                                <Form.Label className="mb-2 text-muted">
                                                     Delivery Company
                                                 </Form.Label>
                                                 <DeliveryCompanyPicker
-                                                    companies={deliveryCompanies}
-                                                    selectedId={data.delivery_company_id}
+                                                    companies={
+                                                        deliveryCompanies
+                                                    }
+                                                    selectedId={
+                                                        data.delivery_company_id
+                                                    }
                                                     onChange={(company) => {
-                                                        setData('delivery_company_id', company?.id ?? null);
+                                                        setData(
+                                                            'delivery_company_id',
+                                                            company?.id ?? null,
+                                                        );
 
                                                         if (company) {
-                                                            setData('actual_delivery_cost_usd', company.delivery_cost_usd);
+                                                            setData(
+                                                                'actual_delivery_cost_usd',
+                                                                company.delivery_cost_usd,
+                                                            );
 
-                                                            if (!data.customer_delivery_fee_usd || data.customer_delivery_fee_usd === '0') {
-                                                                setData('customer_delivery_fee_usd', company.delivery_cost_usd);
+                                                            if (
+                                                                !data.customer_delivery_fee_usd ||
+                                                                data.customer_delivery_fee_usd ===
+                                                                    '0'
+                                                            ) {
+                                                                setData(
+                                                                    'customer_delivery_fee_usd',
+                                                                    company.delivery_cost_usd,
+                                                                );
                                                             }
                                                         }
                                                     }}
-                                                    customerDeliveryFee={Number(data.customer_delivery_fee_usd) || 0}
+                                                    customerDeliveryFee={
+                                                        Number(
+                                                            data.customer_delivery_fee_usd,
+                                                        ) || 0
+                                                    }
                                                 />
                                             </div>
 

@@ -39,8 +39,8 @@ const FullScreenDropdown: React.FC = () => {
                 !document.mozFullScreen &&
                 !document.msFullscreenElement
             ) {
-document.body.classList.remove('fullscreen-enable');
-}
+                document.body.classList.remove('fullscreen-enable');
+            }
         };
         document.addEventListener('fullscreenchange', exitHandler);
         document.addEventListener('webkitfullscreenchange', exitHandler);

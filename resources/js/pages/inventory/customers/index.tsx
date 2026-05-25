@@ -1,16 +1,32 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useState } from 'react';
-import { Alert, Badge, Button, Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
+import {
+    Alert,
+    Badge,
+    Button,
+    Card,
+    Col,
+    Container,
+    Form,
+    Row,
+    Table,
+} from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Pagination from '@/Components/Pagination';
 import Layout from '@/Layouts';
-import { create as customersCreate, destroy as customersDestroy, edit as customersEdit, index as customersIndex } from '@/routes/customers';
+import {
+    create as customersCreate,
+    destroy as customersDestroy,
+    edit as customersEdit,
+    index as customersIndex,
+} from '@/routes/customers';
 import type { CustomerIndexPageProps } from '@/types';
 
 function CustomersIndex() {
-    const { customers, filters, toast } = usePage<CustomerIndexPageProps>().props;
+    const { customers, filters, toast } =
+        usePage<CustomerIndexPageProps>().props;
     const [search, setSearch] = useState(filters.search ?? '');
 
     const handleSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -39,7 +55,9 @@ function CustomersIndex() {
 
                     {toast && (
                         <Alert
-                            variant={toast.type === 'success' ? 'success' : 'danger'}
+                            variant={
+                                toast.type === 'success' ? 'success' : 'danger'
+                            }
                             className="mb-3"
                         >
                             {toast.message}
@@ -51,15 +69,25 @@ function CustomersIndex() {
                             <Card>
                                 <Card.Body>
                                     <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3 gap-3">
-                                        <Form onSubmit={handleSearch} className="d-flex gap-2">
+                                        <Form
+                                            onSubmit={handleSearch}
+                                            className="d-flex gap-2"
+                                        >
                                             <Form.Control
                                                 type="search"
                                                 placeholder="Search customers..."
                                                 value={search}
-                                                onChange={(event) => setSearch(event.target.value)}
+                                                onChange={(event) =>
+                                                    setSearch(
+                                                        event.target.value,
+                                                    )
+                                                }
                                                 style={{ minWidth: 240 }}
                                             />
-                                            <button type="submit" className="btn btn-light">
+                                            <button
+                                                type="submit"
+                                                className="btn btn-light"
+                                            >
                                                 Search
                                             </button>
                                             {search && (
@@ -68,10 +96,14 @@ function CustomersIndex() {
                                                     className="btn btn-light"
                                                     onClick={() => {
                                                         setSearch('');
-                                                        router.get(customersIndex.url(), {}, {
-                                                            preserveScroll: true,
-                                                            preserveState: true,
-                                                        });
+                                                        router.get(
+                                                            customersIndex.url(),
+                                                            {},
+                                                            {
+                                                                preserveScroll: true,
+                                                                preserveState: true,
+                                                            },
+                                                        );
                                                     }}
                                                 >
                                                     Clear
@@ -79,12 +111,18 @@ function CustomersIndex() {
                                             )}
                                         </Form>
 
-                                        <Link href={customersCreate.url()} className="btn btn-primary">
+                                        <Link
+                                            href={customersCreate.url()}
+                                            className="btn btn-primary"
+                                        >
                                             Add Customer
                                         </Link>
                                     </div>
 
-                                    <Table responsive className="table-striped align-middle">
+                                    <Table
+                                        responsive
+                                        className="table-striped align-middle"
+                                    >
                                         <thead>
                                             <tr>
                                                 <th>Name</th>
@@ -97,38 +135,69 @@ function CustomersIndex() {
                                         <tbody>
                                             {customers.data.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={5} className="text-center text-muted">
+                                                    <td
+                                                        colSpan={5}
+                                                        className="text-center text-muted"
+                                                    >
                                                         No customers found.
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                customers.data.map((customer) => (
-                                                    <tr key={customer.id}>
-                                                        <td>{customer.name}</td>
-                                                        <td>{customer.phone || '—'}</td>
-                                                        <td>{customer.address || '—'}</td>
-                                                        <td>
-                                                            <Badge bg={customer.status === 'active' ? 'success' : 'secondary'}>
-                                                                {customer.status}
-                                                            </Badge>
-                                                        </td>
-                                                        <td>
-                                                            <Link
-                                                                href={customersEdit.url({ customer: customer.id })}
-                                                                className="btn btn-sm btn-outline-info me-1"
-                                                            >
-                                                                Edit
-                                                            </Link>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline-danger"
-                                                                onClick={() => handleDelete(customer.id)}
-                                                            >
-                                                                Delete
-                                                            </Button>
-                                                        </td>
-                                                    </tr>
-                                                ))
+                                                customers.data.map(
+                                                    (customer) => (
+                                                        <tr key={customer.id}>
+                                                            <td>
+                                                                {customer.name}
+                                                            </td>
+                                                            <td>
+                                                                {customer.phone ||
+                                                                    '—'}
+                                                            </td>
+                                                            <td>
+                                                                {customer.address ||
+                                                                    '—'}
+                                                            </td>
+                                                            <td>
+                                                                <Badge
+                                                                    bg={
+                                                                        customer.status ===
+                                                                        'active'
+                                                                            ? 'success'
+                                                                            : 'secondary'
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        customer.status
+                                                                    }
+                                                                </Badge>
+                                                            </td>
+                                                            <td>
+                                                                <Link
+                                                                    href={customersEdit.url(
+                                                                        {
+                                                                            customer:
+                                                                                customer.id,
+                                                                        },
+                                                                    )}
+                                                                    className="btn btn-sm btn-outline-info me-1"
+                                                                >
+                                                                    Edit
+                                                                </Link>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline-danger"
+                                                                    onClick={() =>
+                                                                        handleDelete(
+                                                                            customer.id,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    Delete
+                                                                </Button>
+                                                            </td>
+                                                        </tr>
+                                                    ),
+                                                )
                                             )}
                                         </tbody>
                                     </Table>

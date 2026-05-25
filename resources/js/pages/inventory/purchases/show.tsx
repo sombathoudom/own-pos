@@ -79,16 +79,16 @@ function PurchasesShow() {
 
     const statusBadge = (status: string) => {
         if (status === 'in_transit') {
-return <Badge bg="warning">In Transit</Badge>;
-}
+            return <Badge bg="warning">In Transit</Badge>;
+        }
 
         if (status === 'arrived') {
-return <Badge bg="success">Arrived</Badge>;
-}
+            return <Badge bg="success">Arrived</Badge>;
+        }
 
         if (status === 'draft') {
-return <Badge bg="secondary">Draft</Badge>;
-}
+            return <Badge bg="secondary">Draft</Badge>;
+        }
 
         return <Badge bg="secondary">{status}</Badge>;
     };

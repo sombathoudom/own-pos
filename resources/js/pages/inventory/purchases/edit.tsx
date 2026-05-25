@@ -1,5 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import type { FormEvent} from 'react';
+import type { FormEvent } from 'react';
 import { useMemo, useState } from 'react';
 import {
     Alert,
@@ -182,12 +182,12 @@ function PurchasesEdit() {
 
         return products.filter((p) => {
             if (selectedProductIds.has(String(p.id))) {
-return false;
-}
+                return false;
+            }
 
             if (!term) {
-return true;
-}
+                return true;
+            }
 
             return p.name.toLowerCase().includes(term);
         });
@@ -565,8 +565,8 @@ return true;
                                             ).items;
 
                                             if (!itemsError) {
-return null;
-}
+                                                return null;
+                                            }
 
                                             return (
                                                 <Alert

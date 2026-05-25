@@ -10,14 +10,14 @@ const getChartColorsArray = (colors: string): string[] => {
             ).getPropertyValue(newValue);
 
             if (color.indexOf('#') !== -1) {
-color = color.replace(' ', '');
-}
+                color = color.replace(' ', '');
+            }
 
             if (color) {
-return color;
-} else {
-return newValue;
-}
+                return color;
+            } else {
+                return newValue;
+            }
         } else {
             const val = value.split(',');
 

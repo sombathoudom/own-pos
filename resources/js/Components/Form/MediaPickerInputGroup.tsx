@@ -31,12 +31,12 @@ export default function MediaIdPickerGroup({
 
     const helperText = useMemo(() => {
         if (hasPreview) {
-return '';
-}
+            return '';
+        }
 
         if (!value) {
-return placeholder;
-}
+            return placeholder;
+        }
 
         return `Media #${value}`;
     }, [hasPreview, value, placeholder]);
@@ -107,8 +107,8 @@ return placeholder;
                     const first = items?.[0];
 
                     if (!first) {
-return;
-}
+                        return;
+                    }
 
                     onChange(first.id);
 

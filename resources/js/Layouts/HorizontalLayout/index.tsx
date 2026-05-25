@@ -90,12 +90,12 @@ const HorizontalLayout = (props: any) => {
                     ).previousElementSibling;
 
                 if (parentElementDiv) {
-if (parentElementDiv.closest('.collapse')) {
-parentElementDiv
+                    if (parentElementDiv.closest('.collapse')) {
+                        parentElementDiv
                             .closest('.collapse')
                             .classList.add('show');
-}
-}
+                    }
+                }
 
                 parentElementDiv.classList.add('active');
                 const parentElementSibling =

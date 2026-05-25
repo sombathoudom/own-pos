@@ -4,7 +4,7 @@ import { Modal } from 'react-bootstrap';
 
 import { flashToast } from '../../utils/flashToast';
 import MediaBankBrowser from './MediaBankBrowser';
-import type {MediaItem} from './MediaBankBrowser';
+import type { MediaItem } from './MediaBankBrowser';
 
 type Props = {
     show: boolean;
@@ -46,8 +46,8 @@ export default function MediaPickerModal({
 
     useEffect(() => {
         if (!show) {
-return;
-}
+            return;
+        }
 
         setUseAfterUpload(true);
     }, [show]);
@@ -106,8 +106,8 @@ return;
 
     const fetchByIds = async (ids: number[]): Promise<MediaItem[]> => {
         if (!ids.length) {
-return [];
-}
+            return [];
+        }
 
         const { data } = await axios.get(route('media.byIds'), {
             headers: { Accept: 'application/json' },
@@ -119,12 +119,12 @@ return [];
 
     const handleUploaded = async (uploadedIds: number[]) => {
         if (!uploadedIds?.length) {
-return;
-}
+            return;
+        }
 
         if (!useAfterUpload) {
-return;
-}
+            return;
+        }
 
         // edit mode => auto attach
         if (attachOnConfirm) {

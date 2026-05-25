@@ -41,7 +41,7 @@ export default function DeliveryCompanyPicker({
         <div>
             {/* Box grid */}
             <div
-                className="d-flex mb-1 gap-1 flex-nowrap overflow-x-auto"
+                className="d-flex mb-1 flex-nowrap gap-1 overflow-x-auto"
                 style={{ scrollbarWidth: 'thin' }}
             >
                 {/* None option */}
@@ -56,7 +56,10 @@ export default function DeliveryCompanyPicker({
                     }`}
                     style={{ minWidth: 52, fontSize: '0.8rem' }}
                 >
-                    <i className="ri-close-line me-1" style={{ fontSize: '0.75rem' }}></i>
+                    <i
+                        className="ri-close-line me-1"
+                        style={{ fontSize: '0.75rem' }}
+                    ></i>
                     None
                 </button>
 

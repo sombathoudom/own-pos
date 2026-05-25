@@ -26,8 +26,8 @@ const Header = ({ onChangeLayoutMode, layoutModeType, headerClass }: any) => {
         dispatch(changeSidebarVisibility('show'));
 
         if (windowSize > 767) {
-humberIcon.classList.toggle('open');
-}
+            humberIcon.classList.toggle('open');
+        }
 
         //For collapse horizontal menu
         if (

@@ -63,12 +63,12 @@ export default function Pagination<T>({ paginator }: Props<T>) {
 
 function normalizeLabel(label: string) {
     if (label.includes('Previous')) {
-return '&laquo;';
-}
+        return '&laquo;';
+    }
 
     if (label.includes('Next')) {
-return '&raquo;';
-}
+        return '&raquo;';
+    }
 
     return label;
 }
