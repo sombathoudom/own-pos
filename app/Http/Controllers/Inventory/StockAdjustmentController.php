@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductVariant;
 use App\Models\StockAdjustment;
 use App\Models\StockBalance;
+use App\Models\StockLayer;
+use App\Models\StockMovement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -102,8 +104,46 @@ class StockAdjustmentController extends Controller
     {
         $stockAdjustment->load('items.productVariant.product', 'createdBy', 'approvedBy');
 
+        $variantIds = $stockAdjustment->items->pluck('product_variant_id');
+        $movements = StockMovement::whereIn('product_variant_id', $variantIds)
+            ->where('reference_type', $stockAdjustment->getMorphClass())
+            ->where('reference_id', $stockAdjustment->id)
+            ->with('productVariant')
+            ->orderBy('created_at')
+            ->get();
+
         return Inertia::render('inventory/stock-adjustments/show', [
-            'adjustment' => $stockAdjustment,
+            'adjustment' => [
+                'id' => $stockAdjustment->id,
+                'adjustment_date' => $stockAdjustment->adjustment_date,
+                'reason' => $stockAdjustment->reason,
+                'note' => $stockAdjustment->note,
+                'approved_at' => $stockAdjustment->approved_at,
+                'created_by' => $stockAdjustment->createdBy?->name,
+                'approved_by' => $stockAdjustment->approvedBy?->name,
+                'items' => $stockAdjustment->items->map(fn ($item) => [
+                    'id' => $item->id,
+                    'system_qty' => $item->system_qty,
+                    'actual_qty' => $item->actual_qty,
+                    'difference_qty' => $item->difference_qty,
+                    'movement_type' => $item->movement_type,
+                    'note' => $item->note,
+                    'productVariant' => [
+                        'sku' => $item->productVariant?->sku,
+                        'color' => $item->productVariant?->color,
+                        'size' => $item->productVariant?->size,
+                        'product' => ['name' => $item->productVariant?->product?->name],
+                    ],
+                ]),
+                'movements' => $movements->map(fn ($m) => [
+                    'id' => $m->id,
+                    'type' => $m->type,
+                    'qty_change' => $m->qty_change,
+                    'note' => $m->note,
+                    'created_at' => $m->created_at?->toDateTimeString(),
+                    'sku' => $m->productVariant?->sku,
+                ]),
+            ],
         ]);
     }
 
@@ -120,11 +160,43 @@ class StockAdjustmentController extends Controller
                     continue;
                 }
 
+                $stockLayerId = null;
+
+                if ($qtyChange > 0) {
+                    // Create a stock layer so these units are sellable via FIFO
+                    $layer = StockLayer::create([
+                        'purchase_item_id' => null,
+                        'product_variant_id' => $item->product_variant_id,
+                        'original_qty' => $qtyChange,
+                        'remaining_qty' => $qtyChange,
+                        'unit_cost_usd' => '0',
+                        'purchase_date' => $stockAdjustment->adjustment_date,
+                    ]);
+                    $stockLayerId = $layer->id;
+                } else {
+                    // For adjustment_out, deduct from oldest layers first (FIFO)
+                    $toDeduct = abs($qtyChange);
+                    $layers = StockLayer::where('product_variant_id', $item->product_variant_id)
+                        ->where('remaining_qty', '>', 0)
+                        ->orderBy('purchase_date', 'asc')
+                        ->orderBy('id', 'asc')
+                        ->get();
+
+                    foreach ($layers as $layer) {
+                        if ($toDeduct <= 0) {
+                            break;
+                        }
+                        $deduct = min($toDeduct, $layer->remaining_qty);
+                        $layer->decrement('remaining_qty', $deduct);
+                        $toDeduct -= $deduct;
+                    }
+                }
+
                 $this->recordStockMovement->handle(
                     productVariantId: $item->product_variant_id,
                     type: $qtyChange > 0 ? 'adjustment_in' : 'adjustment_out',
                     qtyChange: abs($qtyChange),
-                    stockLayerId: null,
+                    stockLayerId: $stockLayerId,
                     referenceType: $stockAdjustment->getMorphClass(),
                     referenceId: $stockAdjustment->id,
                     unitCostUsd: null,

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductVariant;
 use App\Models\StockBalance;
 use App\Models\StockCount;
+use App\Models\StockLayer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -116,11 +117,43 @@ class StockCountController extends Controller
                     continue;
                 }
 
+                $stockLayerId = null;
+
+                if ($qtyChange > 0) {
+                    // Create a stock layer so these units are sellable via FIFO
+                    $layer = StockLayer::create([
+                        'purchase_item_id' => null,
+                        'product_variant_id' => $item->product_variant_id,
+                        'original_qty' => $qtyChange,
+                        'remaining_qty' => $qtyChange,
+                        'unit_cost_usd' => '0',
+                        'purchase_date' => $stockCount->count_date,
+                    ]);
+                    $stockLayerId = $layer->id;
+                } else {
+                    // For adjustment_out, deduct from oldest layers first (FIFO)
+                    $toDeduct = abs($qtyChange);
+                    $layers = StockLayer::where('product_variant_id', $item->product_variant_id)
+                        ->where('remaining_qty', '>', 0)
+                        ->orderBy('purchase_date', 'asc')
+                        ->orderBy('id', 'asc')
+                        ->get();
+
+                    foreach ($layers as $layer) {
+                        if ($toDeduct <= 0) {
+                            break;
+                        }
+                        $deduct = min($toDeduct, $layer->remaining_qty);
+                        $layer->decrement('remaining_qty', $deduct);
+                        $toDeduct -= $deduct;
+                    }
+                }
+
                 $this->recordStockMovement->handle(
                     productVariantId: $item->product_variant_id,
                     type: $qtyChange > 0 ? 'adjustment_in' : 'adjustment_out',
                     qtyChange: abs($qtyChange),
-                    stockLayerId: null,
+                    stockLayerId: $stockLayerId,
                     referenceType: $stockCount->getMorphClass(),
                     referenceId: $stockCount->id,
                     unitCostUsd: null,

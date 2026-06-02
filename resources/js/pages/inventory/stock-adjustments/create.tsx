@@ -1,12 +1,13 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
+import { Badge, Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
 import Layout from '@/Layouts';
 import { index as adjustmentsIndex } from '@/routes/stock-adjustments';
 import { getCurrentDate } from '@/utils/dateTime';
+
 type AdjustmentVariant = {
     id: number;
     sku: string;
@@ -18,7 +19,7 @@ type AdjustmentVariant = {
 
 function StockAdjustmentsCreate() {
     const { variants } = usePage<{ variants: AdjustmentVariant[] }>().props;
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing } = useForm({
         adjustment_date: getCurrentDate(),
         reason: '',
         note: '',
@@ -29,34 +30,36 @@ function StockAdjustmentsCreate() {
         }[],
     });
 
-    const [selectedVariant, setSelectedVariant] = useState('');
+    const [search, setSearch] = useState('');
+    const [showPicker, setShowPicker] = useState(false);
 
-    const addItem = () => {
-        const variantId = parseInt(selectedVariant);
+    const addedIds = useMemo(
+        () => new Set(data.items.map((i) => i.product_variant_id)),
+        [data.items],
+    );
 
-        if (!variantId) {
-            return;
-        }
+    const filteredVariants = useMemo(() => {
+        const term = search.trim().toLowerCase();
+        if (!term) return variants.slice(0, 20);
+        return variants.filter((v) => {
+            const text =
+                `${v.sku} ${v.product_name} ${v.color ?? ''} ${v.size}`.toLowerCase();
+            return text.includes(term);
+        });
+    }, [variants, search]);
 
-        if (data.items.find((i) => i.product_variant_id === variantId)) {
-            return;
-        }
-
-        const variant = variants.find((v) => v.id === variantId);
-
-        if (!variant) {
-            return;
-        }
-
+    const addItem = (variant: AdjustmentVariant) => {
+        if (addedIds.has(variant.id)) return;
         setData('items', [
             ...data.items,
             {
-                product_variant_id: variantId,
-                actual_qty: String(variant.stock_on_hand ?? 0),
+                product_variant_id: variant.id,
+                actual_qty: String(variant.stock_on_hand),
                 note: '',
             },
         ]);
-        setSelectedVariant('');
+        setSearch('');
+        setShowPicker(false);
     };
 
     const updateItem = (index: number, field: string, value: string) => {
@@ -91,31 +94,45 @@ function StockAdjustmentsCreate() {
                             <Card>
                                 <Card.Body>
                                     <Form onSubmit={submit}>
-                                        <Form.Group className="mb-3">
-                                            <Form.Label>Date</Form.Label>
-                                            <Form.Control
-                                                type="date"
-                                                value={data.adjustment_date}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        'adjustment_date',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                            />
-                                        </Form.Group>
-                                        <Form.Group className="mb-3">
-                                            <Form.Label>Reason</Form.Label>
-                                            <Form.Control
-                                                value={data.reason}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        'reason',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                            />
-                                        </Form.Group>
+                                        <Row className="mb-3">
+                                            <Col md={4}>
+                                                <Form.Group>
+                                                    <Form.Label>
+                                                        Date
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type="date"
+                                                        value={
+                                                            data.adjustment_date
+                                                        }
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'adjustment_date',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+                                            <Col md={8}>
+                                                <Form.Group>
+                                                    <Form.Label>
+                                                        Reason
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        value={data.reason}
+                                                        placeholder="e.g. Physical count, damaged goods..."
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'reason',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+                                        </Row>
+
                                         <Form.Group className="mb-3">
                                             <Form.Label>Note</Form.Label>
                                             <Form.Control
@@ -131,43 +148,117 @@ function StockAdjustmentsCreate() {
                                             />
                                         </Form.Group>
 
-                                        <div className="mb-3">
-                                            <label className="form-label">
-                                                Add Variant
-                                            </label>
-                                            <div className="d-flex gap-2">
-                                                <Form.Select
-                                                    value={selectedVariant}
-                                                    onChange={(e) =>
-                                                        setSelectedVariant(
+                                        {/* Search picker */}
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Add Variant</Form.Label>
+                                            <div className="position-relative">
+                                                <Form.Control
+                                                    type="text"
+                                                    placeholder="Search by SKU, product name, size, color..."
+                                                    value={search}
+                                                    onChange={(e) => {
+                                                        setSearch(
                                                             e.target.value,
+                                                        );
+                                                        setShowPicker(true);
+                                                    }}
+                                                    onFocus={() =>
+                                                        setShowPicker(true)
+                                                    }
+                                                    onBlur={() =>
+                                                        setTimeout(
+                                                            () =>
+                                                                setShowPicker(
+                                                                    false,
+                                                                ),
+                                                            150,
                                                         )
                                                     }
-                                                >
-                                                    <option value="">
-                                                        Select variant...
-                                                    </option>
-                                                    {variants.map((v) => (
-                                                        <option
-                                                            key={v.id}
-                                                            value={v.id}
+                                                    autoComplete="off"
+                                                />
+                                                {showPicker &&
+                                                    filteredVariants.length >
+                                                        0 && (
+                                                        <div
+                                                            className="position-absolute w-100 rounded border bg-white shadow-sm"
+                                                            style={{
+                                                                zIndex: 1000,
+                                                                maxHeight: 300,
+                                                                overflowY:
+                                                                    'auto',
+                                                            }}
                                                         >
-                                                            {v.sku} -{' '}
-                                                            {v.product_name} (
-                                                            {v.size}) [Stock:{' '}
-                                                            {v.stock_on_hand}]
-                                                        </option>
-                                                    ))}
-                                                </Form.Select>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-light"
-                                                    onClick={addItem}
-                                                >
-                                                    Add
-                                                </button>
+                                                            {filteredVariants.map(
+                                                                (v) => {
+                                                                    const alreadyAdded =
+                                                                        addedIds.has(
+                                                                            v.id,
+                                                                        );
+                                                                    return (
+                                                                        <button
+                                                                            key={
+                                                                                v.id
+                                                                            }
+                                                                            type="button"
+                                                                            className="d-flex align-items-center justify-content-between border-bottom w-100 border-0 bg-white px-3 py-2 text-start"
+                                                                            style={{
+                                                                                cursor: alreadyAdded
+                                                                                    ? 'not-allowed'
+                                                                                    : 'pointer',
+                                                                                opacity:
+                                                                                    alreadyAdded
+                                                                                        ? 0.5
+                                                                                        : 1,
+                                                                            }}
+                                                                            onMouseDown={(
+                                                                                e,
+                                                                            ) => {
+                                                                                e.preventDefault();
+                                                                                if (
+                                                                                    !alreadyAdded
+                                                                                )
+                                                                                    addItem(
+                                                                                        v,
+                                                                                    );
+                                                                            }}
+                                                                        >
+                                                                            <div>
+                                                                                <div className="fw-medium">
+                                                                                    {
+                                                                                        v.product_name
+                                                                                    }
+                                                                                </div>
+                                                                                <div className="small font-monospace text-muted">
+                                                                                    {
+                                                                                        v.sku
+                                                                                    }
+                                                                                    {v.color &&
+                                                                                        ` · ${v.color}`}
+                                                                                    {` · ${v.size}`}
+                                                                                </div>
+                                                                            </div>
+                                                                            <Badge
+                                                                                bg={
+                                                                                    v.stock_on_hand >
+                                                                                    0
+                                                                                        ? 'success'
+                                                                                        : 'secondary'
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    v.stock_on_hand
+                                                                                }{' '}
+                                                                                in
+                                                                                stock
+                                                                            </Badge>
+                                                                        </button>
+                                                                    );
+                                                                },
+                                                            )}
+                                                        </div>
+                                                    )}
                                             </div>
-                                        </div>
+                                        </Form.Group>
 
                                         {data.items.length > 0 && (
                                             <Table responsive className="mb-3">
@@ -176,6 +267,7 @@ function StockAdjustmentsCreate() {
                                                         <th>Variant</th>
                                                         <th>System Qty</th>
                                                         <th>Actual Qty</th>
+                                                        <th>Change</th>
                                                         <th>Note</th>
                                                         <th></th>
                                                     </tr>
@@ -189,6 +281,16 @@ function StockAdjustmentsCreate() {
                                                                         v.id ===
                                                                         item.product_variant_id,
                                                                 );
+                                                            const systemQty =
+                                                                variant?.stock_on_hand ??
+                                                                0;
+                                                            const actualQty =
+                                                                parseInt(
+                                                                    item.actual_qty,
+                                                                ) || 0;
+                                                            const diff =
+                                                                actualQty -
+                                                                systemQty;
 
                                                             return (
                                                                 <tr
@@ -197,22 +299,24 @@ function StockAdjustmentsCreate() {
                                                                     }
                                                                 >
                                                                     <td>
-                                                                        {
-                                                                            variant?.sku
-                                                                        }{' '}
-                                                                        -{' '}
-                                                                        {
-                                                                            variant?.product_name
-                                                                        }{' '}
-                                                                        (
-                                                                        {
-                                                                            variant?.size
-                                                                        }
-                                                                        )
+                                                                        <div className="fw-medium">
+                                                                            {
+                                                                                variant?.product_name
+                                                                            }
+                                                                        </div>
+                                                                        <div className="small font-monospace text-muted">
+                                                                            {
+                                                                                variant?.sku
+                                                                            }
+                                                                            {variant?.color &&
+                                                                                ` · ${variant.color}`}
+                                                                            {` · ${variant?.size}`}
+                                                                        </div>
                                                                     </td>
                                                                     <td>
-                                                                        {variant?.stock_on_hand ??
-                                                                            0}
+                                                                        {
+                                                                            systemQty
+                                                                        }
                                                                     </td>
                                                                     <td>
                                                                         <Form.Control
@@ -239,6 +343,24 @@ function StockAdjustmentsCreate() {
                                                                         />
                                                                     </td>
                                                                     <td>
+                                                                        <Badge
+                                                                            bg={
+                                                                                diff >
+                                                                                0
+                                                                                    ? 'success'
+                                                                                    : diff <
+                                                                                        0
+                                                                                      ? 'danger'
+                                                                                      : 'secondary'
+                                                                            }
+                                                                        >
+                                                                            {diff >
+                                                                            0
+                                                                                ? `+${diff}`
+                                                                                : diff}
+                                                                        </Badge>
+                                                                    </td>
+                                                                    <td>
                                                                         <Form.Control
                                                                             value={
                                                                                 item.note
@@ -255,6 +377,7 @@ function StockAdjustmentsCreate() {
                                                                                 )
                                                                             }
                                                                             size="sm"
+                                                                            placeholder="Optional"
                                                                         />
                                                                     </td>
                                                                     <td>
@@ -278,6 +401,13 @@ function StockAdjustmentsCreate() {
                                             </Table>
                                         )}
 
+                                        {data.items.length === 0 && (
+                                            <div className="mb-3 rounded border py-4 text-center text-muted">
+                                                <i className="ri-search-line fs-3 d-block mb-1"></i>
+                                                Search and add variants above
+                                            </div>
+                                        )}
+
                                         <div className="d-flex gap-2">
                                             <button
                                                 type="submit"
@@ -287,7 +417,9 @@ function StockAdjustmentsCreate() {
                                                     data.items.length === 0
                                                 }
                                             >
-                                                Save
+                                                {processing
+                                                    ? 'Saving...'
+                                                    : 'Save'}
                                             </button>
                                             <Link
                                                 href={adjustmentsIndex.url()}

@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { FormEvent } from 'react';
 import type { ReactNode } from 'react';
 import {
@@ -14,6 +14,7 @@ import {
 } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
+import ProductSearchPicker from '@/Components/Inventory/ProductSearchPicker';
 import Layout from '@/Layouts';
 import {
     store as purchasesStore,
@@ -89,9 +90,6 @@ function PurchasesCreate() {
             productRows: [],
         });
 
-    const [productSearch, setProductSearch] = useState('');
-    const [showPicker, setShowPicker] = useState(false);
-
     transform((formData) => {
         const items: Array<{
             category_id: string;
@@ -134,22 +132,6 @@ function PurchasesCreate() {
         [data.productRows],
     );
 
-    const filteredProducts = useMemo(() => {
-        const term = productSearch.trim().toLowerCase();
-
-        return products.filter((p) => {
-            if (selectedProductIds.has(String(p.id))) {
-                return false;
-            }
-
-            if (!term) {
-                return true;
-            }
-
-            return p.name.toLowerCase().includes(term);
-        });
-    }, [products, selectedProductIds, productSearch]);
-
     const addProduct = (product: Product) => {
         const defaultSalePrice = product.variants[0]?.sale_price_usd ?? '0';
         const variantQtys: Record<string, string> = {};
@@ -167,8 +149,6 @@ function PurchasesCreate() {
                 variantQtys,
             },
         ]);
-        setProductSearch('');
-        setShowPicker(false);
     };
 
     const removeRow = (index: number) => {
@@ -665,116 +645,15 @@ function PurchasesCreate() {
                                         })()}
 
                                         {/* Product Picker */}
-                                        <div className="position-relative mb-3">
-                                            <Form.Control
-                                                type="text"
-                                                placeholder="Search products..."
-                                                value={productSearch}
-                                                onChange={(e) => {
-                                                    setProductSearch(
-                                                        e.target.value,
-                                                    );
-                                                    setShowPicker(true);
-                                                }}
-                                                onFocus={() =>
-                                                    setShowPicker(true)
+                                        <div className="mb-3">
+                                            <ProductSearchPicker
+                                                products={products}
+                                                excludeIds={selectedProductIds}
+                                                getCategoryName={
+                                                    getCategoryName
                                                 }
-                                                autoComplete="off"
+                                                onSelect={addProduct}
                                             />
-                                            {showPicker &&
-                                                filteredProducts.length > 0 && (
-                                                    <div
-                                                        className="position-absolute w-100 rounded border bg-white shadow-sm"
-                                                        style={{
-                                                            zIndex: 1000,
-                                                            maxHeight: 320,
-                                                            overflowY: 'auto',
-                                                        }}
-                                                    >
-                                                        {filteredProducts.map(
-                                                            (product) => (
-                                                                <button
-                                                                    key={
-                                                                        product.id
-                                                                    }
-                                                                    type="button"
-                                                                    className="d-flex align-items-center hover-bg-light w-100 gap-2 border-0 bg-white px-3 py-2 text-start"
-                                                                    style={{
-                                                                        cursor: 'pointer',
-                                                                    }}
-                                                                    onMouseDown={(
-                                                                        e,
-                                                                    ) => {
-                                                                        e.preventDefault();
-                                                                        addProduct(
-                                                                            product,
-                                                                        );
-                                                                    }}
-                                                                >
-                                                                    <div
-                                                                        className="bg-light flex-shrink-0 rounded border"
-                                                                        style={{
-                                                                            width: 40,
-                                                                            height: 40,
-                                                                        }}
-                                                                    >
-                                                                        {product.image_url ? (
-                                                                            <img
-                                                                                src={
-                                                                                    product.image_url
-                                                                                }
-                                                                                alt={
-                                                                                    product.name
-                                                                                }
-                                                                                className="object-fit-cover h-100 w-100 rounded"
-                                                                            />
-                                                                        ) : (
-                                                                            <div className="d-flex align-items-center justify-content-center h-100 w-100 text-muted">
-                                                                                <i className="ri-image-line"></i>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="min-w-0 flex-grow-1">
-                                                                        <div className="fw-medium text-truncate">
-                                                                            {
-                                                                                product.name
-                                                                            }
-                                                                        </div>
-                                                                        <div className="small text-muted">
-                                                                            {getCategoryName(
-                                                                                product.category_id,
-                                                                            )}{' '}
-                                                                            &middot;{' '}
-                                                                            {
-                                                                                product
-                                                                                    .variants
-                                                                                    .length
-                                                                            }{' '}
-                                                                            variant
-                                                                            {product
-                                                                                .variants
-                                                                                .length !==
-                                                                            1
-                                                                                ? 's'
-                                                                                : ''}
-                                                                        </div>
-                                                                    </div>
-                                                                </button>
-                                                            ),
-                                                        )}
-                                                    </div>
-                                                )}
-                                            {showPicker &&
-                                                productSearch &&
-                                                filteredProducts.length ===
-                                                    0 && (
-                                                    <div
-                                                        className="position-absolute small w-100 rounded border bg-white px-3 py-2 text-muted shadow-sm"
-                                                        style={{ zIndex: 1000 }}
-                                                    >
-                                                        No products found.
-                                                    </div>
-                                                )}
                                         </div>
 
                                         {/* Product Rows */}

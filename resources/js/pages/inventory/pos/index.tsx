@@ -102,6 +102,7 @@ function PosIndex() {
     const [showPreviewModal, setShowPreviewModal] = useState(false);
     const [showCartMobile, setShowCartMobile] = useState(false);
     const [displayLimit, setDisplayLimit] = useState(30);
+    const [editingItemId, setEditingItemId] = useState<number | null>(null);
     const searchRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -859,144 +860,297 @@ function PosIndex() {
                                                         Number(
                                                             item.discount_usd,
                                                         );
+                                                    const isEditing =
+                                                        editingItemId ===
+                                                        item.product_variant_id;
+                                                    const hasCustomPrice =
+                                                        item.unit_price_usd !==
+                                                        variant.sale_price_usd;
+                                                    const hasDiscount =
+                                                        Number(
+                                                            item.discount_usd,
+                                                        ) > 0;
 
                                                     return (
                                                         <div
                                                             key={
                                                                 item.product_variant_id
                                                             }
-                                                            className="d-flex align-items-center mb-2 gap-2 rounded border bg-white p-2"
+                                                            className="mb-2 rounded border bg-white"
                                                         >
-                                                            <div className="min-w-0 flex-grow-1">
-                                                                <div
-                                                                    className="fw-semibold text-truncate"
-                                                                    style={{
-                                                                        fontSize:
-                                                                            '0.8rem',
-                                                                    }}
-                                                                >
-                                                                    {
-                                                                        variant
-                                                                            .product
-                                                                            .name
-                                                                    }
+                                                            {/* Main row */}
+                                                            <div className="d-flex align-items-center gap-2 p-2">
+                                                                <div className="min-w-0 flex-grow-1">
+                                                                    <div
+                                                                        className="fw-semibold text-truncate"
+                                                                        style={{
+                                                                            fontSize:
+                                                                                '0.8rem',
+                                                                        }}
+                                                                    >
+                                                                        {
+                                                                            variant
+                                                                                .product
+                                                                                .name
+                                                                        }
+                                                                    </div>
+                                                                    <div
+                                                                        className="text-muted"
+                                                                        style={{
+                                                                            fontSize:
+                                                                                '0.7rem',
+                                                                        }}
+                                                                    >
+                                                                        {
+                                                                            variant.sku
+                                                                        }{' '}
+                                                                        •{' '}
+                                                                        {
+                                                                            variant.color
+                                                                        }{' '}
+                                                                        /{' '}
+                                                                        {
+                                                                            variant.size
+                                                                        }
+                                                                        {(hasCustomPrice ||
+                                                                            hasDiscount) && (
+                                                                            <span className="text-warning ms-1">
+                                                                                <i className="ri-price-tag-3-line"></i>
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="d-flex align-items-center flex-shrink-0 gap-1">
+                                                                    <Button
+                                                                        variant="outline-secondary"
+                                                                        size="sm"
+                                                                        className="px-2 py-0"
+                                                                        style={{
+                                                                            fontSize:
+                                                                                '0.8rem',
+                                                                        }}
+                                                                        onClick={() =>
+                                                                            updateQty(
+                                                                                item.product_variant_id,
+                                                                                -1,
+                                                                            )
+                                                                        }
+                                                                        disabled={
+                                                                            processing ||
+                                                                            item.qty <=
+                                                                                1
+                                                                        }
+                                                                    >
+                                                                        -
+                                                                    </Button>
+                                                                    <span
+                                                                        className="fw-bold"
+                                                                        style={{
+                                                                            minWidth: 20,
+                                                                            textAlign:
+                                                                                'center',
+                                                                            fontSize:
+                                                                                '0.85rem',
+                                                                        }}
+                                                                    >
+                                                                        {
+                                                                            item.qty
+                                                                        }
+                                                                    </span>
+                                                                    <Button
+                                                                        variant="outline-secondary"
+                                                                        size="sm"
+                                                                        className="px-2 py-0"
+                                                                        style={{
+                                                                            fontSize:
+                                                                                '0.8rem',
+                                                                        }}
+                                                                        onClick={() =>
+                                                                            updateQty(
+                                                                                item.product_variant_id,
+                                                                                1,
+                                                                            )
+                                                                        }
+                                                                        disabled={
+                                                                            processing ||
+                                                                            item.qty >=
+                                                                                variant.stock_on_hand
+                                                                        }
+                                                                    >
+                                                                        +
+                                                                    </Button>
                                                                 </div>
                                                                 <div
-                                                                    className="text-muted"
+                                                                    className="flex-shrink-0 text-end"
                                                                     style={{
-                                                                        fontSize:
-                                                                            '0.7rem',
+                                                                        minWidth: 55,
                                                                     }}
                                                                 >
-                                                                    {
-                                                                        variant.sku
-                                                                    }{' '}
-                                                                    •{' '}
-                                                                    {
-                                                                        variant.color
-                                                                    }{' '}
-                                                                    /{' '}
-                                                                    {
-                                                                        variant.size
-                                                                    }
+                                                                    <div
+                                                                        className="fw-bold text-success"
+                                                                        style={{
+                                                                            fontSize:
+                                                                                '0.8rem',
+                                                                        }}
+                                                                    >
+                                                                        $
+                                                                        {itemTotal.toFixed(
+                                                                            2,
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="d-flex justify-content-end gap-1">
+                                                                        <Button
+                                                                            variant="link"
+                                                                            size="sm"
+                                                                            className={`p-0 ${isEditing ? 'text-primary' : 'text-secondary'}`}
+                                                                            style={{
+                                                                                fontSize:
+                                                                                    '0.75rem',
+                                                                            }}
+                                                                            onClick={() =>
+                                                                                setEditingItemId(
+                                                                                    isEditing
+                                                                                        ? null
+                                                                                        : item.product_variant_id,
+                                                                                )
+                                                                            }
+                                                                            disabled={
+                                                                                processing
+                                                                            }
+                                                                            title="Edit price / discount"
+                                                                        >
+                                                                            <i className="ri-pencil-line"></i>
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="link"
+                                                                            size="sm"
+                                                                            className="text-danger p-0"
+                                                                            style={{
+                                                                                fontSize:
+                                                                                    '0.75rem',
+                                                                            }}
+                                                                            onClick={() =>
+                                                                                removeFromCart(
+                                                                                    item.product_variant_id,
+                                                                                )
+                                                                            }
+                                                                            disabled={
+                                                                                processing
+                                                                            }
+                                                                        >
+                                                                            <i className="ri-delete-bin-line"></i>
+                                                                        </Button>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                            <div className="d-flex align-items-center flex-shrink-0 gap-1">
-                                                                <Button
-                                                                    variant="outline-secondary"
-                                                                    size="sm"
-                                                                    className="px-2 py-0"
-                                                                    style={{
-                                                                        fontSize:
-                                                                            '0.8rem',
-                                                                    }}
-                                                                    onClick={() =>
-                                                                        updateQty(
-                                                                            item.product_variant_id,
-                                                                            -1,
-                                                                        )
-                                                                    }
-                                                                    disabled={
-                                                                        processing ||
-                                                                        item.qty <=
-                                                                            1
-                                                                    }
-                                                                >
-                                                                    -
-                                                                </Button>
-                                                                <span
-                                                                    className="fw-bold"
-                                                                    style={{
-                                                                        minWidth: 20,
-                                                                        textAlign:
-                                                                            'center',
-                                                                        fontSize:
-                                                                            '0.85rem',
-                                                                    }}
-                                                                >
-                                                                    {item.qty}
-                                                                </span>
-                                                                <Button
-                                                                    variant="outline-secondary"
-                                                                    size="sm"
-                                                                    className="px-2 py-0"
-                                                                    style={{
-                                                                        fontSize:
-                                                                            '0.8rem',
-                                                                    }}
-                                                                    onClick={() =>
-                                                                        updateQty(
-                                                                            item.product_variant_id,
-                                                                            1,
-                                                                        )
-                                                                    }
-                                                                    disabled={
-                                                                        processing ||
-                                                                        item.qty >=
-                                                                            variant.stock_on_hand
-                                                                    }
-                                                                >
-                                                                    +
-                                                                </Button>
-                                                            </div>
-                                                            <div
-                                                                className="flex-shrink-0 text-end"
-                                                                style={{
-                                                                    minWidth: 55,
-                                                                }}
-                                                            >
+
+                                                            {/* Inline edit panel */}
+                                                            {isEditing && (
                                                                 <div
-                                                                    className="fw-bold text-success"
+                                                                    className="border-top px-2 pt-2 pb-2"
                                                                     style={{
-                                                                        fontSize:
-                                                                            '0.8rem',
+                                                                        backgroundColor:
+                                                                            '#f8f9fa',
                                                                     }}
                                                                 >
-                                                                    $
-                                                                    {itemTotal.toFixed(
-                                                                        2,
-                                                                    )}
+                                                                    <div className="d-flex align-items-end gap-2">
+                                                                        <div className="flex-grow-1">
+                                                                            <label
+                                                                                className="form-label mb-1"
+                                                                                style={{
+                                                                                    fontSize:
+                                                                                        '0.7rem',
+                                                                                }}
+                                                                            >
+                                                                                Unit
+                                                                                Price
+                                                                                ($)
+                                                                            </label>
+                                                                            <Form.Control
+                                                                                type="number"
+                                                                                step="0.01"
+                                                                                min="0"
+                                                                                size="sm"
+                                                                                value={
+                                                                                    item.unit_price_usd
+                                                                                }
+                                                                                onChange={(
+                                                                                    e,
+                                                                                ) =>
+                                                                                    updateCartPrice(
+                                                                                        item.product_variant_id,
+                                                                                        e
+                                                                                            .target
+                                                                                            .value,
+                                                                                    )
+                                                                                }
+                                                                                disabled={
+                                                                                    processing
+                                                                                }
+                                                                            />
+                                                                            <div
+                                                                                className="mt-1 text-muted"
+                                                                                style={{
+                                                                                    fontSize:
+                                                                                        '0.65rem',
+                                                                                }}
+                                                                            >
+                                                                                Default:
+                                                                                $
+                                                                                {
+                                                                                    variant.sale_price_usd
+                                                                                }
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex-grow-1">
+                                                                            <label
+                                                                                className="form-label mb-1"
+                                                                                style={{
+                                                                                    fontSize:
+                                                                                        '0.7rem',
+                                                                                }}
+                                                                            >
+                                                                                Item
+                                                                                Discount
+                                                                                ($)
+                                                                            </label>
+                                                                            <Form.Control
+                                                                                type="number"
+                                                                                step="0.01"
+                                                                                min="0"
+                                                                                size="sm"
+                                                                                value={
+                                                                                    item.discount_usd
+                                                                                }
+                                                                                onChange={(
+                                                                                    e,
+                                                                                ) =>
+                                                                                    updateCartDiscount(
+                                                                                        item.product_variant_id,
+                                                                                        e
+                                                                                            .target
+                                                                                            .value,
+                                                                                    )
+                                                                                }
+                                                                                disabled={
+                                                                                    processing
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                        <Button
+                                                                            variant="primary"
+                                                                            size="sm"
+                                                                            onClick={() =>
+                                                                                setEditingItemId(
+                                                                                    null,
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            Done
+                                                                        </Button>
+                                                                    </div>
                                                                 </div>
-                                                                <Button
-                                                                    variant="link"
-                                                                    size="sm"
-                                                                    className="text-danger p-0"
-                                                                    style={{
-                                                                        fontSize:
-                                                                            '0.75rem',
-                                                                    }}
-                                                                    onClick={() =>
-                                                                        removeFromCart(
-                                                                            item.product_variant_id,
-                                                                        )
-                                                                    }
-                                                                    disabled={
-                                                                        processing
-                                                                    }
-                                                                >
-                                                                    <i className="ri-delete-bin-line"></i>
-                                                                </Button>
-                                                            </div>
+                                                            )}
                                                         </div>
                                                     );
                                                 })
