@@ -152,7 +152,7 @@ class StockCountController extends Controller
                 $this->recordStockMovement->handle(
                     productVariantId: $item->product_variant_id,
                     type: $qtyChange > 0 ? 'adjustment_in' : 'adjustment_out',
-                    qtyChange: abs($qtyChange),
+                    qtyChange: $qtyChange,
                     stockLayerId: $stockLayerId,
                     referenceType: $stockCount->getMorphClass(),
                     referenceId: $stockCount->id,
