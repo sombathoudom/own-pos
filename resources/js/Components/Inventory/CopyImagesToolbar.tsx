@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
 
 type VariantWithImage = {
@@ -15,13 +15,6 @@ type Props = {
     processing: boolean;
 };
 
-/**
- * Toolbar with "Select All", image count, and "Copy Images" button.
- *
- * The clipboard copy uses DOM queries (`.product-card`, `.pos-check`,
- * `.pos-img`) so Safari sees a synchronous user gesture — the same
- * pattern that works in the user's vanilla-JS version.
- */
 export default function CopyImagesToolbar({
     selectedImageIds,
     setSelectedImageIds,
@@ -32,6 +25,8 @@ export default function CopyImagesToolbar({
         done: number;
         total: number;
     } | null>(null);
+
+    const copyBtnRef = useRef<HTMLButtonElement>(null);
 
     const toggleSelectAllFiltered = () => {
         const filterableIds = filteredVariants
@@ -53,9 +48,11 @@ export default function CopyImagesToolbar({
         }
     };
 
-    const copyAllSelectedImages = async () => {
-        // 1. Collect image URLs from checked cards — must be synchronous
-        //    so Safari sees a fresh user gesture.
+    // Pattern matches the user's working vanilla-JS: async function +
+    // await navigator.clipboard.write(). Safari preserves transient
+    // activation across await inside an async handler but NOT across
+    // .then() callbacks (which create fresh execution contexts).
+    const copyAllSelectedImages = useCallback(async () => {
         const imageSrcs: string[] = [];
         document.querySelectorAll('.product-card').forEach((card) => {
             const checkbox = card.querySelector(
@@ -74,15 +71,12 @@ export default function CopyImagesToolbar({
             return;
         }
 
-        // 2. Build ClipboardItems SYNCHRONOUSLY — this is the critical
-        //    step that locks in Safari's user gesture.  Each item wraps
-        //    a promise that fetches → resizes → returns a PNG blob.
         const THUMB_WIDTH = 1200;
         const total = imageSrcs.length;
         setCopyProgress({ done: 0, total });
         let done = 0;
 
-        const clipboardItemsArray: ClipboardItem[] = [];
+        const items: ClipboardItem[] = [];
 
         imageSrcs.forEach((src) => {
             const imagePromise = fetch(src)
@@ -100,35 +94,23 @@ export default function CopyImagesToolbar({
                                     1,
                                     THUMB_WIDTH / image.width,
                                 );
-                                const canvas = document.createElement('canvas');
-                                canvas.width = Math.round(image.width * scale);
-                                canvas.height = Math.round(
-                                    image.height * scale,
-                                );
-                                const ctx = canvas.getContext('2d');
+                                const c = document.createElement('canvas');
+                                c.width = Math.round(image.width * scale);
+                                c.height = Math.round(image.height * scale);
+                                const ctx = c.getContext('2d');
                                 if (!ctx) {
                                     URL.revokeObjectURL(image.src);
                                     return reject(
-                                        new Error(
-                                            'Could not get canvas context',
-                                        ),
+                                        new Error('No canvas context'),
                                     );
                                 }
-                                ctx.drawImage(
-                                    image,
-                                    0,
-                                    0,
-                                    canvas.width,
-                                    canvas.height,
-                                );
-                                canvas.toBlob(
-                                    (pngBlob) =>
-                                        pngBlob
-                                            ? resolve(pngBlob)
+                                ctx.drawImage(image, 0, 0, c.width, c.height);
+                                c.toBlob(
+                                    (png) =>
+                                        png
+                                            ? resolve(png)
                                             : reject(
-                                                  new Error(
-                                                      'Canvas toBlob failed',
-                                                  ),
+                                                  new Error('toBlob failed'),
                                               ),
                                     'image/png',
                                 );
@@ -141,7 +123,6 @@ export default function CopyImagesToolbar({
                         }),
                 );
 
-            // Track progress (independent of clipboard write)
             imagePromise
                 .then(() => {
                     done++;
@@ -152,20 +133,14 @@ export default function CopyImagesToolbar({
                     setCopyProgress({ done, total });
                 });
 
-            // Construct ClipboardItem synchronously — this is where
-            // Safari validates the user gesture.
-            clipboardItemsArray.push(
-                new ClipboardItem({ 'image/png': imagePromise }),
-            );
+            items.push(new ClipboardItem({ 'image/png': imagePromise }));
         });
 
-        // 3. Write to clipboard.  Safari already validated the gesture
-        //    during step 2, so this await is safe.
         try {
-            await navigator.clipboard.write(clipboardItemsArray);
+            await navigator.clipboard.write(items);
             setCopyProgress(null);
             alert(
-                `Successfully copied ${clipboardItemsArray.length} item${clipboardItemsArray.length > 1 ? 's' : ''} to clipboard!`,
+                `Successfully copied ${items.length} item${items.length > 1 ? 's' : ''} to clipboard!`,
             );
         } catch (err) {
             setCopyProgress(null);
@@ -175,8 +150,24 @@ export default function CopyImagesToolbar({
                     (err instanceof Error ? err.message : String(err)),
             );
         }
-    };
+    }, []);
 
+    // Use el.onclick (property) — same mechanism as the HTML onclick
+    // attribute used in the working vanilla-JS version. Safari treats
+    // this as a direct user gesture, unlike addEventListener.
+    useEffect(() => {
+        const el = copyBtnRef.current;
+        if (!el) return;
+        el.onclick = copyAllSelectedImages as unknown as (
+            this: GlobalEventHandlers,
+            ev: MouseEvent,
+        ) => unknown;
+        return () => {
+            if (copyBtnRef.current) copyBtnRef.current.onclick = null;
+        };
+    }, [copyAllSelectedImages]);
+
+    const disabled = processing || selectedImageIds.length === 0;
     const withImages = filteredVariants.filter((v) => v.product.image_url);
     const allWithImagesSelected =
         withImages.length > 0 &&
@@ -201,14 +192,14 @@ export default function CopyImagesToolbar({
                 </small>
             </div>
             <Button
+                ref={copyBtnRef}
                 variant="success"
                 size="sm"
-                disabled={processing || selectedImageIds.length === 0}
-                onClick={copyAllSelectedImages}
+                disabled={disabled}
             >
                 <i className="ri-file-copy-line me-1"></i>
                 {copyProgress
-                    ? `Copying ${copyProgress.done} / ${copyProgress.total}…`
+                    ? `Copying ${copyProgress.done} / ${copyProgress.total}...`
                     : `Copy Images (${selectedImageIds.length})`}
             </Button>
         </div>
