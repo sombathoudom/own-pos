@@ -34,7 +34,7 @@ class ProductController extends Controller
                 'name' => $product->name,
                 'description' => $product->description,
                 'status' => $product->status,
-                'image_url' => $product->imageUrl(),
+                'image_url' => $product->imageUrl(200),
                 'category' => $product->category,
                 'variants' => $product->variants->map(fn ($variant) => [
                     'id' => $variant->id,
@@ -98,7 +98,7 @@ class ProductController extends Controller
                 'name' => $product->name,
                 'description' => $product->description,
                 'status' => $product->status,
-                'image_url' => $product->imageUrl(),
+                'image_url' => $product->imageUrl(200),
                 'variants' => $product->variants,
             ],
             'categories' => $categories,

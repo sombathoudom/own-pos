@@ -190,7 +190,7 @@ class SaleController extends Controller
                     'name' => $v->product?->name,
                     'category_id' => (int) $v->product?->category_id,
                     'category' => $v->product?->category?->name,
-                    'image_url' => $v->product?->imageUrl(),
+                    'image_url' => $v->product?->imageUrl(300),
                 ],
             ]),
             'categories' => $categories,

@@ -15,7 +15,24 @@ class Product extends Model
 {
     use Auditable, HasFactory;
 
-    public function imageUrl(): ?string
+    public function imageUrl(int $width = 400): ?string
+    {
+        if (! $this->image_path) {
+            return null;
+        }
+
+        $width = max(100, min($width, 1600));
+
+        return route('product-image', [
+            'filename' => basename($this->image_path),
+            'w' => $width,
+        ]);
+    }
+
+    /**
+     * Return the original full-size image URL.
+     */
+    public function originalImageUrl(): ?string
     {
         if (! $this->image_path) {
             return null;
