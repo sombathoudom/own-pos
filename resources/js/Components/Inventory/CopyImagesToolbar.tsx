@@ -54,8 +54,8 @@ export default function CopyImagesToolbar({
     };
 
     const copyAllSelectedImages = async () => {
-        // 1. Collect image URLs from checked cards (synchronous = the
-        //    user gesture Safari requires).
+        // 1. Collect image URLs from checked cards — must be synchronous
+        //    so Safari sees a fresh user gesture.
         const imageSrcs: string[] = [];
         document.querySelectorAll('.product-card').forEach((card) => {
             const checkbox = card.querySelector(
@@ -74,83 +74,98 @@ export default function CopyImagesToolbar({
             return;
         }
 
+        // 2. Build ClipboardItems SYNCHRONOUSLY — this is the critical
+        //    step that locks in Safari's user gesture.  Each item wraps
+        //    a promise that fetches → resizes → returns a PNG blob.
+        const THUMB_WIDTH = 1200;
         const total = imageSrcs.length;
         setCopyProgress({ done: 0, total });
-
-        // 2. Fetch + resize every image to a PNG blob.
-        //    We pre-resolve ALL blobs before building ClipboardItems so
-        //    navigator.clipboard.write() receives settled data — this
-        //    prevents Safari's gesture timer from expiring on slow prod
-        //    connections (e.g. ngrok).  Localhost is fast enough that
-        //    pending promises resolved before the check anyway.
-        const THUMB_WIDTH = 1200;
-
-        // Load image via Image() (same mechanism as <img> tags) then
-        // resize via canvas.  No fetch() — avoids CORS / proxy issues
-        // that can differ between localhost and production (ngrok).
-        const loadAndResize = (src: string): Promise<Blob> =>
-            new Promise((resolve, reject) => {
-                const image = new Image();
-                image.onload = () => {
-                    const scale = Math.min(1, THUMB_WIDTH / image.width);
-                    const canvas = document.createElement('canvas');
-                    canvas.width = Math.round(image.width * scale);
-                    canvas.height = Math.round(image.height * scale);
-                    const ctx = canvas.getContext('2d');
-                    if (!ctx) {
-                        return reject(
-                            new Error('Could not get canvas context'),
-                        );
-                    }
-                    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-                    canvas.toBlob(
-                        (pngBlob) =>
-                            pngBlob
-                                ? resolve(pngBlob)
-                                : reject(
-                                      new Error(
-                                          'Canvas toBlob conversion failed',
-                                      ),
-                                  ),
-                        'image/png',
-                    );
-                };
-                image.onerror = () =>
-                    reject(new Error(`Failed to load: ${src}`));
-                image.src = src;
-            });
-
         let done = 0;
 
-        const blobPromises = imageSrcs.map((src) =>
-            loadAndResize(src)
-                .then((pngBlob) => {
-                    done++;
-                    setCopyProgress({ done, total });
-                    return pngBlob;
+        const clipboardItemsArray: ClipboardItem[] = [];
+
+        imageSrcs.forEach((src) => {
+            const imagePromise = fetch(src)
+                .then((r) => {
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    return r.blob();
                 })
-                .catch((err) => {
+                .then(
+                    (blob) =>
+                        new Promise<Blob>((resolve, reject) => {
+                            const image = new Image();
+                            image.src = URL.createObjectURL(blob);
+                            image.onload = () => {
+                                const scale = Math.min(
+                                    1,
+                                    THUMB_WIDTH / image.width,
+                                );
+                                const canvas = document.createElement('canvas');
+                                canvas.width = Math.round(image.width * scale);
+                                canvas.height = Math.round(
+                                    image.height * scale,
+                                );
+                                const ctx = canvas.getContext('2d');
+                                if (!ctx) {
+                                    URL.revokeObjectURL(image.src);
+                                    return reject(
+                                        new Error(
+                                            'Could not get canvas context',
+                                        ),
+                                    );
+                                }
+                                ctx.drawImage(
+                                    image,
+                                    0,
+                                    0,
+                                    canvas.width,
+                                    canvas.height,
+                                );
+                                canvas.toBlob(
+                                    (pngBlob) =>
+                                        pngBlob
+                                            ? resolve(pngBlob)
+                                            : reject(
+                                                  new Error(
+                                                      'Canvas toBlob failed',
+                                                  ),
+                                              ),
+                                    'image/png',
+                                );
+                                URL.revokeObjectURL(image.src);
+                            };
+                            image.onerror = () => {
+                                URL.revokeObjectURL(image.src);
+                                reject(new Error('Decode failed'));
+                            };
+                        }),
+                );
+
+            // Track progress (independent of clipboard write)
+            imagePromise
+                .then(() => {
                     done++;
                     setCopyProgress({ done, total });
-                    throw err;
-                }),
-        );
+                })
+                .catch(() => {
+                    done++;
+                    setCopyProgress({ done, total });
+                });
 
-        try {
-            // 3. Wait for ALL blobs → settled data → safe to write
-            const pngBlobs = await Promise.all(blobPromises);
-
-            const items = pngBlobs.map(
-                (blob) =>
-                    new ClipboardItem({
-                        'image/png': Promise.resolve(blob),
-                    }),
+            // Construct ClipboardItem synchronously — this is where
+            // Safari validates the user gesture.
+            clipboardItemsArray.push(
+                new ClipboardItem({ 'image/png': imagePromise }),
             );
+        });
 
-            await navigator.clipboard.write(items);
+        // 3. Write to clipboard.  Safari already validated the gesture
+        //    during step 2, so this await is safe.
+        try {
+            await navigator.clipboard.write(clipboardItemsArray);
             setCopyProgress(null);
             alert(
-                `Successfully copied ${items.length} item${items.length > 1 ? 's' : ''} to clipboard!`,
+                `Successfully copied ${clipboardItemsArray.length} item${clipboardItemsArray.length > 1 ? 's' : ''} to clipboard!`,
             );
         } catch (err) {
             setCopyProgress(null);
