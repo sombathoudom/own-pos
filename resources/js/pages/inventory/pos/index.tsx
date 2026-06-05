@@ -2,7 +2,6 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-    Accordion,
     Alert,
     Badge,
     Button,
@@ -16,14 +15,15 @@ import {
 } from 'react-bootstrap';
 
 import BreadCrumb from '@/Components/Common/BreadCrumb';
+import CopyImagesToolbar from '@/Components/Inventory/CopyImagesToolbar';
 import CustomerSelect from '@/Components/Inventory/CustomerSelect';
 import DeliveryCompanyPicker from '@/Components/Inventory/DeliveryCompanyPicker';
 import type { DeliveryCompanyOption } from '@/Components/Inventory/DeliveryCompanyPicker';
 import Layout from '@/Layouts';
-import { store as customersStore } from '@/routes/customers';
-import { store as salesStore } from '@/routes/sales';
 import type { InventoryCustomer } from '@/types';
 import { getCurrentDate } from '@/utils/dateTime';
+import { store as customersStore } from '@/routes/customers';
+import { store as salesStore } from '@/routes/sales';
 
 type Variant = {
     id: number;
@@ -103,6 +103,7 @@ function PosIndex() {
     const [showCartMobile, setShowCartMobile] = useState(false);
     const [displayLimit, setDisplayLimit] = useState(30);
     const [editingItemId, setEditingItemId] = useState<number | null>(null);
+    const [selectedImageIds, setSelectedImageIds] = useState<number[]>([]);
     const searchRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -141,6 +142,7 @@ function PosIndex() {
 
     useEffect(() => {
         setDisplayLimit(30);
+        setSelectedImageIds([]);
     }, [search, activeCategory, activeSize]);
 
     const addToCart = (variant: Variant) => {
@@ -253,6 +255,14 @@ function PosIndex() {
     };
 
     const getVariant = (id: number) => variants.find((v) => v.id === id);
+
+    const toggleImageSelection = (variantId: number) => {
+        setSelectedImageIds((prev) =>
+            prev.includes(variantId)
+                ? prev.filter((id) => id !== variantId)
+                : [...prev, variantId],
+        );
+    };
 
     const cartTotal = data.items.reduce((sum, item) => {
         const price = Number(item.unit_price_usd) || 0;
@@ -457,6 +467,13 @@ function PosIndex() {
                                     </Card.Body>
                                 </Card>
 
+                                <CopyImagesToolbar
+                                    selectedImageIds={selectedImageIds}
+                                    setSelectedImageIds={setSelectedImageIds}
+                                    filteredVariants={filteredVariants}
+                                    processing={processing}
+                                />
+
                                 {/* Products Grid */}
                                 <Card className="flex-grow-1 border-0 shadow-sm">
                                     <Card.Body className="p-2">
@@ -483,7 +500,7 @@ function PosIndex() {
                                                             xl={3}
                                                         >
                                                             <Card
-                                                                className={`h-100 cursor-pointer shadow-sm ${outOfStock || processing ? 'opacity-50' : ''}`}
+                                                                className={`product-card h-100 cursor-pointer shadow-sm ${outOfStock || processing ? 'opacity-50' : ''}`}
                                                                 onClick={() =>
                                                                     !outOfStock &&
                                                                     !processing &&
@@ -541,7 +558,7 @@ function PosIndex() {
                                                                                     .product
                                                                                     .name
                                                                             }
-                                                                            className="h-100 w-100"
+                                                                            className="pos-img h-100 w-100"
                                                                             style={{
                                                                                 objectFit:
                                                                                     'cover',
@@ -603,6 +620,27 @@ function PosIndex() {
                                                                             }
                                                                         </Badge>
                                                                     )}
+                                                                    {/* Image Selection Checkbox */}
+                                                                    <Form.Check
+                                                                        type="checkbox"
+                                                                        className="pos-check position-absolute start-0 top-0 m-1"
+                                                                        checked={selectedImageIds.includes(
+                                                                            variant.id,
+                                                                        )}
+                                                                        onClick={(
+                                                                            e,
+                                                                        ) =>
+                                                                            e.stopPropagation()
+                                                                        }
+                                                                        onChange={() =>
+                                                                            toggleImageSelection(
+                                                                                variant.id,
+                                                                            )
+                                                                        }
+                                                                        style={{
+                                                                            cursor: 'pointer',
+                                                                        }}
+                                                                    />
                                                                 </div>
                                                                 <Card.Body className="p-2">
                                                                     <div
