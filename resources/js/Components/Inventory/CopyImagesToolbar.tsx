@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { Button } from 'react-bootstrap';
+import { useCallback, useMemo, useState } from 'react';
+import { Alert, Button } from 'react-bootstrap';
 
 type VariantWithImage = {
     id: number;
@@ -15,70 +15,61 @@ type Props = {
     processing: boolean;
 };
 
-const THUMB_WIDTH = 800;
+const MAX_CLIPBOARD_IMAGES = 10;
+const THUMB_WIDTH = 600;
 
-function createPngPromise(src: string, onDone?: () => void): Promise<Blob> {
+function createPngPromise(src: string): Promise<Blob> {
     return fetch(src, {
-        credentials: 'same-origin',
-        cache: 'force-cache',
+        mode: 'cors',
+        cache: 'no-store',
     })
         .then((response) => {
             if (!response.ok) {
-                throw new Error(`Image fetch failed: HTTP ${response.status}`);
-            }
-
-            const contentType = response.headers.get('content-type') ?? '';
-
-            if (!contentType.startsWith('image/')) {
                 throw new Error(
-                    `Expected image response but got: ${contentType || 'unknown'}`,
+                    `Failed to fetch image: HTTP ${response.status}`,
                 );
             }
 
             return response.blob();
         })
         .then((blob) => {
+            if (blob.type === 'image/png') {
+                return blob;
+            }
+
             return new Promise<Blob>((resolve, reject) => {
                 const objectUrl = URL.createObjectURL(blob);
                 const image = new Image();
 
+                const cleanup = () => {
+                    URL.revokeObjectURL(objectUrl);
+                };
+
                 image.onload = () => {
-                    const naturalWidth = image.naturalWidth;
-                    const naturalHeight = image.naturalHeight;
-
-                    if (!naturalWidth || !naturalHeight) {
-                        URL.revokeObjectURL(objectUrl);
-                        reject(new Error('Invalid image dimensions'));
-                        return;
-                    }
-
-                    const scale = Math.min(1, THUMB_WIDTH / naturalWidth);
-
                     const canvas = document.createElement('canvas');
-                    canvas.width = Math.max(
-                        1,
-                        Math.round(naturalWidth * scale),
-                    );
-                    canvas.height = Math.max(
-                        1,
-                        Math.round(naturalHeight * scale),
-                    );
+
+                    canvas.width = image.naturalWidth;
+                    canvas.height = image.naturalHeight;
 
                     const context = canvas.getContext('2d');
 
                     if (!context) {
-                        URL.revokeObjectURL(objectUrl);
-                        reject(new Error('No canvas context'));
+                        cleanup();
+                        reject(new Error('Canvas is unavailable.'));
                         return;
                     }
 
-                    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                    context.drawImage(image, 0, 0);
 
                     canvas.toBlob((pngBlob) => {
-                        URL.revokeObjectURL(objectUrl);
+                        cleanup();
 
                         if (!pngBlob) {
-                            reject(new Error('PNG conversion failed'));
+                            reject(
+                                new Error(
+                                    `Could not convert image to PNG: ${src}`,
+                                ),
+                            );
                             return;
                         }
 
@@ -87,15 +78,15 @@ function createPngPromise(src: string, onDone?: () => void): Promise<Blob> {
                 };
 
                 image.onerror = () => {
-                    URL.revokeObjectURL(objectUrl);
-                    reject(new Error('Image decode failed'));
+                    cleanup();
+
+                    reject(
+                        new Error(`Could not decode image: ${src}`),
+                    );
                 };
 
                 image.src = objectUrl;
             });
-        })
-        .finally(() => {
-            onDone?.();
         });
 }
 
@@ -105,217 +96,210 @@ export default function CopyImagesToolbar({
     filteredVariants,
     processing,
 }: Props) {
-    const [copyProgress, setCopyProgress] = useState<{
-        done: number;
-        total: number;
-    } | null>(null);
+    const [copying, setCopying] = useState(false);
+    const [copyError, setCopyError] = useState<string | null>(null);
+
+    const variantsWithImages = useMemo(
+        () =>
+            filteredVariants.filter(
+                (
+                    variant,
+                ): variant is VariantWithImage & {
+                    product: {
+                        image_url: string;
+                    };
+                } => Boolean(variant.product.image_url),
+            ),
+        [filteredVariants],
+    );
+
+    /*
+     * Build image URLs directly from the selected variant IDs.
+     *
+     * Set removes duplicate URLs when several sizes/variants
+     * belong to the same product.
+     */
+    const selectedImageUrls = useMemo(() => {
+        const selectedIds = new Set(selectedImageIds);
+
+        return Array.from(
+            new Set(
+                variantsWithImages
+                    .filter((variant) => selectedIds.has(variant.id))
+                    .map((variant) => variant.product.image_url),
+            ),
+        );
+    }, [selectedImageIds, variantsWithImages]);
+
+    const allWithImagesSelected =
+        variantsWithImages.length > 0 &&
+        variantsWithImages.every((variant) =>
+            selectedImageIds.includes(variant.id),
+        );
 
     const toggleSelectAllFiltered = () => {
-        const filterableIds = filteredVariants
-            .filter((variant) => variant.product.image_url)
-            .map((variant) => variant.id);
+        const filterableIds = variantsWithImages.map(
+            (variant) => variant.id,
+        );
 
         if (filterableIds.length === 0) {
             return;
         }
 
-        const allSelected = filterableIds.every((id) =>
-            selectedImageIds.includes(id),
+        if (allWithImagesSelected) {
+            setSelectedImageIds((previous) =>
+                previous.filter(
+                    (id) => !filterableIds.includes(id),
+                ),
+            );
+
+            return;
+        }
+
+        setSelectedImageIds((previous) =>
+            Array.from(
+                new Set([
+                    ...previous,
+                    ...filterableIds,
+                ]),
+            ),
         );
-
-        if (allSelected) {
-            setSelectedImageIds((prev) =>
-                prev.filter((id) => !filterableIds.includes(id)),
-            );
-        } else {
-            setSelectedImageIds((prev) =>
-                Array.from(new Set([...prev, ...filterableIds])),
-            );
-        }
     };
 
-    const getSelectedImageUrls = (): string[] => {
-        return Array.from(document.querySelectorAll('.product-card'))
-            .filter((card) => {
-                const checkbox = card.querySelector(
-                    '.pos-check input[type="checkbox"]',
-                ) as HTMLInputElement | null;
+   const copyAllSelectedImages = useCallback(() => {
+    setCopyError(null);
 
-                return checkbox?.checked;
-            })
-            .map((card) => {
-                const image = card.querySelector(
-                    '.pos-img',
-                ) as HTMLImageElement | null;
+    if (selectedImageUrls.length === 0) {
+        alert('Please select at least one image.');
+        return;
+    }
 
-                return image?.src;
-            })
-            .filter((src): src is string => Boolean(src));
-    };
+    if (selectedImageUrls.length > MAX_CLIPBOARD_IMAGES) {
+        alert(
+            `Please select no more than ${MAX_CLIPBOARD_IMAGES} unique images. ` +
+                `You currently selected ${selectedImageUrls.length}.`,
+        );
+        return;
+    }
 
-    const copyAllSelectedImages = useCallback(async () => {
-        const imageSrcs = getSelectedImageUrls();
+    if (!window.isSecureContext) {
+        alert('Clipboard image copying requires HTTPS.');
+        return;
+    }
 
-        if (imageSrcs.length === 0) {
-            alert('Please select at least 1 image.');
-            return;
-        }
+    if (!navigator.clipboard?.write) {
+        alert(
+            'Clipboard image writing is not supported in this browser.',
+        );
+        return;
+    }
 
-        if (!window.isSecureContext) {
-            alert('Clipboard image copying requires HTTPS.');
-            return;
-        }
+    if (typeof ClipboardItem === 'undefined') {
+        alert('ClipboardItem is not supported in this browser.');
+        return;
+    }
 
-        if (!navigator.clipboard?.write) {
-            alert('Clipboard image writing is not supported in this browser.');
-            return;
-        }
-
-        if (typeof ClipboardItem === 'undefined') {
-            alert('ClipboardItem is not supported in this browser.');
-            return;
-        }
-
-        let done = 0;
-        const total = imageSrcs.length;
-
-        try {
-            const items = imageSrcs.map((src) => {
-                const pngPromise = createPngPromise(src, () => {
-                    done += 1;
-
-                    setCopyProgress({
-                        done,
-                        total,
-                    });
-                });
-
-                return new ClipboardItem({
-                    'image/png': pngPromise,
-                });
-            });
-
-            console.log('Clipboard attempt', {
-                count: items.length,
-                userAgent: navigator.userAgent,
-                secure: window.isSecureContext,
-                focused: document.hasFocus(),
-                visible: document.visibilityState,
-                activationActive: navigator.userActivation?.isActive,
-                activationHasBeenActive:
-                    navigator.userActivation?.hasBeenActive,
-            });
-
-            /*
-             * Important:
-             * Call navigator.clipboard.write() before React state updates.
-             * This helps iPhone Safari keep the button-tap user gesture.
-             */
-            const writePromise = navigator.clipboard.write(items);
-
-            setCopyProgress({
-                done: 0,
-                total,
-            });
-
-            await writePromise;
-
-            setCopyProgress(null);
-
-            alert(
-                `Successfully copied ${items.length} image${
-                    items.length > 1 ? 's' : ''
-                } to clipboard!`,
-            );
-        } catch (error) {
-            setCopyProgress(null);
-
-            console.error('Clipboard failed', {
-                error,
-                userAgent: navigator.userAgent,
-                secure: window.isSecureContext,
-                focused: document.hasFocus(),
-                visible: document.visibilityState,
-                activationActive: navigator.userActivation?.isActive,
-                selectedCount: imageSrcs.length,
-            });
-
-            alert(
-                error instanceof Error
-                    ? `Execution error: ${error.message}`
-                    : 'Execution error: Copy failed.',
-            );
-        }
-    }, []);
-
-    const copyOneImageForTest = useCallback(async () => {
-        const imageSrcs = getSelectedImageUrls();
-
-        if (imageSrcs.length === 0) {
-            alert('Please select at least 1 image.');
-            return;
-        }
-
-        try {
-            const item = new ClipboardItem({
-                'image/png': createPngPromise(imageSrcs[0]),
-            });
-
-            await navigator.clipboard.write([item]);
-
-            alert('One image copied successfully.');
-        } catch (error) {
-            console.error(error);
-
-            alert(
-                error instanceof Error
-                    ? `One-image test failed: ${error.message}`
-                    : 'One-image test failed.',
-            );
-        }
-    }, []);
-
-    const disabled = processing || selectedImageIds.length === 0;
-
-    const withImages = filteredVariants.filter(
-        (variant) => variant.product.image_url,
+    /*
+     * Build ClipboardItems synchronously while the click
+     * is still active.
+     */
+    const clipboardItems = selectedImageUrls.map(
+        (imageUrl) =>
+            new ClipboardItem({
+                'image/png': createPngPromise(imageUrl),
+            }),
     );
 
-    const allWithImagesSelected =
-        withImages.length > 0 &&
-        withImages.every((variant) => selectedImageIds.includes(variant.id));
+    console.log('Clipboard write starting', {
+        imageCount: clipboardItems.length,
+        userActivation: navigator.userActivation?.isActive,
+        focused: document.hasFocus(),
+        secure: window.isSecureContext,
+    });
+
+    /*
+     * Critical:
+     * Start navigator.clipboard.write immediately.
+     * Do not put this inside setTimeout.
+     * Do not await image downloads before calling it.
+     */
+    const writePromise =
+        navigator.clipboard.write(clipboardItems);
+
+    /*
+     * Updating React state is safer after write has already started.
+     */
+    setCopying(true);
+
+    writePromise.then(
+        () => {
+            setCopying(false);
+            setCopyError(null);
+
+            alert(
+                `Successfully copied ${clipboardItems.length} image${
+                    clipboardItems.length === 1 ? '' : 's'
+                }!`,
+            );
+        },
+        (error: unknown) => {
+            setCopying(false);
+
+            const message =
+                error instanceof Error
+                    ? `${error.name}: ${error.message}`
+                    : String(error);
+
+            setCopyError(message);
+
+            console.error('Clipboard write failed', {
+                error,
+                message,
+                imageCount: clipboardItems.length,
+                selectedImageUrls,
+                userActivation:
+                    navigator.userActivation?.isActive,
+                focused: document.hasFocus(),
+                secure: window.isSecureContext,
+            });
+
+            alert(`Execution error: ${message}`);
+        },
+    );
+}, [selectedImageUrls]);
+
+    const disabled =
+        processing ||
+        copying ||
+        selectedImageUrls.length === 0 ||
+        selectedImageUrls.length > MAX_CLIPBOARD_IMAGES;
 
     return (
-        <div className="d-flex align-items-center justify-content-between mb-2">
-            <div className="d-flex align-items-center gap-2">
-                <Button
-                    type="button"
-                    variant="outline-secondary"
-                    size="sm"
-                    disabled={processing || filteredVariants.length === 0}
-                    onClick={toggleSelectAllFiltered}
-                >
-                    {allWithImagesSelected ? 'Deselect All' : 'Select All'}
-                </Button>
+        <div className="mb-2">
+            <div className="d-flex align-items-center justify-content-between gap-2">
+                <div className="d-flex align-items-center flex-wrap gap-2">
+                    <Button
+                        type="button"
+                        variant="outline-secondary"
+                        size="sm"
+                        disabled={
+                            processing ||
+                            copying ||
+                            variantsWithImages.length === 0
+                        }
+                        onClick={toggleSelectAllFiltered}
+                    >
+                        {allWithImagesSelected
+                            ? 'Deselect All'
+                            : 'Select All'}
+                    </Button>
 
-                <small className="text-muted">
-                    {selectedImageIds.length} selected
-                    {withImages.length > 0 && (
-                        <> / {withImages.length} with images</>
-                    )}
-                </small>
-            </div>
-
-            <div className="d-flex align-items-center gap-2">
-                <Button
-                    type="button"
-                    variant="outline-primary"
-                    size="sm"
-                    disabled={disabled}
-                    onClick={copyOneImageForTest}
-                >
-                    Test 1 Image
-                </Button>
+                    <small className="text-muted">
+                        {selectedImageIds.length} variants selected
+                        {' / '}
+                        {selectedImageUrls.length} unique images
+                    </small>
+                </div>
 
                 <Button
                     type="button"
@@ -326,11 +310,39 @@ export default function CopyImagesToolbar({
                 >
                     <i className="ri-file-copy-line me-1" />
 
-                    {copyProgress
-                        ? `Copying ${copyProgress.done} / ${copyProgress.total}...`
-                        : `Copy Images (${selectedImageIds.length})`}
+                    {copying
+                        ? 'Copying...'
+                        : `Copy Images (${selectedImageUrls.length}/${MAX_CLIPBOARD_IMAGES})`}
                 </Button>
             </div>
+
+            {selectedImageUrls.length > MAX_CLIPBOARD_IMAGES && (
+                <Alert
+                    variant="warning"
+                    className="small mt-2 mb-0 py-2"
+                >
+                    Select no more than {MAX_CLIPBOARD_IMAGES}{' '}
+                    unique images. Deselect{' '}
+                    {selectedImageUrls.length -
+                        MAX_CLIPBOARD_IMAGES}{' '}
+                    image
+                    {selectedImageUrls.length -
+                        MAX_CLIPBOARD_IMAGES ===
+                    1
+                        ? ''
+                        : 's'}{' '}
+                    first.
+                </Alert>
+            )}
+
+            {copyError && (
+                <Alert
+                    variant="danger"
+                    className="small mt-2 mb-0 py-2"
+                >
+                    {copyError}
+                </Alert>
+            )}
         </div>
     );
 }
