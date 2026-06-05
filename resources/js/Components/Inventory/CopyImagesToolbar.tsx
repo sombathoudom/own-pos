@@ -85,10 +85,12 @@ export default function CopyImagesToolbar({
         //    pending promises resolved before the check anyway.
         const THUMB_WIDTH = 1200;
 
-        const resizeToPng = (blob: Blob): Promise<Blob> =>
+        // Load image via Image() (same mechanism as <img> tags) then
+        // resize via canvas.  No fetch() — avoids CORS / proxy issues
+        // that can differ between localhost and production (ngrok).
+        const loadAndResize = (src: string): Promise<Blob> =>
             new Promise((resolve, reject) => {
                 const image = new Image();
-                image.src = URL.createObjectURL(blob);
                 image.onload = () => {
                     const scale = Math.min(1, THUMB_WIDTH / image.width);
                     const canvas = document.createElement('canvas');
@@ -96,7 +98,6 @@ export default function CopyImagesToolbar({
                     canvas.height = Math.round(image.height * scale);
                     const ctx = canvas.getContext('2d');
                     if (!ctx) {
-                        URL.revokeObjectURL(image.src);
                         return reject(
                             new Error('Could not get canvas context'),
                         );
@@ -113,23 +114,16 @@ export default function CopyImagesToolbar({
                                   ),
                         'image/png',
                     );
-                    URL.revokeObjectURL(image.src);
                 };
-                image.onerror = () => {
-                    URL.revokeObjectURL(image.src);
-                    reject(new Error('Failed to load image for resize'));
-                };
+                image.onerror = () =>
+                    reject(new Error(`Failed to load: ${src}`));
+                image.src = src;
             });
 
         let done = 0;
 
-        const blobPromises = imageSrcs.map((src) => {
-            const sep = src.includes('?') ? '&' : '?';
-            const sizedSrc = `${src}${sep}w=${THUMB_WIDTH}`;
-
-            return fetch(sizedSrc)
-                .then((r) => r.blob())
-                .then(resizeToPng)
+        const blobPromises = imageSrcs.map((src) =>
+            loadAndResize(src)
                 .then((pngBlob) => {
                     done++;
                     setCopyProgress({ done, total });
@@ -139,8 +133,8 @@ export default function CopyImagesToolbar({
                     done++;
                     setCopyProgress({ done, total });
                     throw err;
-                });
-        });
+                }),
+        );
 
         try {
             // 3. Wait for ALL blobs → settled data → safe to write
