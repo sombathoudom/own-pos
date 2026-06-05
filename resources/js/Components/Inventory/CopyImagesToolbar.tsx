@@ -31,38 +31,30 @@ function optimizedUrl(src: string): string {
 }
 
 /**
- * Fetch an image and return it as a Blob suitable for ClipboardItem.
+ * Fetch an image and convert it to a PNG blob via canvas.
  *
- * JPEG images are passed through as-is (fast, small).
- * Everything else is converted to PNG via a canvas (needed for
- * PNG/GIF/WebP sources so the clipboard can hold them).
+ * The Clipboard API requires image/png for broad compatibility
+ * with apps like Messenger, LINE, WhatsApp etc.
  */
-function fetchImageForClipboard(src: string): Promise<Blob> {
+function createPngPromise(src: string): Promise<Blob> {
     return fetch(src, {
         mode: 'cors',
         cache: 'no-store',
     })
         .then((response) => {
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                throw new Error(
+                    `Failed to fetch image: HTTP ${response.status}`,
+                );
             }
 
             return response.blob();
         })
         .then((blob) => {
-            /*
-             * JPEG can go straight to the clipboard — no canvas
-             * conversion, so it stays small and fast.
-             */
-            if (blob.type === 'image/jpeg') {
+            if (blob.type === 'image/png') {
                 return blob;
             }
 
-            /*
-             * For PNG, GIF, WebP etc. we must convert to PNG
-             * because the Clipboard API only reliably supports
-             * image/png (and image/jpeg in some browsers).
-             */
             return new Promise<Blob>((resolve, reject) => {
                 const objectUrl = URL.createObjectURL(blob);
                 const image = new Image();
@@ -213,20 +205,14 @@ export default function CopyImagesToolbar({
         /*
          * Build ClipboardItems synchronously while the click
          * is still active — each item fetches its optimized
-         * thumbnail in the background.
-         *
-         * The optimized image endpoint always returns JPEG,
-         * so we use 'image/jpeg' as the MIME type key.
-         * JPEG blobs pass through fetchImageForClipboard
-         * without canvas conversion — fast and small.
+         * thumbnail and converts to PNG for broad compatibility.
          */
-        const clipboardItems = selectedImageUrls.map((imageUrl) => {
-            const thumbUrl = optimizedUrl(imageUrl);
-
-            return new ClipboardItem({
-                'image/jpeg': fetchImageForClipboard(thumbUrl),
-            });
-        });
+        const clipboardItems = selectedImageUrls.map(
+            (imageUrl) =>
+                new ClipboardItem({
+                    'image/png': createPngPromise(optimizedUrl(imageUrl)),
+                }),
+        );
 
         console.log('Clipboard write starting', {
             imageCount: clipboardItems.length,
