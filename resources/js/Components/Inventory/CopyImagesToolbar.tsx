@@ -53,7 +53,7 @@ export default function CopyImagesToolbar({
         }
     };
 
-    const copyAllSelectedImages = () => {
+    const copyAllSelectedImages = async () => {
         // 1. Collect image URLs from checked cards (synchronous = the
         //    user gesture Safari requires).
         const imageSrcs: string[] = [];
@@ -74,112 +74,98 @@ export default function CopyImagesToolbar({
             return;
         }
 
-        // 2. Build one promise per image (fetch → resize → PNG blob).
-        const THUMB_WIDTH = 1200;
-        const blobPromises: Promise<Blob>[] = [];
-        const clipboardItemsArray: ClipboardItem[] = [];
+        const total = imageSrcs.length;
+        setCopyProgress({ done: 0, total });
 
-        imageSrcs.forEach((src) => {
+        // 2. Fetch + resize every image to a PNG blob.
+        //    We pre-resolve ALL blobs before building ClipboardItems so
+        //    navigator.clipboard.write() receives settled data — this
+        //    prevents Safari's gesture timer from expiring on slow prod
+        //    connections (e.g. ngrok).  Localhost is fast enough that
+        //    pending promises resolved before the check anyway.
+        const THUMB_WIDTH = 1200;
+
+        const resizeToPng = (blob: Blob): Promise<Blob> =>
+            new Promise((resolve, reject) => {
+                const image = new Image();
+                image.src = URL.createObjectURL(blob);
+                image.onload = () => {
+                    const scale = Math.min(1, THUMB_WIDTH / image.width);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(image.width * scale);
+                    canvas.height = Math.round(image.height * scale);
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        URL.revokeObjectURL(image.src);
+                        return reject(
+                            new Error('Could not get canvas context'),
+                        );
+                    }
+                    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(
+                        (pngBlob) =>
+                            pngBlob
+                                ? resolve(pngBlob)
+                                : reject(
+                                      new Error(
+                                          'Canvas toBlob conversion failed',
+                                      ),
+                                  ),
+                        'image/png',
+                    );
+                    URL.revokeObjectURL(image.src);
+                };
+                image.onerror = () => {
+                    URL.revokeObjectURL(image.src);
+                    reject(new Error('Failed to load image for resize'));
+                };
+            });
+
+        let done = 0;
+
+        const blobPromises = imageSrcs.map((src) => {
             const sep = src.includes('?') ? '&' : '?';
             const sizedSrc = `${src}${sep}w=${THUMB_WIDTH}`;
 
-            const imagePromise = fetch(sizedSrc)
-                .then((response) => response.blob())
-                .then(
-                    (blob) =>
-                        new Promise<Blob>((resolve, reject) => {
-                            const image = new Image();
-                            image.src = URL.createObjectURL(blob);
-                            image.onload = () => {
-                                const scale = Math.min(
-                                    1,
-                                    THUMB_WIDTH / image.width,
-                                );
-                                const canvas = document.createElement('canvas');
-                                canvas.width = Math.round(image.width * scale);
-                                canvas.height = Math.round(
-                                    image.height * scale,
-                                );
-                                const ctx = canvas.getContext('2d');
-                                if (!ctx) {
-                                    URL.revokeObjectURL(image.src);
-                                    return reject(
-                                        new Error(
-                                            'Could not get canvas context',
-                                        ),
-                                    );
-                                }
-                                ctx.drawImage(
-                                    image,
-                                    0,
-                                    0,
-                                    canvas.width,
-                                    canvas.height,
-                                );
-                                canvas.toBlob(
-                                    (pngBlob) =>
-                                        pngBlob
-                                            ? resolve(pngBlob)
-                                            : reject(
-                                                  new Error(
-                                                      'Canvas toBlob conversion failed',
-                                                  ),
-                                              ),
-                                    'image/png',
-                                );
-                                URL.revokeObjectURL(image.src);
-                            };
-                            image.onerror = () => {
-                                URL.revokeObjectURL(image.src);
-                                reject(
-                                    new Error(
-                                        'Failed to load image for resize',
-                                    ),
-                                );
-                            };
-                        }),
-                );
-
-            blobPromises.push(imagePromise);
-            clipboardItemsArray.push(
-                new ClipboardItem({ 'image/png': imagePromise }),
-            );
-        });
-
-        // 3. Progress tracking on each blob promise.
-        const total = blobPromises.length;
-        let done = 0;
-        setCopyProgress({ done: 0, total });
-
-        blobPromises.forEach((promise) => {
-            promise
-                .then(() => {
+            return fetch(sizedSrc)
+                .then((r) => r.blob())
+                .then(resizeToPng)
+                .then((pngBlob) => {
                     done++;
                     setCopyProgress({ done, total });
+                    return pngBlob;
                 })
-                .catch(() => {
+                .catch((err) => {
                     done++;
                     setCopyProgress({ done, total });
+                    throw err;
                 });
         });
 
-        // 4. Write to clipboard.
-        navigator.clipboard
-            .write(clipboardItemsArray)
-            .then(() => {
-                setCopyProgress(null);
-                alert(
-                    `Successfully copied ${clipboardItemsArray.length} item${clipboardItemsArray.length > 1 ? 's' : ''} to clipboard!`,
-                );
-            })
-            .catch((err) => {
-                setCopyProgress(null);
-                console.error(err);
-                alert(
-                    'Execution error: ' +
-                        (err instanceof Error ? err.message : String(err)),
-                );
-            });
+        try {
+            // 3. Wait for ALL blobs → settled data → safe to write
+            const pngBlobs = await Promise.all(blobPromises);
+
+            const items = pngBlobs.map(
+                (blob) =>
+                    new ClipboardItem({
+                        'image/png': Promise.resolve(blob),
+                    }),
+            );
+
+            await navigator.clipboard.write(items);
+            setCopyProgress(null);
+            alert(
+                `Successfully copied ${items.length} item${items.length > 1 ? 's' : ''} to clipboard!`,
+            );
+        } catch (err) {
+            setCopyProgress(null);
+            console.error(err);
+            alert(
+                'Execution error: ' +
+                    (err instanceof Error ? err.message : String(err)),
+            );
+        }
     };
 
     const withImages = filteredVariants.filter((v) => v.product.image_url);
